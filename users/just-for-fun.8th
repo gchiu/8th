@@ -1,0 +1,97 @@
+true app:isgui !
+
+var thegui
+
+var ticker-task
+
+: BUFW 800 ;
+: BUFH 260 ;
+
+BUFW BUFH img:new var, buf
+"8th version 18.04 released!" var, msg
+"Arial 24" font:new var, fnt
+fnt @ msg @ font:measure nip n:ceil var, msg-w
+fnt @ font:pixels? n:ceil var, msg-h
+msg-w @ msg-h @ img:new var, msgbuf
+
+: DOTW 7 ;
+: DOTH 7 ;
+: XGAP 3 ;
+: YGAP 3 ;
+
+msg-h @ DOTH n:* msg-h @ n:1- YGAP n:* n:+ n:int var, tickerheight
+BUFH tickerheight @ n:- 2 n:/ n:int var, tickery
+BUFW DOTW n:- DOTW XGAP n:+ n:/ n:int var, nscrdots
+nscrdots @ msg-w @ n:+ var, tickerw
+nscrdots @ DOTW XGAP n:+ n:* n:int var, dotx
+
+
+: rgba  \ r g b a -- rgba
+  >r
+  >r
+  8 n:shl
+  r> 16 n:shl
+  r> 24 n:shl
+  n:bor
+  n:bor
+  n:bor ;
+
+
+0 0 0 255 rgba var, black
+0 255 0 255 rgba var, fg
+0 128 0 255 rgba var, bg
+
+
+: scroll
+  buf lock @ 3 black @ DOTW XGAP n:+ img:scroll drop buf unlock drop ;
+
+
+: bg-loop
+  tickery @ "y" t:@ DOTH YGAP n:+ n:* n:+ n:int "doty" t:!
+  buf lock @ bg @ g:fcolor
+  dotx @ "doty" t:@ DOTW DOTH g:rect g:fill drop buf unlock drop ;
+
+
+: ticker-loop
+  "textx" t:@ msg-w @ n:< if
+    msgbuf @ "y" t:@ "textx" t:@ img:pix@ nip 0 n:= not if
+      tickery @ "y" t:@ DOTH YGAP n:+ n:* n:+ n:int "doty" t:!
+      buf lock @ fg @ g:fcolor
+      dotx @ "doty" t:@ DOTW DOTH g:rect g:fill drop buf unlock drop
+    then
+  then ;
+
+
+: draw-ticker
+  ( "textx" t:! scroll ( "y" t:! bg-loop ) 0 msg-h @ n:1- loop ) 0 tickerw @ n:1- loop
+
+  repeat
+    ( "textx" t:! scroll ( "y" t:! bg-loop ticker-loop ) 0 msg-h @ n:1- loop thegui @ g:invalidate drop 0.1 sleep ) 0 tickerw @  n:1- loop
+  again ;
+
+
+: do-draw
+  buf lock @ 0 0 g:image-at drop buf unlock drop ;
+
+
+: clean-up
+  ticker-task @ t:done? not if ticker-task @ 0 t:kill then ;
+
+
+{
+  "kind" : "win",
+  "title" : "Tickertape",
+  "wide" : 800,
+  "high" : 260,
+  "center" : true,
+  "nobg" : true,
+  "opaque" : true,
+  "draw" : "do-draw"
+} var, w
+
+
+: app:main
+  msgbuf @ "white" g:scolor fnt @ g:setfont 0 -4 g:moveto  msg @ msg-w @ msg-h @ g:draw-fitted-text drop
+  w @ g:new thegui !
+  ' clean-up onexit
+  ' draw-ticker t:task ticker-task ! ;
