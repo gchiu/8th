@@ -1,0 +1,34 @@
+\ Bluetooth 4.0 (BLE) sample
+
+"ns:bt" w:find "Only Pro or Enterprise versions of 8th have Bluetooth support" thrownull 
+
+{} var,  results
+var timeout
+
+: scan-ble \ item|null -- f
+  null? if t:main t:notify false ;then
+
+  "name" m:@ null? if drop "UNK" then
+  swap results @  -rot m:!?  true ;
+
+: ledump \ key item --
+  "name: " . swap . cr
+  "data: " . . cr ;
+
+: dot-task '. putc f:stdout f:flush 0.5 sleep recurse ;
+
+: app:main
+  bt:on? not if "The Bluetooth system is not on" . cr bye then
+  "Starting BLE scan (on Linux/RPI you must be root): " . cr
+  ' scan-ble 10 bt:lescan
+  "Scanning..." . cr
+
+  \ use a background task to print a lot every half-second
+  ' dot-task t:task >r
+
+  \ sleep until there are results:
+  -1 sleep
+
+  cr "Done with scan: " . cr
+  results @ ' ledump m:each
+  cr bye ;

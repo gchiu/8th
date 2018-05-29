@@ -1,0 +1,91 @@
+\ Sample using 'skins' to modify a GUI:
+
+needs gui/skin
+
+true var, portrait
+var gui
+
+: orient-skin
+  gui @
+  portrait @ if "portrait" else "landscape" then
+  g:named-skin drop ;
+
+: check-orientation \ gui
+  n:< portrait !
+  ' orient-skin g:do ;
+
+\ First, define a GUI layout.  Each item that needs to be skinned must have a
+\ unique name (without symbols except _ ) :
+
+true app:isgui !
+{
+  "kind" : "win",
+  "bg" : "black",
+  "wide" : "200",
+  "high" : "400",
+  "name" : "g1",
+  "size" : ' check-orientation ,
+  \ click on the window to bring up a pop-up menu:
+  "mouse-down" : "menu",
+  "children" : [
+    {
+      "kind" : "label",
+      "label" : "G2",
+      "justify" : ["hcenter", "vcenter"],
+      "font" : 20,
+      "bg" : "red",
+      "name" : "g2",
+      "mouse-down" : "menu",
+      "children" : [
+        {
+          "kind" : "edit",
+          "skin-class" : "edit"
+        }
+      ]
+    },
+    {
+      "kind" : "label",
+      "label" : "G3",
+      "justify" : ["hcenter", "vcenter"],
+      "bg" : "green",
+      "font" : 20,
+      "name" : "g3",
+      "mouse-down" : "menu",
+      "children" : [
+        {
+          "kind" : "edit",
+          "skin-class" : ["edit", "what"]
+        }
+      ]
+    }
+  ]
+} var, gui-def
+
+[ null, 
+  "default",
+  "pink" 
+] var, skins
+var skin
+
+\ This is invoked on the GUI thread
+: updateskin
+  gui @
+  skins @ skin @ caseof
+  g:named-skin drop ;
+
+: menuselect
+  null? if drop ;then
+  skin !  ' updateskin g:do ;
+
+: menu
+  {
+    "menu" : [ "pink" , 2 , "default", 1 ],
+    "cb" : ' menuselect
+  } g:popmenu ;
+
+: app:main
+  \ create the gui:
+  gui-def @ g:new 
+  \ set the skin (if we don't do this, the background of g1 would be black)
+  "default" g:named-skin
+  gui ! ;

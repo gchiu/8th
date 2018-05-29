@@ -1,0 +1,436 @@
+#! /usr/bin/env 8th
+
+\ 8th script to generate a Dash docset format of the online help for 8th
+\
+\ Version: 1.2
+\ Updated: 2017/08/14
+\ Author: Richard A. Mead
+\ Contact: Richard {at} InfoMontage.com
+\ Copyright: (c) 2016 Information Montage
+\ Non-exclusive distribution rights are herein granted to Aaron High-Tech, Ltd.
+\
+\ Dash is created by Kapeli, see https://kapeli.com/
+\
+\ Usage: 8th dash-doc-gen.8th
+\ Created using 8th version 17.06 (build ad91807f)
+
+needs stack/rstack
+
+: _add-to-map \ v k m[k->a] --
+	over m:exists? -- v k m f
+		if -- v k m
+			swap m:@ rot -- m oa v
+			a:push 2drop -- 
+		else -- v k m
+			swap rot -- m k v
+			[] clone nip swap a:push -- m k na
+			m:! drop -- 
+		then ;
+
+: _write_file \ s file -- _ | -throw-
+	swap f:write null?
+	if
+		drop f:relpath "Could not write to the file '%s'!\n"
+		s:strfmt con:print 1001 throw ;;;
+	then
+	2drop ;
+
+"8th-words.html" var, HFILN
+var HFIL
+
+: init-html-output-file \ --
+	HFILN @  dup >r dup f:exists?
+	if
+		dup f:rm not
+		if
+			rdrop "Could not remove current '%s' file!\n"
+			s:strfmt con:print 1002 throw ;;;
+		then
+	then
+	f:create null?
+	if
+		drop r> "Could not create the file '%s'!\n"
+		s:strfmt con:print 1003 throw ;;;
+	then
+	HFIL !
+	rdrop ;
+
+"Info.plist" var, IFILN
+var IFIL
+
+: init-plist-output-file \ --
+	IFILN @  dup >r dup f:exists?
+	if
+		dup f:rm not
+		if
+			rdrop "Could not remove current '%s' file!\n"
+			s:strfmt con:print 1009 throw ;;;
+		then
+	then
+	f:create null?
+	if
+		drop r> "Could not create the file '%s'!\n"
+		s:strfmt con:print 1010 throw ;;;
+	then
+	IFIL !
+	rdrop ;
+
+app:8thdir "docs/help.db" s:+ var, HDBN
+var HDB
+var CSQL
+var WSQL
+
+: init-helpdb-access \ --
+	HDBN @ db:open
+	"SELECT * FROM classes WHERE nm=?" db:prepare CSQL !
+	"SELECT * FROM words WHERE nm=? AND cls=?" db:prepare WSQL !
+	HDB ! ;
+
+"docSet.dsidx" var, DDBN
+var DDB
+var DSQL
+
+: init-dashdb-access \ --
+	DDBN @ dup >r dup f:exists?
+	if
+		dup f:rm not
+		if
+			rdrop "Could not remove current '%s' file!\n"
+			s:strfmt con:print 1004 throw ;;;
+		then
+	then
+	db:open
+	"CREATE TABLE searchIndex(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, path TEXT);"
+	db:exec dup db:err?
+	if
+		drop r> "searchIndex" "Could not create table '%s' in the '%s' database!\n"
+		s:strfmt con:print 1005 throw ;;;
+	then
+	"CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);"
+	db:exec dup db:err?
+	if
+		drop r> "searchIndex" "anchor"
+		"Could not create index '%s' on table '%s' of the '%s' database!\n"
+		s:strfmt con:print 1006 throw ;;;
+	then
+	"INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?, ?, ?);"
+	db:prepare DSQL !
+	DDB ! rdrop ;
+
+: create-html-header-section \ --
+	quote %
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>8th %
+
+	G:8thver? " (build " s:+ G:buildver? s:+ ")" s:+
+
+	dup >r s:+
+
+	" word list</title>
+	</head>
+	<body>
+	<center><h1>8th " s:+ r> s:+
+
+	quote %
+</h1></center>
+<br/>
+<ul>
+<li><a href="#namespace-section">Namespaces</a></li>
+<li><a href="#words-section">Words</a></li>
+<li><a href="#detail-section">Detailed list</a></li>
+</ul><br>%
+	s:+
+	HFIL @ _write_file ;
+	
+: create-html-ns-section \ m[ns>s->a[w>s]] -- m[ns>s->a[w>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[ns>s] (r: m[ns>s->a[w>s]])
+	quote %
+<div id="namespace-section">
+<center><h3>Namespaces</h3></center>
+<p>The following are the predefined namespaces in 8th,
+ and the words that are defines in each of them:</p>
+<table style="border-spacing:0"><thead>
+<tr style="text-align:left">
+<th style="border-bottom:1px solid black">Namespace</th>
+<th style="border-bottom:1px solid black">Description</th>
+<th style="border-bottom:1px solid black">Word(s)</th>
+</tr>
+</thead><tbody>%
+	>r -- a[ns>s] (r: m[ns>s->a[w>s]] html)
+	( nip
+		"<tr><td style=\"vertical-align:top;border-bottom: thin dashed black\">"
+		"<div id=\"namespace-" s:+ over s:+ "\">"
+		s:+ "<a href=\"#" s:+ over s:+ ":\">" s:+ over s:+ "</a>" s:+
+		"</td>\n<td style=\"vertical-align:top;border-bottom: thin dashed black\">" s:+
+		"ns:" 2 pick s:+ eval ns>ls s:+
+		"</td><td style=\"border-bottom: thin dashed black\">" s:+
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[w>s] (r: m[ns>s->a[w>s]] html ns>s phtml)
+		(
+			swap 0 n:> if ", "  else "" then
+			"<a href=\"#" s:+ 1 rpick s:+ ":" s:+ over s:+ "\">" s:+ swap s:+ "</a>" s:+
+			r> s:<+ >r -- (r: m[ns>s->a[w>s]] html ns>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ "</div></td><tr>\n" s:+ >r -- (r: m[ns>s->a[w>s]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+
+	HFIL @ _write_file
+	r> ;
+
+: create-html-words-section \ m[w>s->a[ns>s]] -- m[w>s->a[ns>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[w>s] (r: m[w>s->a[ns>s]])
+	quote %
+<div id="words-section">
+<center><h3>Words</h3></center>
+<p>The following are the predefined words in 8th,
+ and the namespaces that define each word:</p>
+<table style="border-spacing:0"><thead>
+<tr style="text-align:left">
+<th style="border-bottom:1px solid black">Word</th>
+<th style="border-bottom:1px solid black">Namespace(s)</th>
+</tr>
+</thead><tbody>%
+	>r -- a[w>s] (r: m[w>s->a[ns]] html)
+	( nip
+		"<tr><td style=\"vertical-align:top;border-bottom: thin dashed black\">"
+		"<div id=\"word-" s:+ over s:+ "\">" s:+ over s:+ "</td>\n" s:+
+		"<td style=\"vertical-align:top;border-bottom: thin dashed black\">" s:+
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[ns>s] (r: m[w>s->a[ns>s]] html w>s phtml)
+		(
+			swap 0 n:> if ", "  else "" then
+			"<a href=\"#" s:+ over s:+ ":" s:+ 1 rpick s:+ "\">" s:+ swap s:+ "</a>" s:+
+			r> s:<+ >r -- (r: m[w->a[ns]] html w>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ "</div></td><tr>\n" s:+ >r -- (r: m[w>s->a[ns]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+
+	HFIL @ _write_file
+	r> ;
+
+: apply-html-highlights \ text -- text+html
+	/__([^_]+)__/
+	"<span style=\"font-weight:bolder\">\\1</span>"
+	s:replace!
+	/@([^@]+)@/
+	"<span style=\"text-decoration:underline;font-style: italic\">\\1</span>"
+	s:replace! ;
+
+: get-ns-detail \ ns>s -- desc2>s
+	HDB @ CSQL @ rot 1 db:bind
+	{ "desc2" : "" } >r
+	( rdrop db:col{} >r ) swap db:exec-cb drop r>
+	"desc2" m:@ nip
+	apply-html-highlights "<br/><br/>" s:+ ;
+
+: get-word-detail \ w>s ns>s -- imm>s stk>s desc>s
+	HDB @ WSQL @ rot 2 db:bind rot 1 db:bind
+	{ "immed" : 0, "st" : "", "desc" : "" } >r
+	( rdrop db:col{} >r ) swap db:exec-cb drop r>
+	"st" m:@ swap "desc" m:@ swap "immed" m:@ nip
+	0 n:>
+	if
+		"Immed"
+	else
+		/^\s*__deferred__:?\s*/ >r
+		r@ s:search number?
+		if
+			0 n:=
+			if
+				r@ "" s:replace
+				"Defer"
+			else
+				""
+			then
+		else
+			drop ""
+		then
+		rdrop
+	then
+	swap apply-html-highlights -rot ;
+	
+: create-html-ns-words-detail-section -- m[ns>s->a[w>s]] -- m[ns>s->a[w>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[ns>s] (r: m[ns>s->a[w>s]])
+	quote %
+<div id="detail-section">
+<center><h3>Word descriptions</h3></center>
+<p>The following are the built-in descriptions of each predefined word in each of the
+ predefined namespaces in 8th:</p>
+
+<table>
+<thead>
+	<tr style="text-align:left">
+		<th style="border-bottom:1px solid black">Word</th>
+		<th style="border-bottom:1px solid black;padding-left:4pt">Immediate /Deferred</th>
+		<th style="border-bottom:1px solid black;padding-left:2pt;padding-right:6pt">Stack comment</th>
+		<th style="border-bottom:1px solid black">Description</th>
+	</tr>
+</thead>
+<tbody>
+%
+	>r -- a[ns>s] (r: m[ns>s->a[w>s]] html)
+	( nip
+		"<tr><td colspan=5>&nbsp</td></tr>\n"
+		"<tr style=\"text-align:center\">" s:+
+		"<td colspan=5 style=\"font-size:larger;font-weight:bolder\">" s:+
+		"<a name=\"//apple_ref/cpp/Namespace/" s:+ over  s:+
+		"\" class=\"dashAnchor\"/>" s:+
+		"<div id=\"" s:+
+		over s:+ ":\">" s:+ over s:+
+		" (" s:+ "ns:" 2 pick s:+ eval ns>ls s:+ ")" s:+
+		"</div></td></tr>" s:+
+		"<tr><td colspan=5 style=\"border-bottom:1px solid black\">" s:+
+		over get-ns-detail s:+
+		"</td></tr>" s:+
+		over "Namespace" over HFILN @ "#" s:+ swap s:+ ":" s:+ 3 a:close
+		DSQL @ swap db:bind DDB @ swap db:exec drop
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[w>s] (r: m[ns>s->a[w>s]] html ns>s phtml)
+		( nip
+			"<tr><td style=\"border-bottom: thin dashed black\">"
+			"<a name=\"//apple_ref/cpp/Word/" s:+ 1 rpick s:+ ":" s:+ over s:+
+			"\" class=\"dashAnchor\"/>" s:+
+			"<div id=\"" s:+ 1 rpick s:+ ":" s:+ over
+			s:+ "\">" s:+
+			over s:+ "</div></td>\n<td style=\"border-bottom: thin dashed black;" s:+
+			"padding-left:2px\">" s:+
+			swap clone -rot 1 rpick get-word-detail
+			4 roll 1 rpick ":" s:+  swap s:+ "Word" over HFILN @ "#" s:+ swap s:+ 3 a:close
+			DSQL @ swap db:bind DDB @ swap db:exec drop
+			"%s</td><td style=\"border-bottom: thin dashed black;"
+			"padding-left:2px;padding-right:2px;white-space: nowrap\">" s:+
+			"%s</td>\n<td style=\"border-bottom: thin dashed black\">%s</td>\n" s:+ s:strfmt s:+ "</tr>\n" s:+
+			r> s:<+ >r -- (r: m[ns>s->a[w>s]] html ns>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ >r -- (r: m[ns>s->a[w>s]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+
+	HFIL @ _write_file
+	r> ;
+
+
+[]
+"ns:" words-like a:+
+"I:" words-like a:+
+"C:" words-like a:+
+"X:" words-like a:+
+"ctx:" words-like a:+
+"user:" words-like a:+
+
+null words-like
+(
+	true >r
+	swap
+	( nip over s:= if rdrop false >r break then ) a:each
+	nip r>
+) a:filter
+nip -- a["ns:w"]
+
+
+{} >r {} >r
+
+( nip -- nv
+	":" s:search s:/ a:open 0 1 s:- 2dup r@ -- ns>s w>s v k m
+	_add-to-map -- ns>s w>s = nsk nsv
+	swap 1 rpick -- v k m
+	_add-to-map -- 
+) a:each drop
+
+
+r>
+{ "#then":[], "#else":[] } m:+
+r>
+
+init-html-output-file
+create-html-header-section
+create-html-ns-section
+swap
+create-html-words-section
+drop
+init-helpdb-access
+init-dashdb-access
+create-html-ns-words-detail-section
+drop
+
+HDB @ db:close
+DDB @ db:close
+HFIL @ f:close
+
+init-plist-output-file
+
+quote %
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>8th</string>
+	<key>CFBundleName</key>
+	<string>8th</string>
+	<key>DocSetPlatformFamily</key>
+	<string>8th</string>
+	<key>isDashDocset</key>
+	<true/>
+	<key>DashDocSetFamily</key>
+	<string>dashtoc</string>
+</dict>
+</plist>
+%
+IFIL @ _write_file
+IFIL @ f:close
+
+"8th-words.docset" var, DSFILN
+var SHF
+
+: create-docset \ --
+	DSFILN @ clone "/Contents/Resources/Documents/" s:+ over f:exists?
+	if
+		DSFILN @ clone nip "/" s:+ f:rmdir not
+		if
+			"Could not remove current '%s' directory!\n"
+			s:strfmt con:print 1007 throw ;;;
+		then
+	then
+	dup f:mkdir not
+	if
+		"Could not create the directory '%s'!\n"
+		s:strfmt con:print 1008 throw ;;;
+	then
+	HFILN @ dup "." f:relpath dup 3 pick 3 roll s:+ f:mv not
+	if
+		"Could not mv the file '%s' to the directory '%s'!\n"
+		s:strfmt con:print 1007 throw ;;;
+	then
+	drop
+	/(.+\/).+\// "\\1" s:replace DDBN @ dup "." f:relpath dup 3 pick 3 roll s:+ f:mv not
+	if
+		"Could not mv the file '%s' to the directory '%s'!\n"
+		s:strfmt con:print 1007 throw ;;;
+	then
+	drop
+	/(.+\/).+\// "\\1" s:replace IFILN @ dup "." f:relpath dup 3 pick 3 roll s:+ f:mv not
+	if
+		"Could not mv the file '%s' to the directory '%s'!\n"
+		s:strfmt con:print 1007 throw ;;;
+	then
+	drop 2drop ;
+
+create-docset
+
+cr
+
+-- "[","]","{","}"
+
+bye

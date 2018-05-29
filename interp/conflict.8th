@@ -1,0 +1,27 @@
+\ 8th normally allows you to override existing words.  If you don't like that
+\ behavior, you can do something different by assigning an action to "conflict"
+
+\ let's define a word:
+: joe "Hi, Joe!\n" . ;
+
+\ show that we can redefine it without problems:
+
+: joe "Bye, Joe!\n" . ;
+
+joe
+
+\ Now put a handler in place
+(
+	"You are trying to override '" .
+	.
+	"', which will be disallowed\n" .
+	false
+) is conflict
+
+\ and try to override again
+
+: joe "Success is ours, Joe!\n" . ;
+
+joe
+
+bye

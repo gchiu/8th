@@ -1,0 +1,38 @@
+\ Demonstration of the 'utils/structs' library:
+
+
+needs utils/structs
+
+\ test code
+struct:
+  int  joe
+  3 ignore
+  long mama
+  float x
+  0 buf  bbb
+struct;  astr
+
+"The struct: " . astr dup . cr
+
+"The data to encode: " .  [123, 456, -1.0, "joemama" ]  dup . cr
+\ "ii" pack
+
+struct:arr>
+
+"After arr> " . dup . cr
+
+struct:>buf
+"After >buf " . dup . cr
+
+"Creating a new astr using encoded data: " . cr
+astr swap struct:buf> dup . cr
+
+"Access 'mama' field: " . 
+"mama" struct:field@ dup . cr
+
+"Change 'mama' value: " .
+100 n:+ "mama" swap struct:field!
+"mama" struct:field@ . cr
+dup . cr
+
+bye

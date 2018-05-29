@@ -1,0 +1,107 @@
+\ This is an RFCOMM server and client app.
+\ Start on one side with the parameter 'server' to make it a server, and on the
+\ connecting side with 'client' to be a client.  
+"ns:bt" w:find "Only Pro or Enterprise versions of 8th have Bluetooth support" thrownull 
+
+needs string/tsub
+
+\ The client first needs to scan for devices, which takes a while:
+[] var, devices
+: choose-device \ -- o
+  devices @ a:len 1 n:= if
+      \ only one device was found so return it:
+      a:open
+    else
+      "These devices were found.\nPlease press the number corresponding to the desired device:\n\n" . 
+      (
+        swap . space
+        "%name% (%id%)\n" swap 
+        s:tsub .
+      ) a:each
+      con:key '0 n:- a:@ nip
+  then
+  "Using " . dup . cr ;
+
+\ var still-scanning
+
+: scanning \ item --
+  null? if 
+    drop false  \ dup still-scanning ! 
+    t:main t:notify
+  else
+    devices @ swap a:push drop true 
+  then ;
+
+: dot-task '. putc f:stdout f:flush 0.5 sleep recurse ;
+
+: client
+  "You are the client!\n" . 
+  "Please wait while we search for devices...\n" .
+
+  ' scanning 15 bt:scan 
+  "Scanning...\n" .
+
+  \ use a background task to print a lot every half-second
+  ' dot-task t:task >r
+
+  \ wait until scan is complete
+  -1 sleep
+  r> 0 t:kill
+
+  cr "finished scanning" . cr
+  devices @ a:len not if
+    "No devices were found, sorry" . cr
+  else
+    dup . cr
+    choose-device "\nFailed to choose a device" thrownull
+    "port" 1 m:!
+    "Connecting..." .
+    bt:connect
+    "Could not connect" thrownull
+
+    "Writing..." . cr
+    "send" bt:write drop
+    "Reading..." . cr
+    "" 4 bt:read drop
+    "Read: " . . cr
+  then
+  bye ;
+
+: server
+  "you are the server" . cr 
+  "Listen:" . cr
+  {"port" : 1}  bt:listen
+  dup . cr
+  "Accept:" . cr
+  bt:accept 
+  "Could not accept" thrownull
+
+  "Reading..." . cr
+  "" 4 bt:read 
+  .s cr
+  drop
+  "Read: " . dup . cr 
+  .s cr
+  s:rev bt:write
+  bye ;
+
+
+\ This is the decision-maker.  Did you want to be server or client?
+{
+  "client" : ' client ,
+  "server" : ' server 
+} var, client-server
+
+: app:main
+  client-server @ 
+  \ get the cmd-line argument and lowercase it first:
+  0 args null? if
+    "Please say 'client' or 'server' on the command line" . cr bye
+  then
+
+  s:lc caseof
+  null? nip if 
+    \ "null" is returned if you didn't match one of the keys in client-server:
+    "You needed to say either 'server' or 'client'" 
+    . cr bye
+  then ;

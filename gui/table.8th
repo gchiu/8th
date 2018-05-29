@@ -1,0 +1,95 @@
+true app:isgui !
+
+\ a "color" lets you select from a palette of colors
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "black",
+	"resize-corner" : 20,
+	"children" :
+	[
+		{
+			"kind" : "table",
+			"name" : "table",
+			"bg" : "darkgreen",
+      "fg" : "white",
+			"hl" : "lightgreen",
+			"hlc" : "lightblue",
+			"header" : 
+			[
+				{
+					"name" : "Name"
+				},
+				{
+					"name" : "Address"
+				}
+			],
+			"bounds" : "0,0,parent.width, parent.height",
+			"items" : [
+				["Ron", "123 Main St."],
+				["Joe", "456 Oak Ave."]
+			],
+			"list-get-item" : "get-item",
+			"list-row-count" : "get-row-count",
+			"list-clicked" : "item-clicked",
+			"click" : "outside-clicked",
+			"list-sort-change" : "sort-click"
+		}
+	]
+} var, guiobj
+
+var gui
+
+[
+	["Alpha", 123],
+	["Beta", 456],
+	["Gamma", 789]
+] var, other
+
+: item-clicked \ gui col row 
+	other @ swap a:@ nip
+	swap a:@ nip >s
+	"You clicked: " swap s:+ log
+	;
+
+: ascend \ a a -- f
+	0 a:@ nip swap
+	0 a:@  nip
+	s:cmp ;
+
+: descend \ a a -- f
+	ascend n:neg ;
+
+: sort-click \ gui ix fwd
+	other @ swap
+	if 
+		\ ascending sort
+		' ascend
+	else
+		\ descending sort
+		' descend
+	then
+	a:sort drop ;
+
+: outside-clicked
+	"Clicked outside of any row" log ;
+: get-row-count 
+	other @  a:len nip ;
+
+: get-item \ gui col row -- item
+	other @ swap a:@ nip
+  null? if 
+    drop "" 
+  else
+	  swap a:@ 
+  then ;
+
+: color-change \ gui clr --
+	>r gui @ "btn" g:child r> g:bg
+	;
+: app:main
+	guiobj @ g:new 
+	g:show gui !
+	;

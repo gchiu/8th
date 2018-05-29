@@ -1,0 +1,42 @@
+true app:isgui !
+needs gui/fontdlg
+
+\ a convenience variable which saves us from looking up the button:
+var gui
+
+\ user selected a font, it's on TOS
+: do-save \ s --
+   gui @ swap 
+   g:setfont 
+   \ this is required so the button font changes immediately:
+   g:invalidate ;
+
+\ We call the font dialog with an map which says what to call back on
+\ choosing a font, and the initial font face and size 
+: choose-font \ g --
+    g:getfont >r
+    {
+     "cb" : ' do-save ,
+     "fontface" : "Times",
+     "fontsize" : 20
+    } const
+    r> font:pixels? 
+    swap font:face? nip
+    \ o size face
+    -rot "fontsize" swap m:!
+    "fontface" rot m:!
+    g:fontdlg ;
+
+: app:main
+  { "kind": "win" , "wide":800, "high":600, "bg":"white", "children" :
+    [
+      {
+        "kind":"btn",
+        "name":"btn",
+        "font" : "Arial 20",
+        "label" : "Click me",
+        "bounds" :"parent.width/2-100,parent.height/2-40,left+200,top+80",
+        "click" : ' choose-font 
+      }
+    ]
+  } g:new dup "btn" g:child gui ! ;

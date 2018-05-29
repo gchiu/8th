@@ -1,0 +1,44 @@
+true app:isgui !
+
+\ a "callout" lets you put up a kind of pop-up dialog with an arrow pointing to
+\ another component
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "white",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"label" : "A Button",
+			"click" : "callout",
+			"bounds" : "0,0,parent.width/2, parent.height",
+			"bg" : "green"
+		},
+		{
+			"kind" : "color",
+			"name" : "color",
+			"bg" : "green",
+			"changed" : "color-change",
+			"bounds" : "parent.width/2,0,parent.width, parent.height"
+		}
+	]
+} var, guiobj
+
+var gui
+
+: callout \ btngui
+	"Far out, dude!" g:callout 
+	;
+
+: color-change \ gui clr --
+	>r gui @ "btn" g:child r> g:bg
+	;
+
+: app:main
+	guiobj @ g:new 
+	g:show gui !
+	;

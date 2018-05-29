@@ -1,0 +1,57 @@
+\ Convert the FOOD_DES.txt database into a SQLite database for the
+\ 'foodlist.8th' sample:
+
+\ This holds the prepared SQL query we use:
+var q-ins
+
+\ For each line, strip the "~" delimiters and then split the string on "^" into
+\ an array of the fields; then insert into the database using our query:
+: process-data \ db s
+  "~" "" s:replace!
+  "^" s:/ 
+  \ db array-of-fields
+  q-ins @ swap db:bind 
+  db:exec ;
+
+\ Load the named file and process it:
+: load-file \ db s -- db
+  "Processing file: " . dup . cr
+  app:asset >s ' process-data s:eachline ;
+
+\ Create the database schema:
+: make-schema \ db -- db
+quote * 
+  DROP TABLE IF EXISTS food_des;
+  CREATE TABLE food_des 
+  (NDB_No text, FdGrp_Cd, Long_Desc, Shrt_Desc, ComName, ManufacName, Survey, 
+  Ref_desc, Refuse, SciName, N_Factor, Pro_Factor, Fat_Factor, CHO_Factor);
+  CREATE UNIQUE INDEX food_des_ndb_no_idx ON food_des (NDB_No);
+  CREATE INDEX food_des_ndb_no_idx2 ON food_des (Long_Desc);
+  BEGIN *
+  db:exec ;
+
+\ Create the prepared query:
+: make-query \ db -- db
+  "insert into food_des values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+  db:prepare q-ins ! ;
+ 
+ \ Create the database in the same folder as the raw text file:
+: create-database \ -- db
+  scriptdir clone nip
+  "food.db" s:+
+  "Creating database: " . dup . cr
+  db:open ;
+
+\ Save and close the database:
+: close-database \ db --
+  "COMMIT" db:exec
+  db:close 
+  "Done" . cr ;
+
+: app:main 
+  create-database
+  make-schema 
+  make-query
+  "FOOD_DES.txt" load-file
+  close-database
+  bye ;

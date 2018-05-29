@@ -1,0 +1,39 @@
+\ Print a map with the keys in a specific order.  Keys not specified will be
+\ output in alphabetic increasing order
+
+needs array/diff
+needs map/iter
+
+\ Simple-minded print:
+\    key : value
+: print \ map key -- map
+  dup . 
+  " : " .
+  m:@ . cr ;
+
+\ Variation of m:iter, which iterates the given keys first and then iterates all the
+\ other keys in alphabetic order:
+: m:iter-all \ map keys wrd -- map 
+  >r tuck
+  \ First iterate over the given keys:
+  r@ m:iter
+  \ Now, iterate over the other keys, in alpha order:
+  m:keys ' s:cmpi a:sort rot ' s:= a:diff
+  r@ m:iter rdrop ;
+  
+\ Sample map:
+{
+  "dog" : "pet",
+  "yellow" : "color",
+  "ZZ Top" : "band",
+  "123" : "Easy as",
+  "hello" : "goodbye"
+} var, themap
+
+\ Original order:
+"Printing the map in the original order:\n" .
+themap @ dup ( drop print ) m:each
+
+"\nPrinting in specific order:\n" . 
+["hello","dog"] ' print m:iter-all
+bye

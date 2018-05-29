@@ -1,0 +1,60 @@
+\ Formatting numbers according to Indian standards.
+\ In Western cultures, every three digits are grouped and separated with a
+\ comma; while in India only the first three are grouped, and every two digits
+\ after that group together.  Thus:
+\
+\ In the West: 1,000,000
+\ In India   : 10,00,000
+
+: (n>in) \ s n -- s n 
+  dup 0 n:= if ;then
+  "," rot s:+ swap
+  100 /mod swap
+  over 0 n:= if "%d" else "%02d" then
+  s:strfmt rot s:+ swap recurse ;
+
+: n>in \ n -- s
+  1000 /mod swap    \ top "bottom"
+  "%03d" s:strfmt
+  swap (n>in) drop ;
+
+123 n>in . cr
+1234567890 n>in . cr
+
+
+\ An alternative way using string operations:
+
+\ split a string two-by-two, right to left:
+: s:2/ \ a s -- a s | a
+  s:len 3 n:< if a:push ;then
+  -2 s:/ a:open
+  rot swap a:push swap recurse ;
+
+: n>in2 \ n -- s
+  >s s:len 3 n:> if
+    -3 s:/ a:shift 
+    s:2/ a:rev 
+    "," a:join
+  then ;
+
+
+\ A third alternative
+: n>in3 \ n -- s
+  >s s:len 3 n:> if
+    -3 s:/ a:open swap
+    \ if odd, pad with a space:
+    s:len 2 n:mod if " " swap s:+ then
+    \ if the number could be larger, add more '2c' specifiers:
+    "2c2c2c2c2c2c2c2c2c" unpack drop
+    swap a:push
+    \ get rid of empty strings from unpack:
+    ' s:len a:filter
+    "," a:join s:ltrim
+  then ;
+
+123 n>in2 . cr
+1234567890 n>in2 . cr
+
+123 n>in3 . cr
+1234567890 n>in3 . cr
+bye

@@ -1,0 +1,22 @@
+\ Shows the use of 'debug/nicer'
+
+
+\ This library forces each word to save its name in an array so that a backtrace
+\ can be shown if there is an exception.
+needs debug/nicer
+
+: bar "I'm useless" throw ;
+
+: useless
+  0.5 sleep
+  bar ;
+
+\ 'baz' is not well behaved, puts a new map on the stack every time.  You'll see
+\ that in the backtrace:
+: baz m:new 0.1 sleep recurse ;
+: foo
+  baz ;
+
+: app:main 
+  { "xt" : ' useless , "name" : "a useless task" } t:task
+  { "xt" : ' foo , "name" : "Foo" }  t:task ;

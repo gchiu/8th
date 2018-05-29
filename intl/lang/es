@@ -1,0 +1,20 @@
+\ Spanish
+\ vim: ft=8th :
+"es" curlang !
+
+\ make sure the date formatter can find our language's strings:
+["Do", "Lu", "Ma", "Mi", "Je", "Vi", "Sa" ] 
+["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado" ] 
+	s:days!
+
+["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" ] 
+["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"] 
+	s:months!
+
+{
+	"hi" : "¡Hola, mundo!",
+	"bye" : "Adios",
+	"today": "Hoy es el %d de %n, %W",
+	"sure?" : "¿Esta Ud. seguro?"
+}
+s:intl!

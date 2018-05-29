@@ -1,0 +1,85 @@
+( 
+	os dup
+	0 n:= swap
+	5 n:= or
+	not if "sorry, this sample only runs on linux or raspberry pi!\n" . cr bye then 
+) exec
+
+var mainwin
+var button
+var gbutton
+var hbox
+
+"libgtk-x11-2.0.so.0" lib gtk
+gtk "Could not load the GTK library" thrownull
+"GTK lib: " . . cr
+"V" "gtk_main_quit" func: gtk_main_quit
+"VNN" "gtk_init" func: gtk_init
+"NN" "gtk_window_new" func: gtk_window_new
+
+"VNZWNNNNN" "gtk_signal_connect_full" func: gtk_signal_connect_full
+: gtk_signal_connect \ o,n,f,d
+	0 swap 0 0 0 gtk_signal_connect_full ;
+: gkt_signal_connect_object \ o,n,f,so
+	0 swap 0 1 0 gtk_signal_connect_full ;
+	
+
+"NZ" "gtk_button_new_with_label" func: gtk_button_new_with_label
+"VN" "gtk_widget_show" func: gtk_widget_show
+"VN" "gtk_widget_destroy" func: gtk_widget_destroy
+"VNN" "gtk_container_set_border_width" func: gtk_container_set_border_width
+"VNN" "gtk_container_add" func: gtk_container_add
+"VNZNN" "gtk_signal_connect_object" func: gtk_signal_connect_object
+"V" "gtk_main" func: gtk_main
+
+"NNN" "gtk_hbox_new" func: gtk_hbox_new
+
+\ GTK_WINDOW_TOPLEVEL = 0, GTK_WINDOW_POPUP=1
+
+: hello
+	"Hello world\n" . true ;
+
+: gbye
+	"G'bye, mate!\n" .  mainwin @ gtk_widget_destroy 0 die ;
+: destroy 
+	"Destroy\n" . 
+	gtk_main_quit ;
+
+: init 0 0 gtk_init ;
+: win 0 gtk_window_new ;
+
+: destroy-win
+	"Destroy win\n" .
+	gtk_main_quit ;
+
+: gtk-stuff
+	mainwin @ "delete-event" ' destroy-win 0 
+	gtk_signal_connect
+	mainwin @ 100 gtk_container_set_border_width
+
+	1 20 gtk_hbox_new hbox !
+
+	"Hello world" gtk_button_new_with_label button !
+	button @ "clicked" ' hello 0 gtk_signal_connect
+
+	"Goodbye!" gtk_button_new_with_label gbutton !
+	gbutton @ "clicked" ' gbye 0 gtk_signal_connect
+
+	hbox @ button @ gtk_container_add
+	hbox @ gbutton @ gtk_container_add
+	mainwin @ hbox @ gtk_container_add
+
+	gbutton @ gtk_widget_show
+	button @ gtk_widget_show
+	hbox @  gtk_widget_show
+	mainwin @ gtk_widget_show
+	gtk_main
+	"done" . cr bye
+  ;
+
+true app:isgui !
+: app:main
+	init win mainwin !
+
+	' gtk-stuff g:do
+	;

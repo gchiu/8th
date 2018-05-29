@@ -1,0 +1,20 @@
+\ French
+\ vim: ft=8th :
+
+"fr" curlang !
+\ make sure the date formatter can find our language's strings:
+["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam" ] 
+["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi" ,"Vendredi" ,"Samedi"]
+	s:days!
+
+["Janv", "Févr", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc" ] 
+["Janvier", "Février", "Mars" ,"Avril" ,"Mai" ,"Juin" ,"Juillet" ,"Août" ,"Septembre" ,"Octobre" ,"Novembre" ,"Décembre"]
+	s:months!
+
+
+{
+"hi" : "Bonjour!",
+"bye" : "Au revoir",
+"today" : "Aujourd'hui: %n %d, %W",
+"sure?" : "Es-tu sûr?"
+} s:intl!

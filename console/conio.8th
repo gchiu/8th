@@ -1,0 +1,19 @@
+\ Sample showing the use of the console I/O words
+with: con
+
+
+
+: app:main
+	blue onWhite cls
+	10 0 gotoxy
+
+	"Enter something up to 10 characters: " print
+	10 null accept cr null? if
+		"You cancelled the input"
+	else
+		"You wrote: " print
+	then
+	print cr cr
+
+	black onWhite normal clreol bye
+	;

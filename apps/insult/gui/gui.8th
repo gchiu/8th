@@ -1,0 +1,48 @@
+\ This is the GUI definition:
+{
+  "kind" : "win",
+  "wide" : 800,
+  "high" : 600,
+  "init" : "onInit",
+  "bg" : "cream1",
+  "children" : [
+    {
+      "kind" : "label",
+      "bounds" : "0,0,parent.width,32",
+      "font" : "24",
+      "justify" : ["hcenter"],
+      "label" : "Ye Olde 8th Insult Generator"
+    },
+    {
+      "kind" : "label",
+      "name" : "thou",
+      "top" : 200,
+      "left" : 20,
+      "wide" : 200,
+      "high" : 40,
+      "font" : "24",
+      "label" : "Thou art:"
+    },
+    {
+      "kind" : "label",
+      "name" : "adj",
+      "bounds" : "thou.right+8,thou.top,left+100,top+40",
+      "nbounds" : "thou.right+8,thou.top,left+%d,top+%d",
+      "font" : "24",
+      "value-changed" : "resize-lbl"
+    },
+    {
+      "kind" : "label",
+      "name" : "noun",
+      "bounds" : "adj.right+4,adj.top,parent.width-left,top+40",
+      "font" : "24"
+    },
+    {
+      "kind" : "btn",
+      "bounds" : "parent.width/2 - 50, parent.height-50, left+100, top+40",
+      "label" : "Spin!",
+      "font" : "24",
+      "click" : "spin"
+    }
+  ]
+}

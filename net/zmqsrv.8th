@@ -1,0 +1,44 @@
+\ Server for libzmq, port of 'wuserver.c'
+\ See http://zeromq.org/
+\ Requires you to install the zmq library.  Paired with 'zmqcli.8th', or you can
+\ run the wuclient sample from the zeromq
+
+
+needs net/zmq
+
+\ Test code:
+var ctx
+var pub
+
+: init
+  zmq:ctx-new ctx !
+  ctx @ zmq:PUB zmq:socket pub !
+  "bind..." .       pub @ "tcp://*:5556" 
+  zmq:bind  
+  drop ;
+
+: deinit
+ pub @ zmq:close drop
+ ctx @ zmq:ctx-destroy ;
+
+: randof \ n -- rand(n)
+  rand-pcg n:abs swap n:mod ;
+
+: publish-stats
+  repeat
+    pub @
+    50 randof 10 n:+
+    215 randof 80 n:-
+    100000 randof
+    "%05d %d %d" s:strfmt
+\    s:len
+    0 zmq:send 
+    drop
+  again ;
+
+: app:main
+  "Issuing weather updates...\n" .
+  init
+  publish-stats
+  deinit
+  bye ;

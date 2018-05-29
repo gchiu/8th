@@ -1,0 +1,237 @@
+\ A simple BMI calculator
+\ Use from the command-line like:
+\   8th bmi.8th -h 170 -w 80 
+\ or give '-?' to see help
+\ or give no parameters to have a GUI version of the calculator
+
+true app:isgui !
+
+needs utils/args
+
+true  var,  metric
+\ The height and weight.  Set to 'null' so we know if the cmd-line set the value:
+null var, h
+null var, w
+
+\ If we're running a gui:
+null var, gui
+{
+  "kind" : "win",
+  "children" : [
+    {
+      "kind" : "box",
+      "bg"   : "lightgreen",
+      "flex" : {
+        "dir" : "col"
+      },
+      "children" : [
+        {
+          "kind" : "label",
+          "label" : "Calculate your BMI:",
+          "font" : 20,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "btn",
+          "label" : "Metric",
+          "metric" : true,
+          "tooltip" : "Click to switch between metric and Imperial measures",
+          "font" : 20,
+          "labels" : ["Imperial", "Metric"] ,
+          "click" : ( "metric" g:m@ not dup metric ! "metric" swap g:m! gui @ metric @ if 1 else 0 then g:user! ) ,
+          "user" : ( >r "labels" g:m@ r> a:@ nip g:text ) ,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "label",
+          "label" : "Weight (kg)",
+          "font" : 20,
+          "labels" : ["Weight (lbs)", "Weight (kg)"] ,
+          "user" : ( >r "labels" g:m@ r> a:@ nip g:text ) ,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "edit",
+          "name" : "w",
+          "font" : 20,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "label",
+          "label" : "Height (cm)",
+          "font" : 20,
+          "labels" : ["Height (ft and in)", "Height (cm)"] ,
+          "user" : ( >r "labels" g:m@ r> a:@ nip g:text ) ,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "edit",
+          "name" : "h",
+          "font" : 20,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "btn",
+          "label" : "Calculate!",
+          "tooltip" : "Click to calculate the BMI",
+          "font" : 20,
+          "click" : "gui-calc-bmi" ,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        },
+        {
+          "kind" : "label",
+          "label" : "",
+          "name" : "bmi",
+          "font" : 20,
+          "flex" : {
+            "height" : 30,
+            "align" : "stretch",
+            "margin" :[5],
+            "grow" : 0
+          }
+        }
+      ]
+    }
+  ]
+} var, gui-def
+
+\ Get an array of the numbers present:
+: get-numbers \ s -- a
+  /([1-9][0-9.]*)/ r:+/
+  a:len not if drop null ;then
+  ' >n a:map ;
+
+\ Take weight in kg and height in m and return the BMI:
+: calc-bmi \ weight height -- bmi
+  n:sqr n:/ ;
+
+\ Convert a string representing the height into a number of meters:
+\ If 'metric' then the value should be either cm or m.  Test: if >3, it's cm
+\ If 'imperial' then it could be 
+\   N inches or feet
+\   5' 2"
+\   5 ft 2 in
+\   5 ft
+: convert-height \ s -- n
+  get-numbers null? if drop 1 ;then
+  metric @ if 
+    0 a:@ nip
+    dup 3 n:> if 100 n:/ then 
+  else
+    0 a:@ 12 n:> if
+      \ must be number of inches
+      0 a:@ nip
+      \ convert inches to feet
+      12 n:/
+    else
+      \ should be feet and maybe inches
+      0 a:@ swap 1 a:@ nip
+      null? if drop 0 else 12 n:/ then n:+
+    then
+    \ convert ft to meters
+    0.3048 n:*
+  then ;
+
+\ Convert a string representing the weight into a number of kilograms:
+\ If 'metric', the weight is kg
+\ If 'standard', it is lbs
+: convert-weight \ s -- n
+  get-numbers null? if drop 1 ;then
+  0 a:@ nip
+  metric @ not if 2.2 n:/ then ;
+
+: bmi-string \ n -- s
+  1 over n:= if
+    "Invalid value"
+  else
+    "The BMI is: %.1f" s:strfmt 
+  then ;
+
+: gui-calc-bmi
+  reset
+  gui @ "w" g:child g:text? nip convert-weight
+  gui @ "h" g:child g:text? nip convert-height
+  calc-bmi bmi-string
+  gui @ "bmi" g:child swap g:text ;
+
+ns: arg
+
+: help
+"Options are:
+   -h N  set the height to N
+   -i    use Imperial instead of metric units
+   -w N  set the weight to N
+   -?    show this help
+
+If height and weight are not both given, a GUI will start.
+
+Using the metric system (the default), the height must be given in either meters
+or centimeters, as a plain number.  Using the Imperial system, it must be given
+in either inches, or feet, or feet and inches.
+
+Similarly, the weight must be given in kg (metric) or lbs (Imperial).
+
+The program will convert the values as necessary and print the BMI.
+"
+  . bye ;
+
+
+ns: user
+
+{
+  "-?" : ' arg:help ,
+  "-w" : ( next-arg w ! ) ,
+  "-h" : ( next-arg h ! ) ,
+  "-i" : ( false metric ! ) 
+} var, arg-actions
+
+: app:main
+  \ Process any arguments:
+  arg-actions @ process-args
+
+  \ Set GUI mode based on whether we have given enough parameters:
+  w @ null?  h @ null? or if
+    \ gui mode...
+    gui-def @ g:new gui !
+  else
+    \ calculate bmi and tell user:
+    w @ convert-weight
+    h @ convert-height
+    calc-bmi bmi-string
+    . cr bye
+  then ;

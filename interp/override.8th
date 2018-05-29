@@ -1,0 +1,31 @@
+\ Example of how to use 'prior' to override an existing word in some
+\ cases while keeping the default behavior in others.
+
+
+quote * 
+Override ">s" so that the number 123 (for instance) is turned into "Number: 123"
+Since ">s" handles all kinds of items, we'll only override handling for ns:n * . cr cr cr
+
+: G:>s
+	\ get the previous ">s" word and keep it in r:
+	' G:>s prior >r
+	\ test the class of the item on TOS
+	dup >kind 
+	\ if it is a number, so something special:
+	ns:n n:= if
+		"Number: " swap r> w:exec s:+
+	else
+		\ otherwise, do what we used to do:
+		r> w:exec
+	then ;
+
+
+\ test the word:
+
+"Just an array: " . cr
+[1,2,3] >s . cr
+
+"Now for a number: " . cr
+1001 >s . cr
+
+bye

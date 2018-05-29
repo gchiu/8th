@@ -1,0 +1,55 @@
+\ Let a0, a1, a2, ... be an integer sequence defined by:
+\   a0 = 1;
+\   for n ≥ 1, an is the sum of the digits of all preceding terms.
+\ The sequence starts with 1, 1, 2, 4, 8, 16, 23, 28, 38, 49, ...
+\ You are given a[1000000] = 31054319.
+
+\ Find a[1000000000000000]
+
+false type-check
+false stack-check
+
+
+with: n
+
+: BASE 100000 ;
+\ : LIMIT 1000000000000000 ;
+0 args 
+"Must supply an upper limit on the command line (e..g 1000000000000000)"
+thrownull
+>n 
+: LIMIT literal ;
+
+: init-lookup
+  a:new
+  (
+    0 swap
+    \ sum ix
+    repeat
+      10 /mod
+      \ sum ix%10 ix/10
+      >r + r>
+    while
+    \ sum ix
+    drop a:push
+  ) 0 BASE 1- loop ;
+
+init-lookup
+
+: lookup literal swap a:@ nip ;
+
+: do-loop
+  (
+    dup \ dig dig2
+    repeat
+        \ dig2 
+        BASE /mod
+        \ dig2 dig2%base dig2/base
+        -rot lookup + swap
+  \      >r lookup + r>
+    while
+    drop
+  ) LIMIT 1- times ;
+
+1 do-loop . cr
+bye

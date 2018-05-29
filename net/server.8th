@@ -1,0 +1,55 @@
+\ A simple server to demonstrate how to make one:
+: okfail if "OK" else "FAIL" then . ;
+: waitfor \  net -- net
+  true 100 net:wait if ;then
+  "waiting\n" .
+  waitfor ;
+
+\ The descriptor for the server:
+{
+  "port" : 8080,
+  "recv" : "onRecv",
+  "made" : "onMade",
+  "lost" : "onLost"
+} var, server-obj
+
+\ This is called when data get received.  It gets the buffer of data, as well as
+\ a 'net' which is a socket to the connected client:
+
+: onRecv \ net buf --
+  "SERVER received: " .  >s  dup . cr              \ Announce that we got data
+  1 sleep
+  "TESTING" s:= if "GO ON" else "STOP" then        \ Determine our response
+  net:write drop \ Send it out and keep going  
+  false ;                                
+
+: onMade "CLIENT CONNECTED" log ;
+: onLost "CLIENT DROPPED" log ;
+
+"Launching server on port 8080\n" . 
+server-obj @ net:server var, server
+
+.1 sleep
+"Now, creating a client-side net to connect to the server we created:" .  cr
+net:INET4 net:STREAM net:socket var, sock
+null 8080 net:getaddrinfo  sock @ net:connect
+
+"Sending data" . cr 
+sock @ "TESTING" net:write
+
+
+"" var, response
+
+sock @ waitfor
+response @ 100 net:read \ nip
+"Reading response: " .
+response @ "GO ON" s:= okfail  cr 
+
+"Sending again" . cr 
+sock @ "TESTING2" net:write drop
+sock @ waitfor
+response @ 100 net:read
+"Reading second response: " .
+response @ "GO ON" s:= okfail  cr 
+bye
+

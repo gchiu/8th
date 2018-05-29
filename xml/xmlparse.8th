@@ -1,0 +1,81 @@
+\ Illustrate usage of the XML parser, in simple mode (single string, just
+\ parse):
+
+needs xml/parse
+\ Take some XML:
+quote *
+<Students>
+  <Student Name="April" Gender="F" DateOfBirth="1989-01-02" />
+  <Student Name="Bob" Gender="M"  DateOfBirth="1990-03-04" />
+  <Student Name="Chad" Gender="M"  DateOfBirth="1991-05-06" />
+  <Student Name="Dave" Gender="M"  DateOfBirth="1992-07-08">
+    <Pet Type="dog" Name="Rover">
+      <Pest Type="flea" Amount="1e6" />
+    </Pet>
+    <Pet Type="cat" Name="Felíz" />
+    Random data
+  </Student>
+  <Student DateOfBirth="1993-09-10" Gender="F" Name="&#x00C9;mily" />
+</Students>
+* var, xml
+
+\ Print the name of only those items which have a "Student" tag,
+\ and whose attributes are not empty:
+: .xml \ xml --
+  "tag" m:@ dup "Pet" s:cmp if
+		"Student" s:cmp not if
+      "attr" m:@ dup null;
+			\ xml:attrs dup null;
+			"Name" m:@ . cr
+		then drop 
+	else
+		"tag" m:@ . " --> " . 
+		"attr" m:@ . cr
+\		"Name" m:@ . cr drop
+	then ;
+
+: spaces ' space swap times ;
+
+: .xml \ level node -- level node
+"START" . cr .s 
+  over spaces "tag" m:@ . cr
+  over spaces "attr" m:@ .s null? if drop else 
+    \ level node attr
+    (
+"MID" . cr
+      \ level node attr key val
+      4 pick 2 n:+ spaces
+      swap . " : " . . cr
+    ) m:each drop
+  then
+"END" . cr
+  cr
+  ;
+
+: xml:(each) \ level xml cb -- level xml
+  >r 
+  \ process this node:
+  r@ w:exec
+
+  \ depth-first processing of any children:
+  "children" m:@
+  null? if drop else
+    2 pick n:1+ swap
+    ( nip r@ xml:(each) drop ) a:each
+    swap n:1- swap
+  then
+  rdrop ;
+
+: xml:each \ xml cb -- xml
+  0 -rot xml:(each) nip ;
+
+\ Parse the XML:
+xml @ xml:parse
+2 json-pretty
+"The XML was parsed into: " . cr 
+
+\ Do the iteration over the saved XML document:
+' .xml xml:each 
+
+.s
+bye

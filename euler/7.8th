@@ -1,0 +1,42 @@
+\ By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.
+\ What is the 10001st prime number?
+
+with: n
+
+\ Check the number 'n' against the array of primes to see if it's divisible:
+: isprime? \ [arr] n -- [arr] flag
+  over
+  ( 
+    \ n a[ix] accum
+    >r over swap mod
+    not if
+      \ it's divisible, so not prime: set the accumulator to 0 and break
+      rdrop 0 >r break 
+    then
+    r>
+  ) 1 a:reduce nip ;
+
+\ This will generate the next prime by keeping track of all primes found.  It
+\ starts with [2,3], so the 1000th prime is given at the 998th iteration!
+: getprime
+  \ This is a non-constant value, since it's a container.  We'll use that fact:
+  [2,3]
+
+  \ Get the next item to test (+2 from the last prime):
+  -1 a:@ 1+ 1+ 
+
+  repeat
+    \ [primes] next
+    tuck isprime? if
+      \ we have a winner, so keep it
+      over a:push drop
+      \ and return to sender:
+      ;; 
+    then
+
+    \ not prime, so try next candidate:
+    swap 1+ 1+ 
+  again ;
+
+( getprime drop ) 9998 times
+getprime . cr bye

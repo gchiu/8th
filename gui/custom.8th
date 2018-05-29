@@ -1,0 +1,75 @@
+\ Sample showing how to make a custom gui element which can be reused
+true app:isgui !
+\ define the custom element
+{
+  \ this is required:
+  "kind" : "triangle",
+  \ This means that we inherit the behavior of an 'edit' control
+  "derived" : "edit",
+  \ these will be default values:
+  "fg" : "green",
+  "bg" : "white",
+  "rot" : 0,
+  \ this one's needed so you can do paint yourself
+  "draw" : "triangle-draw"
+} var, tr-desc
+{
+  "kind" : "triangle2",
+  "derived" : "triangle",
+  \ these will be default values:
+  "fg" : "red",
+  "rot" : 0
+} var, tr-desc2
+
+: triangle-draw
+  "bg" g:m@ g:fillall 
+  "rot" g:m@ >r
+  "fg" g:m@ g:fcolor
+  \ get size and make the center our origin:
+  g:size? 
+    2 n:/ swap  \ high
+    2 n:/ swap \ wide
+  g:translate
+  \ and rotate as per 'rot'
+  r> g:rotate 
+  g:size? n:min 4 n:/ >r
+  r@ n:neg 0 0 r> dup 0 g:triangle g:fill 
+  ;
+
+\ This is a gui using the custom element
+{
+  "kind" : "win",
+  "bg" : "blue",
+  "fg" : "white",
+  "wide" : 200,
+  "high" : 200,
+  "children" : [
+    {
+      "kind" : "triangle",
+      "bounds" : "0,0,parent.width/2,parent.height/2",
+      "name" : "t1",
+      "rot"  : 0
+    },
+    {
+      "kind" : "triangle",
+      "bounds" : "0,t1.bottom,parent.width/2,parent.height",
+      "rot"  : 90,
+      "mouse-up" : "clicked"
+    },
+    {
+      "kind" : "triangle2",
+      "bounds" : "t1.right,t1.bottom,parent.width,parent.height",
+      "rot" : 270
+    }
+  ]
+} var, maingui
+
+: clicked g:quit ;
+
+: app:main
+  \ first we have to register the new gui:
+  tr-desc @ g:+kind
+  tr-desc2 @ g:+kind
+  \ and now we can create the main gui
+  maingui @ g:new
+  ;

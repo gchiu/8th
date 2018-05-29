@@ -1,0 +1,49 @@
+\ Sample showing use of asynchronous listeners:
+true app:isgui !
+
+"" var, newlabel
+var counter
+var btn
+
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Listener Demo",
+	"bg" : "red",
+	"font" : "20",
+  "init" : ( "btn" g:child btn ! ) ,
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+			"bg"   : "pink",
+			"font" : "20",
+			"click" : "clicked",
+			"label" : "Click..."
+		}
+	]
+} var, guiobj
+
+\ Invoked when you press the button:
+: clicked 
+  1 counter n:+!
+  counter @ "#%d" 
+  s:strfmt
+  newlabel ! ;
+
+\ Invoked when 'newlabel' is modified, on the gui thread but not inside the
+\ event handler
+: newlabel-listener
+  "listener invoked" log
+  dup @
+  btn @ swap 
+  g:text drop ;
+  
+  
+: app:main
+  \ add an asynch listener to 'newlabel'
+  newlabel ' newlabel-listener true +listener
+	guiobj @ g:new ;

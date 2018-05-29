@@ -1,0 +1,45 @@
+\ Client for libzmq, port of 'wuclient.c'
+\ See http://zeromq.org/
+\ Requires you to install the zmq library.  Paired with 'zmqsrv.8th', or you can
+\ run the wuserver sample from the zeromq
+
+
+needs net/zmq
+
+\ Test code:
+var ctx
+var sub
+
+: init
+  zmq:ctx-new  ctx !
+  ctx @ zmq:SUB zmq:socket sub !
+  "connect..." .       
+  sub @ "tcp://localhost:5556" zmq:connect not if 
+    "filter ..." .       
+    sub @ "1001" zmq:subscribe 
+  then ;
+
+: deinit
+ sub @ zmq:close drop
+ ctx @ zmq:ctx-destroy ;
+
+var stats
+
+: getstats
+  sub @ 256 b:new tuck
+  0 zmq:recv dup -1 n:= if
+    2drop rdrop
+  else
+    0 swap b:slice >s
+    " " s:/
+    1 a:@ nip >n stats n:+!
+  then
+  ;
+
+: app:main
+  "Collecting updates from weather server...\n" .
+  init
+  ' getstats 100 times
+  stats @ 100 n:/ . cr
+  deinit
+  bye ;

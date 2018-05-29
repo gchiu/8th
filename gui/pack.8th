@@ -1,0 +1,65 @@
+\ Example using pack
+
+true app:isgui !
+
+needs gui/pack
+
+{ "kind" : "win",
+  "wide" : 400, 
+  "high" : 400,
+  "center" : true,
+  "title" : "Juce 'Rectangle' style layout in 8th!",
+  "title-centered" : true  \ Does not seem to work (on win64?)
+} var, gui
+
+{ "kind" : "box",
+  "bounds" : "0, 0, parent.width, parent.height",
+  "bg" : "grey20"
+} g:new var, box
+
+{ "kind" : "btn",
+  "label" : "Header",
+  "fg" : "white",
+  "bg" : "cornflowerblue"
+} g:new var, hd
+
+{ "kind" : "btn",
+  "label" : "Footer",
+  "fg" : "white",
+  "bg" : "cornflowerblue"
+} g:new var, ft
+
+{ "kind" : "btn",
+  "label" : "Sidebar",
+  "fg" : "white",
+  "bg" : "dimgray"
+} g:new var, sb
+
+{ "kind" : "btn",
+  "bg" : "green"
+} g:new var, bt1
+
+{ "kind" : "btn",
+  "bg" : "yellowgreen"
+} g:new var, bt2
+
+{ "kind" : "btn",
+  "bg" : "yellow"
+} g:new var, bt3
+
+{ "kind" : "btn",
+  "bg" : "orange"
+} g:new var, bt4
+
+: app:main
+
+  box @ hd @ 40 pack:+top
+        ft @ 40 pack:+bottom
+        sb @ 80 pack:+left
+
+        bt1 @ 28 pack:+top
+        bt2 @ 28 pack:+top
+        bt3 @ 28 pack:+top
+        bt4 @ 28 pack:+top
+  
+  gui @ g:new swap g:+child ;

@@ -1,0 +1,89 @@
+\ vim: ts=2 sw=2 sts=2 et :
+
+\ Sample showing how to connect to a MySQL database
+\ The initial schema is:
+\    create table joe ( id int primary key auto_increment, name varchar(20), st timestamp default now(), weight float );
+
+\ Connection information for the MySQL database:
+{
+"kind" : "mysql",
+"host" : "db4free.net",
+"db" : "eighthdev",
+"user" : "user8th",
+"db" : "eighthdev",
+"pwd" : "password",
+"port" : 3306
+} var, connect-parameters
+var db
+
+\ Determine whether we can connect using the MySQL connector at present:
+: check-mysql
+  db:mysql? not if
+    "Either this is not a Pro or Enterprise version (so doesn't have MySQL support), or\n" .
+    "there is no MySQL connectivity.  You need to install the MySQL C connector:\n" .
+    "https://dev.mysql.com/downloads/connector/c/6.0.html\n" . 
+    bye
+  then ;
+
+\ Actually connect to the database:
+: connect-db
+  "Attempting to connect...\n" . 
+  connect-parameters @ 
+  db:open null? if 
+    "Could not connect to the database.  Perhaps the parameters are incorrect, or you don't have connectivity right now\n" .  bye
+  then 
+  db !  ;
+
+\ Gets called for each row of the SELECT results, wraps 'em up in an array:
+: each-row
+  db:col[] . cr ;
+
+\ Query the database:
+: query-db
+  "Querying database...\n" .
+  db @ 
+  ' each-row
+  "select id,name,st,weight from joe order by name"
+  db:exec-cb 
+  cr drop ;
+
+\ Create a "prepared statement" to use for inserting data:
+: prepare-statement \ -- sql
+  cr "Preparing statement" . cr 
+  db @ 
+  "insert into joe (name,weight,st) values (?,?,?)"
+  db:prepare ;
+
+\ Ask for data to send off, and then execute the prepared statement:
+: add-record 
+  prepare-statement dup >r
+  [] const
+  "Enter a name (up to 20 characters): " con:print  20 null con:accept a:push
+  cr
+  "Enter the weight (a number): " con:print  20 null con:accept >n a:push
+  d:new a:push
+  cr
+  cr "About to execute..." . cr
+  db:bind db:exec 
+  cr
+  db:err? r> swap if db:sqlerrmsg . cr then drop ;
+
+\ Prompt the user, return true if y or Y was pressed:
+: yesno?  \ prompt -- flag
+  con:print con:key 
+  32 n:bor 'y n:= ;
+
+\ Ask if user wants to make a new record.  If so, add the record and display the
+\ table again
+: add-record?
+  cr
+  "Would you like to add a record to the database? (Y/N) " 
+  yesno? if add-record query-db then cr ;
+  
+  
+: app:main
+  check-mysql
+  connect-db
+  query-db 
+  add-record? 
+  bye ; 

@@ -1,0 +1,32 @@
+\ the josephus problem
+\ https://en.wikipedia.org/wiki/Josephus_problem
+
+\ Number of men:
+var n 
+
+\ "kill-skip":
+var k
+
+: josephus-round
+	swap k @ n:+ 
+	over n:mod
+	swap n:1+
+	dup n @ n:> if; 
+	recurse noop ;
+
+: josephus
+	k ! n !
+	0 1 josephus-round drop n:1+ ;
+
+\ do the actual calculation:
+: app:main
+  40 3 josephus 
+
+  "The number of the last man standing out of " .  
+    n @ .
+  ", killing each " .  
+    k @ .
+  " is: " .  
+    .  cr 
+  "Should say '28'"  . cr
+  bye ;

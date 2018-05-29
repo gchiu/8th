@@ -1,0 +1,51 @@
+\ egotist.8th
+
+\ For learners exploring how namespaces work in
+\ the computer programming language named "8th".
+
+\ Written by 8th newbie (5 days) Peter
+\ in northern New England, USA
+\ (Modified by Ron: just refactoring)
+
+\ Places a Forth word ego in most of the
+\ built in namespaces of 8th, that identifies
+\ which namespace it is in. 
+
+: .cls \ n --
+  "I am " .
+  dup . space
+  dup ns>s . space
+  ns>ls . cr ;
+  
+\ iterate the classes, create a new word appropriately named in each class:
+: notclass? \ n -- f
+  ns>ls null? nip ;
+
+: ego-class \ n -- n+1|exit
+  dup notclass? if 0 ns drop ;then
+  dup dup ns ": ego %d .cls ;" 
+  s:strfmt eval 
+  n:1+ ego-class ;
+
+\ create all the ego words:
+0 ego-class
+
+"The word 'ego' is present in all available namespaces.  If you change to one of
+them using 'ns' for instance, and type 'ego', it will report the namespace in
+which it was created.  Here we'll use with: to change the namespace looked in:\n\n" .
+
+with: m
+with: xml
+
+"\nShould report 'XML':\n" .
+ego
+;with
+
+"\nShould report 'Map':\n" .
+ego
+;with
+
+"\nShould report 'user':\n" .
+ego
+
+bye

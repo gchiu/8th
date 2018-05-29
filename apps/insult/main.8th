@@ -1,0 +1,63 @@
+\ This is an "insult generator", based on "Mr William Shakespeare's Insult
+\ Generator" http://insult.dream40.org/
+\
+\ That version is very compact, because it leverages JQuery and another library
+\ written in JQuery to produce the "one-armed bandit" effect.
+\
+\ We'll do it the hard way, from scratch.
+\
+\ The GUI is in a separate file, 'gui/gui.8th', while the logic is in this file.
+\
+\ Enjoy!
+
+true app:isgui !
+
+\ word lists:
+var nouns
+var adjectives
+
+\ labels:
+var noun
+var adj
+
+\ This is done on a task...
+: do-spin \ lbl w[] times delay --
+  >r
+  (
+    >r a:len r> n:mod a:@ 
+    2 pick swap g:text drop
+    r> 1.05 n:* dup >r sleep
+  ) 0 rot loop
+  2drop rdrop ;
+
+: spin
+    adj @ adjectives @ a:shuffle 34 0.15 4 ' do-spin t:task-n
+    noun @ nouns @ a:shuffle 40 0.10 4 ' do-spin t:task-n ;
+
+\ The main window was loaded, so give a spin:
+: onInit
+  \ Reset the size of the 'thou' label to match the text and font:
+  "thou" g:child  "label" g:m@ g:textsize 1.5 n:* g:size drop 
+  ' spin g:do ;
+
+\ Resize the adjective label so that it is as wide as the string:
+: resize-lbl 
+  g:textsize  1.5 n:* swap
+  2 pick "nbounds" g:m@ nip
+  s:strfmt g:bounds ;
+
+\ utility to load an asset as an item:
+: load \ s -- x
+  app:asset json> ;
+
+: app:main
+  \ load the words
+  "words/adjectives.8th" load adjectives !
+  "words/nouns.8th" load nouns !
+
+  \ load the gui:
+  "gui/gui.8th" load g:new 
+  
+  \ get the children
+  dup "adj" g:child adj !
+  dup "noun" g:child noun !  ;

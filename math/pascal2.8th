@@ -1,0 +1,12 @@
+\ second version of Pascal's triangle, using array operations
+
+\ print the array 
+: .arr \ a -- a 
+  ( . space ) a:each ;
+
+: pasc \ a --
+  .arr cr
+  ' n:+ a:y
+  1 a:slide 1 a:push ;
+
+1 . [] ' pasc 16 times bye

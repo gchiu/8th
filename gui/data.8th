@@ -1,0 +1,50 @@
+\ Sample of binding data
+
+true app:isgui !
+
+\ Gets called when the user presses RETURN:
+: return \ gui -- 
+  \ grab the text from the given edit:
+  g:text? >r
+  \ figure out who to send the data to:
+  "target" g:m@ >r
+  g:parent r> g:child
+  \ set the text in the target control:
+  r> g:text ;
+
+var gui
+{
+  "kind" : "win",
+  "bg" : "white",
+  "children" : [
+    {
+      "kind" : "edit",
+      "name" : "e1",
+      "bg" : "pink",
+      "justify" : ["vcenter"],
+      "font": 20,
+      "empty-text" : "Enter text here and press ENTER",
+      "return-pressed" : ' return ,
+      "target" : "e2",
+      "esc-ret-consumed" : true,
+      "bounds" : "10,10,parent.width-10,top+40"
+    },
+    {
+      "kind" : "edit",
+      "name" : "e2",
+      "bg" : "palegreen",
+      "justify" : ["vcenter"],
+      "font": 20,
+      "return-pressed" : ' return ,
+      "target" : "e1",
+      "empty-text" : "Then the text will appear here",
+      "bounds" : "10,e1.bottom+10,parent.width-10,top+40"
+    }
+  ]
+} var, gui-desc
+
+
+
+: app:main
+  gui-desc @ g:new gui !
+  ;

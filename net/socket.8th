@@ -1,0 +1,34 @@
+var sock
+var ai
+var page
+
+
+\ Let's try to get a page from Google:
+
+net:INET4 net:STREAM net:socket   sock !
+
+"google.com" "80" net:getaddrinfo 
+	"Could not use the internet" thrownull
+	ai !
+
+
+"connect .... " . cr
+ai @ sock @ net:connect
+
+: ok? net:err? 0 = if "OK" else "FAIL" then . ;
+
+"ok ? " .
+	sock @ ok? cr
+
+"try read" . cr
+
+\ NOTe: you don't have to specify the size to write; 8th will use the String or
+\ Buffer full-size if you don't tell it how much to write 
+sock @ "GET /\r\n" net:write
+
+\ get the page:
+sock @ "" dup page ! 100 net:read drop
+
+"Google said: " . cr
+. cr bye
+

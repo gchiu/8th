@@ -1,0 +1,26 @@
+\ Illustrating the 'file/getc' library
+
+needs file/getc
+
+: open-file
+  scriptdir "getc.txt" s:+
+  f:open-ro ;
+
+: read-by-bytes
+  f:getb dup . cr f:ungetb
+  ( f:getb null? if drop else . cr then )
+   10 times ;
+
+: read-by-chars
+  f:getc dup . cr f:ungetc
+  ( f:getc null? if drop else . cr then )
+   10 times ;
+
+: app:main
+  "Reading by bytes: " . cr
+  open-file read-by-bytes f:close
+
+  "Reading by chars: " . cr
+  open-file read-by-chars f:close
+
+  bye ;

@@ -1,0 +1,75 @@
+\ text-to-speech sample
+
+needs net/http
+
+\ Usage: 8th tts.8th "text to convert to sound"
+\ This sample sends the text you give it to the 'voicerss.org' server, which
+\ converts it to an OGG sound.  The 8th code then creates a playable sound from
+\ that OGG binary data and plays it.
+"ns:sio" w:find "The Free version does not have sound support" thrownull 
+
+\ Put your key from voicerss.org here:
+\ NOTE: the API key below will NOT work!  Get your own key:
+\ http://www.voicerss.org/personel
+{
+\ "a9fd461922534e0abd78a318043e24f9",   \ the API key
+"key" : "b9fd461922534e0abd78a318043e24f9",
+"hl" : "en-us",                              \ what language to use
+"f" : "OGG"                                \ the desired audio format
+} var, params
+\ Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+{
+  "headers" : {
+    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+  },
+  "url" : "http://api.voicerss.org/"
+} var, posturl
+
+: map>url \ map -- string
+  "" const swap
+  (
+    \ str key value
+    >r
+    swap 
+      s:len if "&" s:append then 
+      swap
+    s:append
+    "=" s:append
+    r> net:>url 
+    s:append
+  ) m:each drop ;
+
+\ Create the query string for the GET:
+: setup-params \ --  
+  posturl @ 
+  "data"
+  params @
+  "src"
+  \ Get the text to convert, make sure it's URL-encoded
+  0 args null? if drop "ERROR!" then 
+  m:! map>url m:! ;
+
+: is-invalid? \ b -- b|exit
+  dup >s 6 s:lsub 
+  dup "<!DOCT" s:=
+  swap "ERROR:" s:= 
+  or ;
+
+( null? if t:main t:notify then drop ) w:is snd:played
+
+: app:main
+  setup-params
+  \ Ask the server for the converted sound:
+  net:post if
+    is-invalid? 
+    if
+      "Did not create a sound" . cr 
+    else
+      "Playing the result..." . cr
+      snd:new snd:play 
+      -1 sleep
+    then
+  else
+    "Failed" . cr
+  then
+  bye ;

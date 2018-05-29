@@ -1,0 +1,29 @@
+\ Contributed by djouniot
+\ Original: https://8th-dev.com/forum/index.php/topic,1491.msg8112.html#msg8112
+needs math/gmp
+
+with: bi
+
+"19872928798279872" set var, a
+"37987938798798793" set var, b
+a @ bi:get "a = " . . cr
+b @ bi:get "b = " . . cr
+a @ b @ bi:+ bi:get "a + b = " . . cr
+a @ b @ bi:- bi:get "a - b = " . . cr
+a @ b @ bi:* bi:get "a * b = " . . cr
+a @ b @ bi:/mod bi:get swap bi:get "q and r of a / b : " . . ", " . . cr
+b @ a @ bi:/mod bi:get swap bi:get "q and r of b / a : " . . ", " . . cr
+a @ 2092800 bi:^ dup var, pow  bi:get "a ^ 2092800 = " . . cr
+
+pow @ bi:get s:len "Size of number (a^2092800) : " . . cr
+
+
+\ Be careful, must modify the seed. if not, give always the same result.
+234 randomb_mt var, rnd
+rnd @ bi:get "Nb alea : " . . cr
+rnd @ bi:prime? "Prime ? : " . . cr
+rnd @ bi:nextprime var, prime 
+prime @ bi:get "Next Prime : " . . cr
+prime @ bi:prime? "Prime ? : " . . cr
+"Done !" . cr
+bye

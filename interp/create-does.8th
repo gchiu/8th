@@ -1,0 +1,37 @@
+\ Adaptation of the traditional Forth CREATE...DOES>
+\
+\ In traditional Forths, CREATE... DOES> is used to create a new "creating
+\ word".  8th does things radically differently, but yet it's possible to get
+\ the same functionality ... actually, better - since the captive data can be of
+\ any type.
+\
+\ The 8th take on this is to have the word "c/does" take three items on the
+\ stack:
+\   cw - the "create-time" word, invoked when an item is first created
+\   dw - the "does-time" word, invoked when that item is invoked
+\   x  - the "captive data", which is passed both to 'cw' and to 'dw'
+
+\ "does>" is effective during the run-time of the created word.  It executes the
+\ 'does-word' encapsulated in the caller, which receives the "captive data" on
+\ TOS.  Do not invoke directly!
+
+needs utils/create-does
+
+\ Silly words; obviously you would want to do something more useful:
+: cw "Created: " . .s drop cr ;
+: dw "Does: " . .s drop cr ;
+
+"We are creating a 'creating word' called 'joe'" . cr
+[1,2,3] ' dw ' cw c/does joe
+
+
+"Now we're using 'joe' to create instances of 'joe' called 'j1' and 'j2'" . cr
+\ These will both echo "Created" and show the captive data as well as the 'does' word:
+joe j1
+joe j2
+
+"Now we're invoking 'j1' and 'j2'.   Note the arrays they get are not identical!" . cr
+j1
+j2
+
+bye

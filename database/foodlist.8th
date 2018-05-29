@@ -1,0 +1,104 @@
+\ Sample showing how to do "infinite" lists (e.g. on-demand list load from db and paint )
+true app:isgui !
+needs string/tsub
+var db
+var gui
+var q-item
+
+\ The gui descriptions
+{
+  "kind" : "win",
+  "wide" : 800,
+  "high" : 600,
+  "center" : true,
+  "bg" : "gray70",
+  "children": [
+    {
+      "kind" : "box",
+      "bounds" : "0,0,parent.width, parent.height",
+      "bg" : "red",
+      "name" : "main",
+      "children" : [
+        \ list
+        {
+          "kind" : "list",
+          "bounds" : "0,0,parent.width, parent.height",
+          "bg" : "gray70",
+          "name" : "list",
+          "list-row-count" : "getcount",
+          "multi" : true,
+          "row-height" : 32,
+          "font" : 20,
+          "fg" : "black",
+          "paint-list-item" : "paintrow"
+        }
+      ]
+    }
+  ]
+} var, guidesc
+
+\ Colors for painting:
+: getcolor \ s -- n
+  {
+  "select" : "red",
+  "even" : "gray70",
+  "odd" : "gray60"
+  } swap caseof ;
+
+: create-gui
+  guidesc @ g:new g:show 
+  gui !  ;
+
+\ How many records are in the database?
+: getcount \ -- n
+  db @ 
+  ( 0 db:col >r )
+  "select count(*) from food_des"
+  db:exec-cb drop r> ;
+
+\ Get one item from the database; returns a map:
+: getitem \ n -- m
+  db @ q-item @ rot 1
+  db:bind
+  ( db:col{} >r )
+  swap db:exec-cb drop r> ;
+
+\ When a new row needs painting:
+: paintrow \ gui row wide high select? --
+  \ If selecting, use that color; otherwise do 'even-odd-bar'
+  if 
+    "select" getcolor 
+  else
+    2 pick 2 n:mod if "odd" else "even" then getcolor
+  then
+
+  \ and fill the line with that color:
+  4 pick swap g:fillall drop
+
+  \ set black text color:
+  >r drop            \ gui row r:high 
+  over "black" g:scolor drop
+  8 r> 0.5 n:*
+  \ 2 n:/ 0 -rot drop
+  rot getitem
+  "%Long_Desc% : %Fat_Factor%" swap s:tsub
+  g:draw-text-at ;
+
+\ Open existing database or complain:
+: open-database
+  "food.db" app:asset 
+  null? if
+    "You need to run 'food.8th' first to create the database" . cr bye
+  then
+  \ because the database is an 'asset', it's also 'read-only'
+  db:open db ! ;
+
+\ Create the prepared-query we'll use to ask for an item:
+: create-query \ --
+  db @ "select * from food_des order by Long_Desc limit 1 offset ?"
+  db:prepare q-item ! drop ;
+
+: app:main
+  open-database
+  create-query
+  create-gui ;

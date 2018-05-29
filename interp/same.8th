@@ -1,0 +1,27 @@
+\ Illustrate the difference between equality and sameness
+reset
+
+: yesno if "Yes" else "No" then ;
+
+\ Allocating a number and putting in the variable 'x'
+1000 var, x
+
+\ and another, in y:
+1000 var, y
+
+
+"The var 'x' contains:" . x @ .s cr drop
+"The var 'y' contains:" . y @ .s cr drop
+
+"Are they equal? " .
+x @ y @ n:= yesno . cr cr
+
+"Are they the same? " .
+x @ y @ same? yesno . cr cr
+
+"Is a 'dup' the same? " .
+x @ dup same? yesno . cr cr 
+bye 
+
+
+

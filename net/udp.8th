@@ -1,0 +1,63 @@
+\ Demo UDP communication with sockets
+\ Creates a task which is the client listening for broadcasts, and another task
+\ which is the server which does the broadcasts
+
+var sock
+var ai
+
+: make-sock \ -- sock
+  { 
+    "type": ` net:DGRAM ` ,
+    "proto" : ` net:PROTO_UDP ` ,
+    "sockopts" : {
+      "rcvtimeo": 3
+    }
+  } net:socket ;
+
+: client
+  make-sock 
+  "localhost" 8888 net:getaddrinfo
+  over net:bind
+  dup net:err? if "Problem connecting client" . cr bye then
+  \ net
+  "client waiting" . cr
+  100 b:new 0 net:recvfrom null? if
+    drop "Failed the recvfrom: " . net:err? . cr
+  else
+    \ addr port buf #recv
+    \ trim:
+    tuck 0 swap b:slice >r
+    \ a p n
+    >r swap r>
+    "Read: %d bytes from %s:%d\n" s:strfmt . 
+    r> dump 
+  then ;
+
+: server 
+  1 sleep
+  make-sock
+  "localhost" 8888 net:getaddrinfo
+  "You've got mail!" 
+  "Going to send: " . dup dump
+  0 
+  net:sendto null? if
+    drop net:err? 
+    "Problem sending %d\n" s:strfmt . bye
+  else
+    "Sent %d bytes\n" s:strfmt .
+  then cr cr ;
+  
+
+
+: app:main
+  "Starting up..." . cr
+
+  \ Make a client task and a server task, and hold the tasks in an array so we
+  \ can wait for them to finish:
+  a:new
+  ' client t:task a:push
+  ' server t:task a:push
+  t:wait
+
+  "Finished!" . cr
+  bye ;

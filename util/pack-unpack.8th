@@ -1,0 +1,69 @@
+\ Demonstration of the 'pack' and 'unpack' words:
+\
+\ The word 'pack' takes an array of items and a format string, and packs the
+\ data from the array according to the requested format.  For example:
+
+[10,20,30,40]   \ an array of four numbers
+"4i"          \ a format string saying 'four four-byte integers'
+"Original data: " . .s cr
+
+pack            \ the result of 'pack' should be a buffer 16 bytes big
+
+"After packing: " .
+dup dump cr
+
+\ now let's unpack to get the original data again:
+\ note the 'count' is 4, which gives the same result as four 'i's:
+"4i" unpack
+
+"Now after unpacking: " .
+.s cr
+reset
+
+"Make a 'Pascal style' string, with a 2-byte count:" . cr
+["Hi there","Joe"]
+"2s2c"
+.s cr
+pack 
+dup dump cr
+
+\ Just to show you don't have to use the same exact format string:
+"2sc2sc"
+"Unpack it:" . cr
+unpack
+"After dump" . cr
+.s cr
+
+reset
+"Convert a text string to a date using unpack" . cr
+\ Now some fancy stuff.  Let's convert a date:
+"ABC2015-10-23 12:14:05" .s 
+"3x4cx2cx2cx2cx2cx2c" unpack 
+.s cr
+drop
+' >n a:map
+d:join . cr
+
+"Let's use a 'ptr' so that we can pass a pointer to (a copy of) our data:" . cr
+\ The data:
+123 dup . cr
+\ The pointer:
+"i" ptr:pack
+dup . cr
+"Now we'll use G:pack to pack up the pointer (but we have to keep the ptr around or things will crash later on):" . cr
+100 over 2 a:close "iP" pack
+dup dump 
+
+"Now we'll unpack the int and ptr:" . cr
+"iP" unpack drop dup . cr
+a:open
+
+"We have to tell 8th that the ptr is supposed to be an integer, since that information got lost in the G:pack:" . cr
+"i" ptr:cast
+"And now we can ptr:unpack:" . cr
+ptr:unpack
+. cr
+
+
+
+bye

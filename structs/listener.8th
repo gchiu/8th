@@ -1,0 +1,60 @@
+\ Demo of "listeners"
+
+\ These are containers we'll monitor:
+
+var v
+{} var, m
+[] var, a
+
+
+\ For the var:
+: v-listener \ v -- v
+  "v-listener: " .
+  dup @ . cr ;
+
+\ For the array:
+: a-listener \ a ix -- a
+  "a-listener: " . 
+  dup . space
+  a:@ . cr 
+ ;
+
+\ For the map:
+: m-listener \ m key -- m
+  "m-listener: " .
+  dup . space
+  m:@ . cr ;
+
+\ So we'll set listeners:
+-1 var, vmon
+
+"Setting listeners:" . cr
+v ' v-listener +listener vmon ! drop
+m @ ' m-listener +listener 2drop
+a @ ' a-listener +listener 2drop
+
+\ Let's modify some values:
+
+"Making changes:" . cr
+123 v !
+m @ "foo" "bar" m:! drop
+a @ 1000 a:push drop
+
+\ Add another listener:
+
+"Another listener on v" . cr 
+v ( "second listener " . dup @ . cr ) true +listener 2drop
+\ the 'sleep' gives the async listener a chance to respond
+( v ! 0.1 sleep ) 10 20 loop
+
+"Clearing the variable listener:" . cr
+v vmon @ -listener drop
+1000 v !
+
+"Clearing all listeners on the variable:" . cr
+v -1 -listener drop
+1002 v !
+
+"Done" . cr
+bye
+

@@ -1,0 +1,7 @@
+\ Convert 
+{
+  "joe" : "mama"
+}
+"joe" "papa" m:!?
+"jim" "dandy" m:!?
+.s cr bye

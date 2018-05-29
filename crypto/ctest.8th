@@ -1,0 +1,57 @@
+\ Test crypt:
+
+"Hello, world!" var, pt
+null var, ct
+null var, pt2
+"01234567" b:new var, iv
+"some additional data" var, aad
+null var, tag
+null var, tag2
+null var, key
+
+\ call after setting cipher so we have the right key size:
+: gen-key "Just a key" "salt" 1000 cr:genkey key ! ;
+
+: set-cipher
+  cr:GCM "aes" cr:cipher!
+  gen-key ;
+
+
+: do-encrypt
+  pt @ key @ 
+  cr:iv? if iv @ then
+  cr:aad? if aad @ then
+  cr:encrypt ct ! 
+  cr:tag? if tag ! then ;
+
+: test-encrypt
+  "Plaintext was: " . pt @ . cr
+  "Encrypted: " . cr ct @ dump cr
+  cr:tag? if
+    "Tag: " . cr tag @ dump cr
+  then ;
+
+: do-decrypt
+  ct @ key @
+  cr:iv? if iv @ then
+  cr:aad? if aad @ then
+  cr:tag? if tag @ then 
+  cr:decrypt pt2 !  ;
+
+: test-decrypt
+  "Recovered plaintext : " . pt2 @ >s . cr ;
+
+
+: show-key
+  "Key: " . cr key @ dump cr ;
+
+: app:main
+  "Setting up..." . cr
+  set-cipher 
+  show-key
+  do-encrypt test-encrypt
+  do-decrypt test-decrypt
+
+  bye ;
+
+

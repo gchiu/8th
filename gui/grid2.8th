@@ -1,0 +1,50 @@
+\ Demo of how to use the 'grid' option inside a 'box':
+
+true app:isgui !
+
+4 var, cols
+4 var, rows
+
+\ Illustrative of how to programmatically create a bunch of similar controls:
+: grid-children \ -- arr
+  a:new
+  (
+    >r
+    m:new 
+      "kind" "btn" m:!
+      "label" r> "%d" s:strfmt m:!
+      "font" 20 m:!
+      "bg" rand-pcg n:abs 0xFFFFFF n:mod 0xFF000000 n:bor m:!
+    a:push
+  ) 1 rows @ cols @ n:* loop ;
+
+
+\ Note: the "grid" key's value is a "map" which has "cols" and "rows".  If
+\ (either of them is) a number, that is the number of rows or columns, which
+\ will have equal "weight".  That means they'll be evenly distributed across the
+\ available space in the box.  If either is an array, then the number of rows or
+\ columns is the length of that array, and the numbers inside it are the weights
+\ (e.g. the proportion of the total) alloted to that item:
+{
+  "kind" : "win",
+  "children" : [
+    {
+      "kind" : "box",
+      "grid" : {
+        "cols" : ` cols @ `,
+        "rows" : ` rows @ `,
+        "spans" : [
+          [0,0,1,2],
+\          [1,1,1,2],
+          [1,1,2,2],
+          [2,0,2,1]
+        ]
+      },
+      "children" : ` grid-children ` 
+    }
+  ]
+} var, g
+
+
+: app:main
+  g @ g:new ;

@@ -1,0 +1,2 @@
+\ just about as simple as it gets, as seen in the tutorial document:
+"hello, world!\n" . bye

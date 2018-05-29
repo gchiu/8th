@@ -1,0 +1,26 @@
+\ for numbers 1..100, print "Fizz" if multiple of 3, "Buzz" if multiple of 5,
+\ and "FizzBuzz" if multiple of both - otherwise, print the number
+\ Enhanced to allow any number of checks...
+
+\ If "n m mod" is zero, print msg.  leave flag under number:
+: fb? \ f n m msg -- f n
+  >r over swap n:mod
+  if 
+    rdrop false 
+  else 
+    r> . true 
+  then rot or swap ;
+
+\ iterate from 1 to 100.  The 'fb?' word leaves the number on TOS, and a flag
+\ under that.  If neither was printed we print the index:
+false
+( 
+  3 "Fizz" fb?
+  5 "Buzz" fb?
+  7 "Bar" fb?
+  11 "Foo" fb?
+  swap if drop else . then
+  space false
+) 1 100 loop drop
+
+cr bye

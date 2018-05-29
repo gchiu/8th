@@ -1,0 +1,13 @@
+\ Written by Danny Reinhold / Reinhold Software Services
+: cabs n:sqr swap n:sqr n:+ n:sqrt ;
+: c- rot swap n:- -rot n:- swap ;
+: 4dup 2over 2over ;
+: c* 4dup  >r n:* swap r> n:* n:+   >r  rot n:* -rot n:* swap n:- r> ;
+: mandelfunc 2swap 2dup c* 2swap c- ;
+: mandelloop 2over mandelfunc 2dup cabs 2 n:> if rdrop 0 >r break then ;
+: mandelrec 1 >r 0 0 ' mandelloop 255 times 2drop 2drop r> ;
+: loopx -1.025 ( 0.025 n:+ 2dup swap mandelrec if "*" else " " then . ) 120 times drop ;
+: loopy -1.025 ( 0.025 n:+ loopx cr ) 80 times drop ;
+: mandelbrot loopy ;
+mandelbrot
+bye

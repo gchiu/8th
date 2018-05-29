@@ -1,0 +1,17 @@
+\ Demonstrates breaking of strings into runs of the same script:
+
+"-=" 40 s:* var, sep
+
+"This is LTRسَلاَمשלום123Χαῖρε Again LTRמספר 456 Здравствуйте" 
+"original: " . dup . cr dup dump  cr
+s:script? . cr
+cr "Broken into runs:" . cr
+
+\ Break up the string into runs of identical scripts:
+s:/scripts 
+\ Dump that run information:
+(	
+	sep @ . cr 
+	s:script? . cr 
+	dup . dump drop ) a:each cr
+bye

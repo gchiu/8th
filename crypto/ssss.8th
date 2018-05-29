@@ -1,0 +1,38 @@
+\ Sample of using 'SSSS' : Shamir's Secret Sharing System
+\ Read more: https://github.com/duncanburke/libshamir
+
+"Bank acct 123456789"   var, secret
+var shards
+var result
+
+: intro
+  "The secret is: " . 
+  secret @  . cr ;
+
+: doshard
+  "We'll split it into 5 shards, any two of which can restore the secret..." .  cr
+  secret @ 5 2 cr:shard shards ! ;
+
+: showshards
+  "The shards are:" . cr
+  shards @ ( dump drop ) a:each drop ;
+
+: recombine
+  "We must give two shards.  We'll use #1 and #3 for this" . cr
+  shards @
+  1 a:@ swap
+  3 a:@ nip
+  2 a:close
+  cr:unshard dup dump result ! ;
+
+: testok
+  "Test to see if the secret was restored: " .
+  result @ >s secret @ s:= if "Yes" else "No" then . cr ;
+
+: app:main
+  intro
+  doshard
+  showshards
+  recombine
+  testok
+  bye ;

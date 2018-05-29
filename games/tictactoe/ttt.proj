@@ -1,0 +1,13 @@
+{
+   "icon":"logo.png",
+   "linux":true,
+   "windows":true,
+   "app-ver":"1.1",
+   "app-name":"TicTacToe",
+   "android":false,
+   "gui":true,
+   "id":"com.mystuff.tictactoe",
+   "source":"ttt.8th",
+   "TicTacToe!":"app-name",
+   "osx":true,
+   "ios":false}

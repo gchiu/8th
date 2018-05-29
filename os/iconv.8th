@@ -1,0 +1,67 @@
+\ A simple example of using the 'iconv' library via the FFI
+
+
+\ Define the library:
+"iconv"  lib libiconv
+
+\ Make sure 'iconv' is the library which will be used for the func: word
+"Checking for iconv library..." . cr
+libiconv "Failed to load library" thrownull
+drop "OK" . cr
+
+\ Define the interface words
+\ The return from iconv_open is an opaque pointer
+"PZZ" "iconv_open" func: iconv_open
+\ iconv(iconv_t cd [N], const char ** inbuf [P], size_t * inbytesleft [P],
+\       char ** outbuf [P], size_t * outbytesleft [P]) 
+\ Note that the iconv() call *modifies the outbuf* pointer, so we must use
+\ "ptr:unpack_orig" to get the actual modified string!
+"NPPPPP" "iconv" func: iconv
+"VP" "iconv_close" func: iconv_close
+
+: doiconv \ "encodein" "encodeout" s1 -- s2
+  -rot
+	iconv_open 
+\  dup -1 n:= if 2drop ;then
+
+  \ inbuf cd
+  swap 
+  \ cd inbuf
+  \ get the inbuf number of bytes (not chars):
+  s:size 
+  \ the dest buf size save on r-stack
+  dup 4 n:* >r 
+  \ cd inbuf insize
+  "l" ptr:pack swap
+  "z" ptr:pack swap
+  \ cd P(inbuf) P(insize)
+  \ make outbuf of sufficient size
+  r@ b:new b:len >r rswap "b" ptr:pack
+  r> "l" ptr:pack
+  5 a:close
+  dup iconv if
+    \ failed
+    drop rdrop null
+  else
+    4 a:@ ptr:unpack
+    r> swap n:- >r
+    3 a:@ ptr:unpack_orig
+    nip r> 
+    0 swap b:slice
+  then
+;  
+
+
+: test 
+  "UCS-2" "UTF-8" 
+  "שלום" dup dump
+  doiconv ;
+
+"Start with UTF-8: " . cr
+test 
+
+"\nAfter convert to UCS-2: " . cr
+dump
+cr 
+
+bye

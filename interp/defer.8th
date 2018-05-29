@@ -1,0 +1,29 @@
+\ Illustration of how to use deferred words
+
+\ Create a deferred word:
+defer: def
+
+\ Show that it does nothing:
+"Output of a new deferred-word should be nothing: " . def cr
+
+\ Create a word to assign:
+: word1 "This is the first value" . ;
+
+\ Assign it to the deferred-word:
+' word1 is def
+\ and check that it's really got the new value:
+"Now it should have the 'first' value: " . def  cr
+
+\ Make a second word:
+: word2 "Number two" . ;
+\ assign and test:
+' word2 is def
+"#2: " . def  cr
+
+\ Show the undo word:
+' def undo
+"we've been undone: " . def  cr
+' def undo
+"... all the way to nothing: " . def  cr
+
+bye

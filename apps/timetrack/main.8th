@@ -1,0 +1,310 @@
+\ Task Timer project
+\ This console-mode application allows you to keep track of the hours you spend on your projects.  
+\ You specify the project by name (only needed when you change projects), and tell the app to start or stop timing.
+\ The data are stored in a SQLite database so you can get useful reports.
+\ The application is run from the command-line.
+
+"tracker" appname !
+
+needs utils/settings
+
+\ Filled in from the settings database:
+var first-time?
+var current
+
+\ Other globals:
+: version "1.0" ;
+var last-arg
+null var, db
+var comment
+-1 var, project-id
+var daily
+
+\ The file name of the database we will use:
+: dbname  \ -- s
+  app:datadir
+  "data.db" s:+ ;
+
+\ Prints the version:
+: .version
+  appname @ . space version . cr ;
+
+\ Prints the help for this app.  Called via '-h' or if no options were given:
+: do-help
+  .version
+
+  quote *
+
+This program tracks time spent on projects.  You specify a project by name, and
+it will remember the last project you specified.
+
+Syntax is:
+   tt [opts]
+
+Where 'opts' is one of:
+   -c cmt  add the comment 'cmt'
+   -e      end the timer
+   -h      print this help
+   -l      list known projects
+   -p nm   set current project to 'nm'
+   -r      print detailed hours report
+   -r2     print per-day hours report 
+   -s      start timer
+   -v      print version
+   -x nm   remove the project 'nm' from the database
+  * . bye ;
+
+\ Start timing the project:
+: do-start
+  db @ 
+  project-id @
+  "insert into times (project) values (%s)"
+  s:strfmt db:exec drop
+  current @ "Starting project %s" s:strfmt . cr ;
+
+\ Stop timing all projects:
+: do-end-all
+  db @ 
+  "update times set ending=datetime('now','localtime') where ending is null"
+  db:exec drop ;
+
+\ Stop timing the project:
+: do-end
+  db @ 
+  project-id @
+  "update times set ending=datetime('now','localtime') where project=%d and ending is null"
+  s:strfmt db:exec drop
+  current @ "Ending project %s" s:strfmt . cr ;
+
+\ Add a comment:
+: do-comment
+  db @ 
+  "insert into times (project,comment) values (?,?)"
+  db:prepare
+  project-id @ 1 db:bind
+  comment @ 2 db:bind
+  db:exec drop
+  current @ "Commenting project %s" s:strfmt . cr ;
+
+\ Convert a number of seconds into a string of HH:MM
+: secs>hh:mm \ n -- s
+  60 /mod nip
+  60 /mod 
+  "%02d:%02d"
+  s:strfmt ;
+
+\ Print one line of the report.  Invoked for each row returned from the database query
+: report-line
+  0 db:col . space
+  3 db:col null? if
+    drop
+    2 db:col null? if 
+      drop "Still open"
+    else
+      n:int dup r> n:+ >r secs>hh:mm 
+    then
+  else
+    "       " .
+  then
+  . cr ;
+
+\ String to query aggregated daily data
+: aggregate-report-string \ pid -- s
+  "Aggregate by date:\n" . cr
+  >s
+  "select strftime('%Y-%m-%d',starting) as st, ending, sum(round(24*3600 * (julianday(ending) - julianday(starting)))), comment
+  from times where project="
+  swap s:+
+  " and comment is null and starting >= date('now', 'start of month') group by st order by st"
+  s:+ ;
+
+\ String to query detailed daily data
+: detail-report-string \ pid -- s
+  "Detail by date:\n" . cr
+  >s
+  "select strftime('%Y-%m-%d %H:%M',starting), strftime('%H:%M','ending'), round(24*3600 * (julianday(ending) - julianday(starting))), comment
+  from times where project="
+  swap s:+
+  " and starting >= date('now', 'start of month') order by starting"
+  s:+ ;
+
+\ Do (one of the) reports
+: do-report
+  current @
+  "Report of hours for project '%s'" s:strfmt . cr
+  0 >r
+  db @ 
+  ' report-line
+  project-id @
+  \ can't use strfmt because the sql strftime strings will confuse it:
+  daily @ if
+    aggregate-report-string
+  else
+    detail-report-string
+  then
+  db:exec-cb
+  r> secs>hh:mm
+  "\nTotal: %s\n" s:strfmt .  ;
+
+\ Drop a project:
+: do-drop
+  project-id @ -1 n:> if
+    current @
+    "This will remove the project %s and any times reported for it.  Are you sure?\n" s:strfmt .
+    con:key dup 'y n:= swap 'Y n:= or if
+      db @ 
+      project-id @ "delete from projects where id=%d" s:strfmt db:exec 
+      project-id @ "delete from times where project=%d" s:strfmt db:exec 
+      drop
+    then 
+  then ;
+
+\ default action is bye
+var action
+[
+  ' bye ,
+  ' do-start ,
+  ' do-end ,
+  ' do-comment ,
+  ' do-report ,
+  ' do-drop 
+] var, actions
+  
+: report false daily ! 4 action ! ;
+: report2 true daily ! 4 action ! ;
+: start-timer 1 action ! ;
+: end-timer 2 action ! ;
+
+: drop-project 
+  last-arg @ n:1+ args 
+  null? if "-x requires a project name as its argument" . cr bye then
+  current !
+  5 action ! ;
+
+: add-comment 3 action ! 
+  last-arg @ n:1+ args 
+  null? if "-c requires a comment as its argument" . cr bye then
+  comment ! ;
+
+: save-new-project \ name --
+  db @
+  "insert into projects (name) values (?)"
+  db:prepare dup >r
+  rot 1 db:bind
+  db:exec rdrop drop ;
+
+: list-projects
+  "Known projects: " . cr
+  db  @
+  ( 0 db:col . cr )
+  "select name from projects order by name"
+  db:exec-cb drop
+  cr bye ;
+
+: set-project
+  last-arg @ n:1+ args
+  null? if "-p requires a project name as its argument" . cr bye then
+  current @ over s:= if
+    drop
+  else
+    \ changed the project.  make sure existing ones are ended
+    do-end-all
+    dup current !
+    save-new-project
+  then ;
+
+\ Valid command-line choices:
+{
+ "-h" : ' do-help ,
+ "-v" : ' .version  ,
+ "-r" : ' report ,
+ "-r2" : ' report2 ,
+ "-s" : ' start-timer ,
+ "-e" : ' end-timer ,
+ "-c" : ' add-comment ,
+ "-p" : ' set-project ,
+ "-l" : ' list-projects ,
+ "-x" : ' drop-project
+} var, cmd-args
+
+: do-args
+  argc not if ;then
+  ( dup last-arg ! args cmd-args @ case ) 
+  0 argc n:1- loop ;
+
+\ Iterate the command-line parameters if any, and process them:
+: process-cli
+  \ First let's read the defaults and/or saved values:
+  "current" "" settings@? current !
+
+  \ Use environment variable if set:
+  "TTPROJ" getenv null? if drop else current !  then
+
+  \ The command-line might override them:
+  do-args ;
+
+\ Create the database
+: setup-database
+  "CREATE DATABASE" . cr
+  dbname db:open dup db !
+  "schema.sql" app:asset >s
+  db:exec drop 
+  "first-time" false settings! ;
+
+\ Convert the string in 'current' into the project id.  'null' if it's invalid:
+: get-project-id
+  null >r
+  db @
+  "select id from projects where name=?" 
+  db:prepare >r
+  (
+    0 db:col r!
+  ) 
+  r> current @ 1 db:bind
+  db:exec-cb drop r> ;
+
+: set-up-project
+  "You need to create a project" . cr
+  "Start again with the '-p project-name' command line, where" . cr
+  "project-name is whatever you want to call the project" . cr
+  bye ;
+
+\ Ensure we have a valid project to work on:
+: validate-project
+  current @ "" s:= if
+    set-up-project
+  else
+    get-project-id null? if
+      drop
+      current @ "The project %s is not valid" s:strfmt . cr
+      set-up-project
+    else
+      project-id !
+    then
+  then ;
+
+\ console-mode processing
+: run
+  "current" current @  settings! 
+  action @ actions @ case ;
+
+: app:main
+
+  \ If we've never run before, we need to set up the database:
+  "first-time" true settings@? first-time? !
+  first-time? @ if setup-database then
+
+  \ Open the database:
+  dbname db:open db !
+
+  \ Deal with options:
+  process-cli
+
+  \ If no options print help and quit:
+  argc not if do-help then
+
+  \ make sure we've got a valid project:
+  validate-project
+
+  \ Process request and go away:
+  run bye ;

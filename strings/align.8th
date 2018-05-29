@@ -1,0 +1,53 @@
+\ Align-columns from RosettaCode: http://rosettacode.org/wiki/Align_columns
+
+quote | Given$a$text$file$of$many$lines,$where$fields$within$a$line$
+are$delineated$by$a$single$'dollar'$character,$write$a$program
+that$aligns$each$column$of$fields$by$ensuring$that$words$in$each$
+column$are$separated$by$at$least$one$space.
+Further,$allow$for$each$word$in$a$column$to$be$either$left$
+justified,$right$justified,$or$center$justified$within$its$column.|
+var, raw-text
+[] var, data
+var width
+
+\ Take the sample text and split it into words 
+\ Each line has words, so you'll end up with an array of arrays of strings.
+\ It collects the results in the var 'data':
+: read-and-parse \ --
+  raw-text @ 
+  ( "$" s:/ data @ swap a:push drop )
+  s:eachline ;
+
+\ This iterates over the 'data' array and simply records the length of the
+\ widest string.  Yes, it could have been done in 'read-and-parse', but this way
+\ is more clear:
+: find-widest \ -- n
+  data @ ( ( swap s:len nip n:max ) swap a:reduce ) 0 a:reduce ;
+
+\ This prints out the 'data' array using the format string given.
+\ It first interpolates the max width, and then iterates the array:
+: print-data \ fmt -- 
+  width @ swap s:strfmt >r
+  data @ 
+  (
+    nip
+    (
+      nip
+      r@ s:strfmt .
+    ) a:each drop
+
+    cr
+  ) a:each drop rdrop ;
+  
+
+: app:main
+  read-and-parse 
+
+  \ find widest column, and add one for the space:
+  find-widest n:1+ width !
+
+  \ print the data
+  cr "right:" . cr "%%>%ds" print-data 
+  cr "left:" . cr "%%<%ds" print-data 
+  cr "center:" . cr "%%|%ds" print-data 
+  bye ;

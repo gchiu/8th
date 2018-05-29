@@ -1,0 +1,56 @@
+\ "Hailstone" problem: http://rosettacode.org/wiki/Hailstone_sequence
+
+var largest
+0 var, largestix
+[] var, seq
+
+\ put the numbers in hailstone sequence 'n' in the array:
+: dohail \ arr n -- 
+	tuck a:push swap
+	dup 1 n:= if 2drop ;then
+
+	\ even or odd?
+	2 /mod swap if
+		\ odd
+		2 * 1 + 3 * 1 +
+	then
+	recurse ;
+
+: hail \ n -- (seq has the sequence itself)
+   seq @ a:clear swap dohail ;
+
+: .hail \ --
+  seq @ a:len dup . " items: " .
+  8 n:> if
+	dup 0 4 a:slice . 
+	" ... " .
+	-4 4 a:slice 
+  then
+  . 
+  cr ;
+
+: printhail
+	"\nHailstone(" . dup . ") " .
+	hail .hail ;
+
+27 printhail
+
+\ var cnt
+: testhail \ n --
+\  1 cnt n:+!  cnt @ 1000 n:mod not if .stats then
+  dup hail 
+  seq @ a:len nip largest @ 
+
+  over n:< if
+	largest !
+	clone nip largestix !
+  else
+    2drop
+  then ;
+
+100000
+"Checking for the largest sequence up to " . dup . " ..." .
+' testhail 1 rot loop
+largestix @ printhail cr
+
+bye

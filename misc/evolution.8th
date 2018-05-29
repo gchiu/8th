@@ -1,0 +1,112 @@
+\ RosettaCode challenge http://rosettacode.org/wiki/Evolutionary_algorithm
+
+var gen
+var target
+
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ " var, valid-chars
+
+\ How many mutations each generation will handle; the larger, the slower each
+\ generation but the fewer generations required:
+200 var, #mutations
+
+: third 2 pick ;
+
+\ Get any valid character at random:
+: get-random-char
+  valid-chars @
+  27 rand-pcg n:abs swap n:mod
+  s:@ nip ;
+
+\ This returns a valid character other than the one on TOS:
+: get-other-char \ c -- c'
+   get-random-char
+   2dup n:= not if nip ;then
+   drop recurse ;
+
+\ Create a new string based on the TOS, changing randomly any characters which
+\ don't already match the target:
+: mutate-string \ s -- s'
+   clone nip
+   s:len n:1-
+   \ iterate over the string, but only mutate characters that don't match:
+   \ s n
+   (
+      dup >r  s:@
+      target @ r@ s:@ nip
+      n:= not if
+         \ s 
+         r@ s:@ 
+         get-other-char
+         r@ swap s:!
+      then
+      rdrop
+   ) 0 rot loop  ;
+
+\ iterate 'n' times over the initial string, mutating it each time
+\ save the original string, as the best of the previous generation:
+: mutate \ s n -- a 
+  >r
+  a:new over a:push swap
+  (
+    tuck 
+    mutate-string
+    a:push swap
+  ) r> times drop ;
+
+\ compute Hamming distance of two strings:
+: hamming \ s1 s2 -- n
+  0 >r
+  s:len n:1-
+  (
+    third over s:@ nip
+    third rot s:@ nip
+    n:- n:abs ' n:+ rop!
+  ) 0 rot loop
+  2drop r> ;
+
+var best
+: fitness-check \ s a -- s t
+  10000 >r
+  -1 best !
+  (
+    \ ix s ix s'
+    third hamming 
+    r@ 
+    over n:> if
+      r! best !
+    else
+      2drop
+    then
+  )
+  a:each
+  rdrop best @  a:@ nip  ;
+  
+\ take the target and make a random string of the same length
+: initial-string \ s -- s
+  clone over target !
+  ( drop get-random-char )
+  s:map ;
+
+\ check to see if we have reached the end:
+: done? \ s1 s2 -- s1 s2 | bye
+  2dup s:= if 
+   "Done in " . gen @ . " generations" . cr ;;;
+  then ;
+
+\ need to initialize the PCG to give different results each time:
+: setup-random
+  rand rand rand-pcg-seed ;
+
+: evolve 
+  1 gen n:+!
+  \ create an array of #mutations strings mutated from the random string, drop the random
+  #mutations @ mutate  
+  \ iterate over the array and pick the closest fit:
+  fitness-check 
+  \ show this generation's best match:
+  dup . cr 
+  \ check for end condition and continue if not done:
+  done? evolve ;
+
+"METHINKS IT IS LIKE A WEASEL"  
+setup-random initial-string evolve bye

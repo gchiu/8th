@@ -1,0 +1,25 @@
+needs net/zmq
+var ctx
+var pub
+
+: init
+  zmq:ctx-new  ctx !
+  ctx @ zmq:PUB zmq:socket dup pub !
+   "tcp://*:5550" zmq:bind drop ;
+
+: deinit
+ pub @ zmq:close drop
+ ctx @ zmq:ctx-destroy ;
+
+: app:main
+  init
+
+  0
+  repeat
+    n:1+
+    "Testing" over >s over 3 a:close
+    pub @ swap zmq:sendmsg[]
+  again
+  
+  deinit
+  bye ;

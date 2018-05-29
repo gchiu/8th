@@ -1,0 +1,19 @@
+\ Use of the UUID words.
+
+"Generating a random UUID: " . 
+cr:uuid . cr 
+
+"Creating a 16 byte random buffer to generate a UUID:" . cr
+16 randbuf var, rb
+
+rb @ dump cr
+
+"Creating a UUID from that buffer: " . 
+rb @ cr:>uuid
+dup . cr
+  
+"Regenerating the binary data for the UUID: " . cr
+cr:uuid> 
+dump cr
+
+bye

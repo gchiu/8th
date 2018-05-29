@@ -1,0 +1,29 @@
+\ Splitting a string for fun and profit
+\ This time, use 'join'
+
+"He went to the store"
+
+\ show it:
+dup . cr
+
+\ split the string on spaces:
+\ Use a Regex this time
+/\s/  s:/
+
+\ now show the array you made:
+dup . cr
+
+\ and let's change "store" to "bar"
+dup >r
+r@ 4 "bar" a:!
+
+\ show the new array:
+r@ . cr
+
+\ and let's coalesce it (using a:join)
+r> " " a:join
+
+\ the final result is:
+dup . cr
+
+bye

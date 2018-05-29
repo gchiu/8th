@@ -1,0 +1,17 @@
+\ Sample demonstrating use of the HOTP and TOTP library:
+
+needs crypto/totp
+
+\ test key for TOTP:
+"3132333435363738393031323334353637383930" b:>hex var, key
+
+"Should be 94287082: " . key @ 59 8 cr:totp . cr
+"Should be 07081804: " . key @ 1111111109 8 cr:totp . cr
+"Should be 65353130: " . key @ 20000000000 8 cr:totp . cr
+
+"Should be 559773: " .  "tqShlrkUX5UA4hkZtbN9gYgJnxQ=" s:base64> 
+  48958981 6 cr:totp . cr
+
+"Should be 071721: " .  "tqShlrkUX5UA4hkZtbN9gYgJnxQ=" s:base64> 
+  48958981 6 cr:hotp . cr
+bye

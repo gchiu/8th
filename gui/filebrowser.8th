@@ -1,0 +1,59 @@
+true app:isgui !
+\ a "filebrowser" lets you put multiple panels inside it
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 300,
+	"center" : true,
+	"bg" : "white",
+	"children" :
+	[
+		{
+			"kind" : "concertina",
+			"bounds" : "0,0,parent.width,parent.height",
+			"bg":"pink",
+			"panels" :
+			[
+				{
+					"kind" : "btn",
+					"name" : "btn",
+					"label" : "A Button",
+					"bounds" : "0,30,parent.width, parent.height",
+					"bg" : "green",
+					"header" : "Just a Button",
+					"headersize" : 30,
+					"headerclr" : "yellow"
+				},
+				{
+					"kind" : "filebrowser",
+					"header" : "File browser",
+					"name" : "fb",
+					"bg" : "pink:70",
+					"changed" : "files-selected",
+					"click" : "file-clicked",
+					"mouse-dbl-click" : "file-dbl-clicked",
+					"label" : "file:",
+					"root" : `getcwd`,
+					"flags" : [ "open", "file", "tree", "multi"],
+					"filter" : "*.8th;*.cpp",
+					"bounds" : "0,30,parent.width, parent.height"
+				}
+			]
+		}
+	]
+} var, guiobj
+
+var gui
+
+: file-clicked
+	"file clicked: " . . cr ;
+
+: file-dbl-clicked
+	"file double clicked: " . . cr ;
+
+: files-selected \ gui arra --
+	"files selected: " . . cr ;
+: app:main
+	guiobj @ g:new 
+	g:show gui !
+	;

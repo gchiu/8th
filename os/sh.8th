@@ -1,0 +1,48 @@
+\ Sample showing how to use the 'sh' commands
+
+-1 var, retcode
+
+\ The command to execute on the different desktop systems:
+[
+	"ls -C",
+	"cmd /c dir",
+	"ls -C",
+	"",
+	"",
+	"ls -C"
+] var, cmd
+
+\ The results from the command:
+"NOTHING" var, results
+
+\ This gets called-back when the external command is finished.  
+: didshell
+  \ save the returned results
+  results !
+  retcode !
+	\ Let the main thread continue
+	t:main t:notify ;
+
+\ The main entry point:
+: app:main
+	mobile? if 
+		"This sample doesn't make sense on mobile platforms" throw
+	else
+		"About to launch command...\n"  .
+
+		\ get the command-line for this os, and launch it:
+		cmd @ os a:@
+		' didshell sh$
+		
+		\ sh$ returns immediately, its results are given to the callback ("didshell"
+		\ in this case).  So we say we've launched and are waiting for results
+		"Finished launching, waiting for results\n" .
+	then
+
+	\ wait (forever) until the cmd finishes...
+	-1 sleep
+
+  "Got results:" . cr
+  "retcode: " . retcode @ . cr
+  results @ . cr
+	bye ;

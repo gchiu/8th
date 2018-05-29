@@ -1,0 +1,13 @@
+\ This is loaded by dynamic.8th; don't run it by itself
+
+"try-me" w:find null? nip #if
+  "This file is loaded by 'dynamic.8th' and should not be run on its own" 
+  . cr bye
+#else
+: really-try-me
+  "You are really loaded, now" . cr ;
+
+' really-try-me w:is try-me
+
+try-me
+#then

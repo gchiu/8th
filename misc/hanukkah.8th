@@ -1,0 +1,22 @@
+\ Calculate how often Hanukkah falls on Christmas
+
+needs date/utils
+needs date/hebrew
+
+: coincide-any? \ gregyr n -- flg
+  >r
+  \ Get fixed date of Christmas in this year:
+  dup 12 25 d:ymd> d:>fixed swap
+  \ Get fixed date of Hanukkah in this year:
+  \ Since Hanukkah is after Rosh Hashanah, we need to add one to the Hebrew year
+  d:>hebepoch n:1+ d:hanukkah dup r> n:+ 
+  \ Are they the same?
+  n:between ;
+
+"The first night of Hannukah coincides with Christmas Eve in these years:" . cr
+( dup 0 coincide-any? if . space else drop then ) 1900 2100 loop cr cr
+
+\ Now if you want to know when any of the eight days of Hannukah coincides, then:
+"Any night of Hannukah coincides with Christmas Eve in these years:" . cr
+( dup 7 coincide-any? if . space else drop then ) 1900 2100 loop cr
+bye

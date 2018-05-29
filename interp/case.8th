@@ -1,0 +1,27 @@
+\ This implements a different 'case' construct, one you're more familiar with:
+
+0 var, case#
+
+: (case?) over n:= dup if nip then ;
+
+: case? \ x y -- true | x x -- x false
+  1 case# n:+!
+  ' (case?) p: compile i;
+
+: thens
+  ( p: then ) 
+  0 case# xchg times i;
+
+: x
+  20 case? if 100 else
+  200 case? if 1000 else
+    \ default case:
+    drop 2000
+  thens 
+  . cr ;
+
+1 x
+20 x
+30 x
+200 x
+bye

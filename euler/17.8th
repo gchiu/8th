@@ -1,0 +1,42 @@
+\ Euler problem #17 (https://projecteuler.net/problem=17)
+\ contributed by dag256 
+\ https://8th-dev.com/forum/index.php/topic,1596.0.html
+
+: onescount  \ n -- n 
+    [ 0, 3, 3, 5, 4, 4, 3, 5, 5, 4 ]
+    swap caseof ;
+
+: teencount  \ n -- n
+    [ 3, 6, 6, 8, 8, 7, 7, 9, 8, 8 ]
+    swap caseof ;
+
+: tenscount  \ n -- n
+    [ 0, 0, 6, 6, 5, 5, 5, 7, 6, 6 ]
+    swap caseof ;
+
+: thousandcount  11 ;  \ # of letters in "one thousand"
+
+with: n
+
+: count99  \ n -- n
+    [ ( dup 10 < ) , ' onescount ,
+      ( dup 20 < ) , ( 10 - teencount ) ,
+      ' true ,      ( 10 /mod tenscount swap onescount + ) ] when ;
+
+: hundreds  \ n -- n
+    dup if onescount 7 + else drop 0 then ;
+
+: +and   \ n1 n2 -- n ; add 3 (for "and") when n1, n2 both not zero.
+    over 0 > over 0 > and if 3 + then + ;
+
+: count999 \ n -- n
+    100 /mod hundreds swap count99 +and ;
+
+\ leave the result on TOS...
+thousandcount ( count999 + ) 1 999 loop 
+
+;with
+
+\ ... to print here:
+"You need " .  .  " letters to spell the numbers from one to one-thousand." . cr
+bye

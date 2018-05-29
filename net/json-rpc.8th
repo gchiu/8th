@@ -1,0 +1,43 @@
+\ JSON-RPC sample
+
+\ pull in the 8th JSON-RPC library:
+needs net/json-rpc
+
+\ this is our request map  it will NOT be modified:
+{
+	"url" : "http://www.raboof.com/projects/jayrock/demo.ashx",
+	"data" : {
+		"id" : "%id%",
+		"method" : "%method%",
+		"params" : {
+			"a" : "%paramA%" ,
+			"b" : "%paramB%"
+		}
+	}
+}
+
+\ make it a little interesting.  give different values to add each time:
+: rand1000 rand 1000 n:mod ;
+
+\ initialize the specific values for htis time:
+rand1000 var, a 
+rand1000 var, b
+
+\ These are the specific parameters we want to use:
+{
+	"id" : `rand1000 `,
+	"method" : "add",
+	"paramA" : `a @`,
+	"paramB" : `b @`
+}
+
+\ Now we make the call:
+"Going to make JSON-RPC call, may take a few minutes...\n" .
+
+JSONRPC:call
+"Could not connect" thrownull
+
+"Asked for " .  a @ . " + " . b @ . ", the answer is: " . 
+"result" m:@ . cr
+
+bye

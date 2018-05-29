@@ -1,0 +1,26 @@
+\ This demonstrates the various permutations of s:strfmt
+
+\ Make our code less verbose by doing the formatting here:
+: dofmt \ s --
+  dup "%>20s" s:strfmt . " : " .
+  eval s:strfmt . cr ;
+
+quote * 123  "[%d]"*      dofmt
+quote * 123  "[%20d]"*    dofmt
+quote x 123  "[%|*=20d]"x dofmt
+quote * 123  "[%>20d]"*   dofmt
+quote * 123  "[%<20d]"*   dofmt
+quote x 123  "[%>*$20d]"x dofmt
+quote * 123  "[%05d]"*    dofmt
+quote * 1.23 "[%f]"*      dofmt
+quote * 1.23 "[%010f]"*   dofmt
+quote * 1.23 "[%010.2f]"* dofmt
+quote * 1.234 "[%.2f]"*    dofmt
+quote * 1.235 "[%.0f]"*    dofmt
+quote * 1234567 "[%g]"*    dofmt
+quote * 10   "[%04x]"*    dofmt
+quote * 1234567 "[$%,,d]"*    dofmt
+quote * 1234567 "[$%, d]"*    dofmt
+quote * 1234567 "[%d]"*    dofmt
+
+bye

@@ -1,0 +1,68 @@
+\ RSA key-pair sample.  Encryption of the text is actually in AES256GCM with a
+\ random session-key.  But the RSA key-pair encrypts that session-key:
+
+\ First, our plain-text:
+"encrypt_moi" var, ptext
+
+\ the generated keys:
+var pkey
+var skey
+
+\ the encrypted text:
+var ctext
+
+\ the decrypted text:
+var dtext
+
+\ create a key-pair; we won't save it, it's just for this sample:
+: create-keys
+	"Creating keys at " .
+	os 2 n:> if 1024 else 4096 then
+	dup . " bits\n" .
+	cr:rsagenkey
+	pkey !
+	skey ! ;
+
+: show-plain
+	"The plain text is: " . ptext @ . cr ;
+	
+\ public key is on top, private below it.
+\ so do the public-key encryption:
+: encrypt-text
+	pkey @ ptext @ cr:rsa_encrypt 
+	ctext ! ;
+
+\ show some of the encrypted text:
+: show-encrypted
+	"The encrypted data: " . cr
+	ctext @ dump cr ;
+
+\ now, decrypt it. remember, the private key is on the stack, the encrypted
+\ buffer is above it in TOs:
+: decrypt-text
+	skey @ ctext @ cr:rsa_decrypt
+	dtext ! ;
+
+\ it's a buffer, make it a String again and show it:
+: show-decrypted
+	"This should be our plain-text again: " . 
+	dtext @ >s . cr  ;
+
+: is-ok?
+	ptext @ 
+	dtext @ >s 
+	s:= if
+		"\net voilà!\n" .
+	else
+		"\nso sorry, the decrypted text does not match the original!\n" .
+	then ;
+
+: app:main
+	create-keys
+	show-plain
+	encrypt-text
+	show-encrypted
+	decrypt-text
+	show-decrypted
+	is-ok?
+	bye ;

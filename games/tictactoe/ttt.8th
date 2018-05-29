@@ -1,0 +1,225 @@
+\ Tic-Tac-Toe demo
+\ The tic-tac-toe board
+true app:isgui !
+\ needs debug/trace
+
+: one-button -- m
+  {
+    "kind" : "btn",
+    "adjustwidth" : false,
+    "click" : "user-click",
+    "bg" : "grey",
+    "fg" : "white",
+    "font" : 80
+  } const ;
+
+: gen-buttons -- arr
+  a:new
+  (
+    >r
+    one-button
+    "label" r@ >s m:!
+    "tooltip" r> "Click or press %d" 
+      s:strfmt m:!
+    a:push
+  ) 1 9 loop ;
+  
+{
+	"kind" : "win",
+	"title" : "Tic-Tac-Toe",
+	"bg" : "green",
+	"fg" : "yellow",
+	"font" : "40",
+	"key-pressed" : "ttt-keypress",
+	"children" :
+	[
+		{
+			"kind" : "menubar",
+			"name" : "menu",
+			"bounds" : "0,0,parent.width, parent.height/20",
+			"bg" : "red",
+			"menu-selected" : "onMenuSelected",
+			"menu" :
+			[
+				[
+					"TicTacToe", 0,
+					"Start again", 1,
+					"Quit", 2
+				],
+				[
+					"Help", 0,
+					"About", 3
+				]
+			]
+		},
+		{
+			"kind" : "box",
+			"bounds" : "0,menu.bottom,parent.width, parent.height",
+      "grid" : {
+        "rows": 3,
+        "cols": 3,
+        "defmargin":10
+      },
+			"children" : ` gen-buttons ` 
+		}
+	]
+} var, tttobj
+var ttt
+
+"Tic-Tac-Toe" appname !
+
+\ ( ix -- g )
+: getbutton 
+	ttt @ 2 g:child swap g:child ;
+
+: redo-button
+	dup getbutton
+	swap n:1+ >s
+	g:text true g:enable 
+	drop ;
+
+\ reset the board
+: reinitialize
+	' redo-button 0 8 loop ;
+
+' reinitialize w:is (say)
+
+: notice 
+  m:new "msg" rot m:!
+  over g:parent "parent" swap m:!
+  g:say  ;
+
+\ ( score -- )
+: check-win  -- flg
+	dup 300 n:= if
+    drop
+		"You won!" notice true
+	else 
+    -300 n:= if
+     "Sorry, better luck next time" notice true
+    else 
+      false
+  	then 
+  then ;
+
+\ ( ix -- score )
+: get-score 
+	getbutton
+	g:text? nip 
+	dup "X" s:= if
+		drop 100
+	else
+		"O" s:= if -100 else 0 then
+	then ;
+\ ( x1 x2 x3 -- )
+: check 
+	get-score 
+	rot get-score 
+	rot get-score
+	n:+ n:+ check-win ;
+
+: check-win? 
+	0 1 2 check if ;then
+	3 4 5 check if ;then
+	6 7 8 check if ;then
+	0 3 6 check if ;then
+	1 4 7 check if ;then
+	2 5 8 check if ;then
+	0 4 8 check if ;then
+	2 4 6 check drop ;
+\ ( ix -- b ) \ determine if the spot 'ix' is available
+\ get the gui for that button:
+	\ is it enabled? if so, it's available
+: available? 
+	getbutton
+	g:enabled? nip ;
+
+false var, picked
+\ ( ix -- )
+: pick-this-one 
+	getbutton
+	"O" g:text
+	false g:enable
+	true picked !  ;
+
+	\ just pick an starting point at random:
+	\ try up to nine times to find an open spot:
+: pick-spot
+	false picked !
+	rand n:abs 9 n:mod
+	(
+		dup available? if
+			pick-this-one
+			break
+		else
+			n:1+ 9 n:mod
+		then
+	) 9 times
+	picked @ not if "The game is tied!" notice then ;
+
+: computer's-turn
+	pick-spot 
+  ' check-win? g:do ;
+
+ \ ( gui -- ) \ user pressed this button
+: user-click
+	"X" g:text
+	false g:enable
+	check-win? 
+	' computer's-turn g:do ;
+\ ( charcode -- gui|null) \ this will return the button or null
+: get-numbered-button 
+	'1 n:- 
+	dup -1 n:>
+	over 9 n:< and if
+		getbutton
+	else
+		drop null
+	then ;
+\ ( gui key code -- ) \ let the user press a number 1-9 to select
+: ttt-keypress 
+	get-numbered-button null? not if
+		g:enabled? if 
+			user-click
+		then
+	then ;
+
+\ create the board we will use
+: initialize 
+	rand drop
+	tttobj @ 
+  mobile? if
+    "fullscreen" true m:!
+  else
+    "center" true m:!
+  then g:new ttt ! ;
+
+: help
+  "help" log
+	"Lame TicTacToe 1.0\n"
+	build? s:+
+	g:say ;
+
+[
+	' reinitialize ,
+	' g:quit ,
+	' help 
+] var, actions 
+
+	\ code is 1, 2 or 3
+: onMenuSelected 
+	n:1- actions @ case ;
+
+
+\ Note that you can embed newlines in a string by just writing the string over
+\ multiple lines:
+: blurb
+	mobile? not if
+"This is a very simple-minded game of Tic-Tac-Toe
+You can use the mouse or keyboard to make your move" g:say
+	then ;
+
+\ the application starts here:
+: app:main 
+	initialize ;
+

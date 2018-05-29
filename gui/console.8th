@@ -1,0 +1,68 @@
+true app:isgui !
+\ console window ... ?
+{
+	"title" : "Console",
+	"kind" : "win",
+	"wide" : 800,
+	"high" : 600, 
+	"bg" : "black",
+  "children" :
+  [
+  {
+    "kind" : "box",
+    "bg" : "salmon",
+    "wide" : 800,
+    "high" : 600, 
+    "visible" : true,
+    "bounds" : "0,0,parent.width,parent.height",
+    "children" :
+    [
+      {
+        "kind" : "edit",
+        "multiline" : true,
+        "bounds" : "0,0, parent.width, parent.height - 60",
+        "bg" : "grey",
+        "name" : "output",
+        "auto-scroll" : true,
+        "scroll-visible" : true
+      },
+      {
+        "kind" : "edit",
+        "bounds" : "0,output.bottom, parent.width, top+60",
+        "bg" : "white",
+        "name" : "input",
+        "esc-ret-consumed" : true,
+        "return-pressed" : "return"
+      }
+    ]
+  }]
+} var, guiobj 
+var gui
+var out
+
+: +text  \ s gui -- gui
+	g:text?	\ s gui t
+	"\n" s:+
+	rot s:+
+	g:text ;
+
+( out @ +text ) is puts
+(	"" swap s:+ 
+	out @ g:text? \ s1 g 
+	rot s:+
+	g:text ) is putc
+	
+: doeval
+  "text" m:@ eval ;
+
+: return
+	g:text? >r "" g:text r>
+  m:new "text" rot m:!
+  "cb" ' doeval m:!
+  g:do ;
+
+: app:main 
+	guiobj  @ 
+	g:new gui !
+	gui @ "output" g:child out !
+	gui @ g:show ;

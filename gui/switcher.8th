@@ -1,0 +1,55 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Switcher Demo",
+	"bg" : "yellow",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+			"bg"   : "red",
+			"font" : "20",
+			"click" : "clicked",
+			"label" : "Big button"
+		}
+	]
+} var, guiobj
+
+{
+	"kind" : "btn",
+	"name" : "btn",
+	"bounds" : "20, 20, parent.width-20, parent.height-20",
+	"bg"   : "green",
+	"font" : "20",
+	"click" : "clicked-new",
+	"label" : "New button"
+} var, newbtnobj
+
+var gui
+: clicked-new2
+	{"msg":"bye", "cb": ' g:quit } g:say ;
+
+: clicked-new 
+	' clicked-new2 g:do ;
+
+: clicked	
+	\ hide me
+	g:hide
+	\ get my parent
+	g:parent
+	\ create a new gui for the new button:
+	newbtnobj @ g:new
+	\ set the new one as the child
+	g:+child
+	 ;
+
+: app:main
+	guiobj @ 
+	g:new 
+	gui !
+	gui @ g:show ;

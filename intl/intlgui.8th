@@ -1,0 +1,102 @@
+true app:isgui !
+\ Demo of using L10N in a GUI application:
+["Lucida Grande", "Ubuntu", "Droid", "Tahoma"] var, fonts
+
+: genfont
+  " %f" s:strfmt
+  fonts @ ( over s:+ ) a:map
+  "|" a:join nip ;
+
+\ the language specific values are in the 'lang' subdirectory
+: (yesno)
+  if free else bye then ;
+
+: g:yesno 
+  >r
+  g:parent
+  {"title":"IntlTest", "type":3,"buttonlist":["OK","Cancel"], "cb" : ' (yesno) } const 
+  "parent" rot m:!
+  "msg" r> m:!  g:msgdlg ;
+
+\ set the text when a 'user' event happens
+: onuser \ gui item --
+	drop g:obj
+	"intl" m:@ nip
+	s:intl g:text ;
+
+: onsize \ gui x y --
+	nip .86 n:* 50 min 22 max genfont g:setfont ;
+: onsize2 \ gui x y --
+	nip .80 n:*  50 min 20 max genfont g:setfont ;
+
+{
+  "kind" : "win",
+  "wide" : 800,
+  "high" : 600,
+  "bg" : "beige",
+  "children" :
+  [
+	{
+		"kind" : "label",
+		"bounds" : "0,0, parent.width, parent.height/8",
+		"justify" : ["hcenter"],
+		"intl" : "hi",
+		"size" : ' onsize ,
+		"user" : ' onuser ,
+		"name" : "hi"
+	},
+
+	{
+		"kind" : "combo",
+		"bounds" : "0,hi.bottom, parent.width, top+parent.height/8",
+		"justify" : ["hcenter"],
+		"size" : ' onsize2 ,
+		"bg" : "beige",
+		"name" : "lang",
+		"selected":0,
+		"changed" : ( \ gui ix item
+				drop
+				\ set the chosen langage
+				["en","es","fr","he"] swap a:@ nip s:lang 
+				\ let everyone know the language has changed
+				g:root null g:user!
+			) ,
+		"items" :
+		[
+			"English",
+			"Spanish",
+			"French",
+			"Hebrew"
+		]
+	},
+
+	{
+		"kind" : "label",
+		"bounds" : "0,lang.bottom, parent.width, parent.height",
+		"justify" : ["hcenter","vcenter"],
+		"size" :  ( nip 8 n:- 20 min 40 max genfont g:setfont ) ,
+		"bg" : "beige",
+		"user" : 
+		(
+			drop
+			"today" s:intl
+			d:new d:format
+			g:text
+		) 
+	},
+	{
+		"kind" : "btn",
+		"bounds" : "parent.width/3,parent.height*.9, .6*parent.width, parent.height-8",
+		"intl" : "bye",
+		"size" : ' onsize ,
+		"user" : ' onuser ,
+		"click" : ( "sure?" s:intl g:yesno ) ,
+		"name" : "bye"
+	}
+  ]
+} var, guiobj
+
+
+: app:main
+	guiobj @ g:new 
+	null g:user! g:show ;

@@ -1,0 +1,15 @@
+\ Memory mapped file access:
+
+: sf scriptfile 0 a:@ nip ;
+
+"Opening this sample as a memory-mapped buffer:" . cr
+sf true f:mmap dump
+
+"Opening it again, but just from bytes 10-30:" . cr
+sf .s cr false 10 30 f:mmap-range
+"Actually it's mapped from " . 
+dup f:mmap-range? swap . " to " . . cr
+dump
+
+bye
+

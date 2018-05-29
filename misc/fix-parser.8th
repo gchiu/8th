@@ -1,0 +1,32 @@
+\ Shows how to parse "FIX" records (FIX protocol)
+
+\ Get an array of "field=value" strings, and convert them into 
+\ an map where each key is 'field' and each item is 'value'
+: >fix \ a -- o
+	m:new swap
+	( 
+		dup "" s:= if
+			2drop
+		else
+			nip "=" s:/ 
+			a:open m:!
+		then
+	) 
+	a:each drop ;
+
+\ Take a string with a FIX record and split it into its fields.
+\ FIX fields are separated by ASCII 01 (Ctrl+A)
+\ The return value is an map where each field in the input 
+\ is represented by its value (as a string)
+: line>fix \ s -- o
+	"\x01" s:/ >fix ;
+
+\ A sample FIX record
+"8=FIX.4.29=15335=D49=BLP56=SCHB34=150=3073797=Y52=20000809-20:20:5011=900010081=1003000321=255=TESTA54=138=400040=259=044=3047=I60=20000809-18:20:3210=061" var, fixrec
+
+"Original FIX : " . cr
+fixrec @  dup dump cr
+
+"After parsing: " . cr
+line>fix . cr
+bye

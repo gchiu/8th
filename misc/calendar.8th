@@ -1,0 +1,17 @@
+\ Sample usage of the date/calendar words
+
+
+needs date/hebrew
+needs date/islamic
+var today
+
+: app:main
+  "Today's date: " .
+  "%W, %D %N %Y" d:new d:format . cr
+
+  "On the Hebrew calendar: " .
+  d:hebrewtoday d:.hebrew cr
+  "On the Islamic calendar: " .
+  d:islamictoday d:.islamic cr
+
+  bye ;

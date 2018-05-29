@@ -1,0 +1,21 @@
+\ How to iterate an map in order of keys
+
+{
+	"xyz" : "last",
+	"abcd" : "first",
+	"mnop" : "middle"
+} var, o
+
+"This is how the map is iterated in its natural order.\n" .
+"Note that in general, the last key inserted is the first key retrieved:\n" .
+
+o @ ( . cr drop ) m:each drop cr
+
+
+"And this is how the map is iterated in sorted key order:\n" .
+
+o @ m:keys ' s:cmp a:sort
+\ o sorted-keys
+( nip m:@ . cr ) a:each drop drop
+
+bye

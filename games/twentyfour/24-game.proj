@@ -1,0 +1,12 @@
+{
+   "id":"org.ronware.twentyfour",
+   "source":"24-game.8th",
+   "TicTacToe!":"app-name",
+   "osx":true,
+   "ios":true,
+   "windows":true,
+   "linux":true,
+   "icon":"img/logo.png",
+   "app-ver":"1.0",
+   "app-name":"24 Game",
+   "android":true}

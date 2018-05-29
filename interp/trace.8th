@@ -1,0 +1,16 @@
+\ How to use the trace words
+
+
+: not-tracing 
+  "This word has no tracing\n" . ;
+
+( "\nEntering " . . .s cr ) dbg:trace-enter
+( "\nLeaving " . . .s cr ) dbg:trace-leave
+true dbg:trace
+
+: yes-tracing
+  "This word should have tracing\n" . ;
+
+not-tracing
+yes-tracing
+bye

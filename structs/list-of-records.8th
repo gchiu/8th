@@ -1,0 +1,52 @@
+\ From RosettaCode:  http://rosettacode.org/wiki/Search_a_list_of_records#8th
+\   "The data structure to be used contains the names and populations (in
+\   millions) of the 10 largest metropolitan areas in Africa, and looks as
+\   follows when represented in JSON:
+\ Search	Expected result
+\ Find the (zero-based) index of the first city in the list whose name is "Dar Es Salaam"	6
+\ Find the name of the first city in this list whose population is less than 5 million	Khartoum-Omdurman
+\ Find the population of the first city in this list whose name starts with the letter "A"	4.58
+
+[
+  { "name": "Lagos",                "population": 21.0  },
+  { "name": "Cairo",                "population": 15.2  },
+  { "name": "Kinshasa-Brazzaville", "population": 11.3  },
+  { "name": "Greater Johannesburg", "population":  7.55 },
+  { "name": "Mogadishu",            "population":  5.85 },
+  { "name": "Khartoum-Omdurman",    "population":  4.98 },
+  { "name": "Dar Es Salaam",        "population":  4.7  },
+  { "name": "Alexandria",           "population":  4.58 },
+  { "name": "Abidjan",              "population":  4.4  },
+  { "name": "Casablanca",           "population":  3.98 }
+] var, cities-raw
+
+"Index of first occurrence of 'Dar Es Salaam': " .
+"Dar Es Salaam" >r cities-raw @ 
+(
+  "name" m:@ r@ s:= if
+    drop . cr ;;
+  then
+  2drop
+) a:each drop rdrop
+
+"The name of the first city in this list whose population is less than 5 million: " . 
+5 >r cities-raw @ 
+(
+  nip
+  "population" m:@ r@ n:< if
+    "name" m:@ . cr break
+  then
+  drop
+) a:each drop rdrop
+
+"The population of the first city in this list whose name starts with the letter \"A\": " .
+'A >r cities-raw @ 
+(
+  nip
+  "name" m:@ 0 s:@ r@ n:= if
+    drop "population" m:@ dup . cr break
+  then
+  2drop
+) a:each drop rdrop
+
+bye

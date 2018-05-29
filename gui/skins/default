@@ -1,0 +1,18 @@
+\ vim: ft=8th :
+\ define skin classes:
+\ define the skin:
+{
+  "g1" : {
+    "bg" : "grey"
+  },
+  "g2" : {
+    "bg" : "red",
+    "font" : 20,
+     "justify" : ["hcenter", "vcenter"]
+  },
+  "g3" : {
+    "bg" : "green",
+    "fg" : "black",
+    "font" : 20
+  }
+}

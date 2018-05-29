@@ -1,0 +1,12 @@
+\ Using enums in 8th.  They're not built-in, but in a library:
+
+needs utils/enums
+
+\ This is how you invoke it.  The enum values don't have to be on the same line:
+100 enum: a b c enum;
+
+"Enums!  a, b, c:\n" .
+"a : " . a . cr
+"b : " . b . cr
+"c : " . c . cr
+cr bye

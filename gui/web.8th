@@ -1,0 +1,59 @@
+\ The web control provides an embedded web-browser:
+true app:isgui !
+
+{
+  "kind" : "win",
+  "wide" : 600,
+  "high" : 480,
+  "children" : [
+    {
+      "kind" : "box",
+      "bounds" : "0,0,parent.width,parent.height",
+      "bg" : "grey",
+      "flex" : {"dir":"col"},
+      "children" : [
+        \ address bar:
+        {
+          "kind" : "edit",
+          "bg" : "palegreen",
+          "empty-text": "Enter a URL here…",
+          "return-pressed" : "gotoURL",
+          "justify" : ["vcenter"],
+          "font": 20,
+          "indent-left" : 10,
+          "indent-top" : 10,
+          "flex" : { 
+            "height" : 40,
+            "maxheight" : 40,
+            "minheight" : 40,
+            "align" : "stretch",
+            "margin" : 10
+          }
+        },
+        \ web
+        {
+          "kind" : "web",
+          "bg" : "red",
+          "name" : "web",
+          \ "url" : "asset://html/index.html",
+          "flex" : {
+            "height" : 100,
+            "margin" : 10,
+            "align" : "stretch"
+          }
+        }
+      ]
+    }
+  ]
+} var, guiobj
+var gui
+
+: gotoURL
+  g:text? 
+  gui @ "web" g:child
+  swap
+  dup log
+  g:url ;
+
+: app:main
+  guiobj @ g:new gui ! ;

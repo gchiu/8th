@@ -1,0 +1,20 @@
+\ Web-scrape sample: get UTC time from the US Naval Observatory:
+needs net/http
+
+: read-url \ -- s
+ {"url":"https://time.is/"} net:get 
+ not if "Could not connect" throw then 
+ >s ;
+
+: get-time
+  read-url
+  "webscrape.html" f:create over f:write drop f:close
+  /<div\s+id=\"twd\">(.*?)<\/div/
+  r:match 
+  if
+    1 r:@
+  else
+    "Failed to scrape the time"
+  then . cr ;
+
+get-time bye

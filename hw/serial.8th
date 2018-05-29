@@ -1,0 +1,34 @@
+\ Example of using the serial devices
+"ns:sio" w:find "The Free version does not have serial I/O support" thrownull 
+
+
+: find-first-valid \ a -- sio|null
+  null >r
+  (
+    sio:open 
+    null? if
+      drop
+    else
+      r! break
+    then
+  ) a:each drop
+  r> ;
+
+
+
+: app:main
+  \ first find devices
+  sio:enum
+  \ find the first one which we can actually open
+  find-first-valid
+  null? if
+    "Sorry, no serial ports are accessible to you" . cr 
+  else
+    "We were able to use a port:" . cr sio:opts@ . cr
+    "Changing settings to 2400 7E1" . cr
+    {"baud":2400, "bytesize":7, "parity":true, "paritybits":2} sio:opts!
+    "Now the opts say: " . cr sio:opts@ . cr
+    sio:close
+  then
+  bye
+  ;

@@ -1,0 +1,11 @@
+{"app-name":"Simple",
+"osx":true,
+"enc":false,
+"ios":false,
+"windows":true,
+"linux":true,
+"icon":"logo.png",
+"source":"app.8th",
+"app-ver":"1.0",
+"id":"com.eighthdev.simple",
+"android":false}

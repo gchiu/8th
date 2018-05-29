@@ -1,0 +1,48 @@
+\ An SMTP sample
+
+needs net/smtp
+
+\ Set your server here as appropriate:
+\ 'secure' can be "none", "tls" or "ssl"
+\ 'auth'   can be "plain" or "login"
+{ 
+  "server" : "mail.something.com", 
+  "port" : 25, 
+  "secure" : "tls",
+  "auth":"login" 
+} var, opts
+
+\ Fill in the mail's parameters.
+\ The keys shown are required.  "to" is an array of recipients, as are "cc" and
+\ "bcc" if present:
+{
+  "from" : "joe@something.com",
+  "subject" : "Testing, 123",
+  "body" : "Just testing, bro",
+  "to" : ["jane@something.com"]
+} var, msg
+
+\ For security, you must give your username and password on the command-line:
+\ parameters to program are:  username password
+: app:main
+  "Connecting to SMTP server" . cr
+  opts @
+    "user" 0 args m:!
+    "pwd"  1 args m:!
+  smtp:new 
+
+  "pwd" m:@ null? if 
+    "You must provide the username and password on the command-line!" 
+    . cr bye
+  then drop
+
+  "err" m:exists? if
+    "The server was not reachable" . cr
+    bye
+  then
+
+  "Connected" . cr
+
+  "Sending a message to the server" . cr
+  msg @ smtp:send
+  bye ;

@@ -1,0 +1,46 @@
+\ Looping constructs in 8th
+
+: flush
+  f:stdout f:flush drop ;
+
+\ regular "loop"
+: regular-loop
+  . space flush ;
+
+\ step "loop"
+var stepping
+: step-loop
+  . space flush stepping @ step ;
+
+: times-loop
+  'x putc space flush ;
+
+: app:main
+  \ "loop" and "loop-" pass the iteration number on TOS to the invoked word:
+  "Regular loop, 10 times: " .  flush
+  ' regular-loop 0 10 loop
+  cr
+
+  "Descending loop, 10 times: " .  flush
+  ' regular-loop 0 10 loop-
+  cr
+
+  "Regular loop, 10 times, by 2s: " . flush
+  2 stepping !
+  ' step-loop 0 10 loop
+  cr
+
+  "Descending loop, 10 times, by 2s: " . flush
+  \ note that the step is negative!
+  -2 stepping !
+  ' step-loop 0 10 loop-
+  cr
+
+  \ "times" executes that number of times, but does not pass any parameters to
+  \ the invoked word:
+  "Just 'times', 10 times: "  . flush
+  ' times-loop 10 times 
+  cr
+
+  "Done" . cr bye ;
+  

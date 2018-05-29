@@ -1,0 +1,38 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Mouse Position Demo",
+	"bg" : "grey",
+  "draggable" : false,
+  "mouse-exit" : "mouseexit",
+  "mouse-enter" : "mouseenter",
+  "mouse-moved" : "mousemove",
+  "mouse-down" : "mousedown",
+  "mouse-drag" : "mousedrag",
+  "mouse-up" : "mouseup"
+} var, x
+
+: mouseexit
+  "exit" . .s cr ;
+
+: mouseenter
+  "enter" . .s cr ;
+
+: mousemove
+  "move" . .s cr ;
+
+: mousedown
+  "down" . .s cr
+  "red" g:fcolor g:pix! ;
+
+: mousedrag
+  "drag" . .s cr ;
+
+: mouseup
+  "up" . .s cr
+  "green" g:fcolor g:pix! ;
+
+: app:main
+  x @ g:new ;

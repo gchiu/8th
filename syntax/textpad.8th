@@ -1,0 +1,167 @@
+\
+\ Script: textpad.8th
+\ 1. fetch all 8th words
+\ 2. extract all namespaces and all words
+\ 3. create TextPad syntax file
+\ 
+
+needs date/utils
+
+ns: avw
+
+\ Zeroeth part of TextPad syntax file
+a:new "; Automagically generated on " d:new d:ymd swap drop s:+ a:push var, hdr
+
+\ First part of TextPad syntax file
+[
+	"; TextPad syntax highlighter for 8th programming language",
+	"; Arie van Wingerden",
+	"C=1",
+	"[Syntax]",
+	"Namespace1 = 6",
+	"IgnoreCase = No",
+	"KeyWordLength = 0",
+	"BracketChars = :;",
+	"OperatorChars =", 
+	"PreprocStart =",
+	"HexPrefix =", 
+	"SyntaxStart =",
+	"SyntaxEnd =",
+	"CommentStart = (",
+	"CommentEnd = )",
+	"CommentStartAlt = .(",
+	"CommentEndAlt = )",
+	"SingleComment = \\",
+	"SingleCommentCol =",
+	"SingleCommentAlt =",
+	"SingleCommentColAlt =",
+	"SingleCommentEsc =",
+	"StringsSpanLines = No",
+	"StringStart = \"",
+	"StringEnd = \"",
+	"StringAlt =",
+	"StringEsc =", 
+	"CharStart =",
+	"CharEnd =",
+	"CharEsc =",
+	"[Keywords 1]"
+] var, part1	
+
+\ Second part of TextPad syntax file
+[
+	"[Keywords 2]"
+] var, part2
+
+\ Third part of TextPad syntax file
+[
+	"[Keywords 3]",
+	"[Keywords 4]",
+	"[Keywords 5]",
+	"[DEFINED]",
+	"[UNDEFINED]"
+] var, part3
+
+var out                 \ output file handle
+ns:m new var, mwd       \ map of words
+ns:m new var, mns       \ map of namespaces
+
+: init-output           \ array -- array
+  "8th.syn" 
+  f:create              \ open output file
+  null?                 \ error?
+  if                    \ true
+    "Error fcreate!"    \   error message
+    throw               \   exception
+  then
+  out !                 \ store file handle
+  ;
+  
+: write-output          \ ix item -- 
+  swap drop             \ drop ix
+  "\n" s:+              \ add eol
+  out @                 \ get file handle 
+  swap                  \ swap item and file handle 
+  f:write               \ write the array value
+  null?                 \ error?
+  if                    \ true
+    "Error fwrite!"     \   error message
+    throw               \   exception
+  then
+  2drop                 \ drop both file and item
+  ;
+
+: output                \ array -- array
+  ' write-output        \ write output
+  a:each                \   for each item
+  drop                  \ drop array
+  ;
+
+: sort-map-to-array     \ -- array
+  m:keys                \ copy keys of map to array
+  ( s:cmp )             \ word for comparison
+  a:sort                \ sort
+  swap drop             \ get rid of map - keep array on TOS
+  ;
+
+: item-to-map           \ item --
+  over                  \ save item for check
+  m:exists?             \ does item exist in map?
+  if                    \ true
+     2drop              \   drop unneeded stuff
+  else                  \ false
+    swap                \   swap key and map
+    1                   \   value to be stored
+    m:!                 \   store new key
+    drop                \   drop map
+  then
+  ;
+
+: is-private-namespace? \
+  dup
+  "avw"                 \ our private namespace
+  s:=                   \ equal?
+  ;
+
+: array-to-map          \ ix item --
+  swap drop             \ drop ix
+  ":" s:/               \ split string on colon
+  0 a:@                 \ first element = namespace
+  is-private-namespace?
+  if                    \ yes it is
+    2drop               \ get rid of stuff
+    ;;                  \ quit this word
+  then
+  mns @                 \ namespaces map
+  item-to-map           \ namespaces
+  1 a:@                 \ second element = word
+  is-private-namespace?
+  if                    \ yes it is
+    2drop               \ get rid of stuff
+    ;;                  \ quit this word
+  then
+  mwd @                 \ words map
+  item-to-map           \ words
+  drop
+  ;
+
+: words-to-array        \ -- array
+  ""                    \ filter = all words 
+  words-like            \ fetch 'em
+  ;
+
+: close-output
+  out @ f:close
+  ;
+
+: app:main
+  words-to-array ' array-to-map a:each drop
+  init-output
+  hdr @ output
+  part1 @ output
+  mns @ sort-map-to-array output
+  part2 @ output
+  mwd @ sort-map-to-array output 
+  part3 @ output
+  close-output
+  bye
+  ;

@@ -1,0 +1,10 @@
+\ How do you format a date in 8th?  It's pretty easy:
+
+\ get the current date
+d:new var, today
+
+"Today is: " . 
+"%Y-%M-%D" today @ d:format . cr
+"Or if you like long words, it's: " .
+"%W, %N %D, %Y" today @ d:format . cr
+bye

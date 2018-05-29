@@ -1,0 +1,28 @@
+\ Splitting a string for fun and profit
+
+"He went to the store"
+
+\ show it:
+dup . cr
+
+\ split the string on spaces:
+\ NOTe: could also have been done with Regex
+" " s:/
+
+\ now show the array you made:
+dup . cr
+
+\ and let's change "store" to "bar"
+dup >r
+r@ 4 "bar" a:!
+
+\ show the new array:
+r@ . cr
+
+\ and let's coalesce it:
+r> ( swap " " s:+  s:+ ) "" a:reduce
+
+\ the final result is:
+dup . cr
+
+bye

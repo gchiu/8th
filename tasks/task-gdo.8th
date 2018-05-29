@@ -1,0 +1,35 @@
+\ Using g:do to process an item on the main/gui thread
+
+var x
+
+\ Invoked on the main thread, with a map containing whatever:
+: y2 \ map --
+  "var" m:@
+  \ Need to say "G:@" here because the "m:@" makes 8th think "@" should be "m:"
+  G:@ . space t:name@ . cr ;
+
+\ the listener for x:
+: y \ var -- var
+  "y-listener " . t:name@ . cr
+  {
+    "cb" : ' y2 
+  }
+  "var"  2 pick m:!
+  g:do ;
+
+
+\ Loop for 5 seconds, poking an incrementing value into x each time:
+: y-task
+  "y-task" t:name!
+  1
+  (
+    1 sleep
+    t:name@ . " poking " . dup .  cr
+    dup x !
+    n:1+
+  ) 5 times bye ;
+
+: app:main
+  t:name@ . " starting" . cr
+  x ' y +listener 2drop
+  ' y-task t:task ;

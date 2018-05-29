@@ -1,0 +1,93 @@
+\ The Computer Language Benchmarks Game
+\   http://benchmarksgame.alioth.debian.org/
+\   contributed by Ron Aaron 
+
+\ a node is an array: [left, right, item]
+\ left and right are null or pointers to another node
+\ item is a number
+
+\ omit type-checking if we can:
+
+false stack-check
+' type-check null? not #if
+false type-check
+#then
+d:msec var, start
+
+: osdiv os 2 n:= if 1048576.0 else 1024.0 then ;
+
+: itemcheck \ tn -- n
+  a:open \ left right item
+  rot null? if drop nip ;then
+  \ right item left
+  recurse n:+
+  \ right item check(left)
+  swap recurse n:- ;
+
+: bottomUpTree \ item depth -- tn
+  dup if
+    \ but(2*it-1, dp-1), but(2*item, dp-1)
+\    n:1- swap 1 n:shl swap
+
+    \ it dp  (>0)
+    n:1- swap 
+    \ dp-1 it
+    dup >r 1 n:shl swap
+    \ 2*item depth-1 (r:item)
+    2dup bottomUpTree >r
+    \ 2*item depth-1 (r: right item)
+    swap n:1- swap recurse
+    \ left
+    r> r> 
+  else
+    \ item depth
+    drop null null rot 
+  then 3 a:close ;
+
+4 var, minDepth
+0 args "Need one argument" thrownull >n var, n
+minDepth @ 2 n:+ n @ n:max  dup var, maxDepth
+n:1+ var, stretchDepth
+
+\ ns:n (stat) . cr
+\ var check = bottomUpTree(0,stretchDepth).itemCheck();
+\ console.log("stretch tree of depth " + stretchDepth + "\t check: " + check);
+0 stretchDepth @ bottomUpTree itemcheck
+
+"stretch tree of depth     " . stretchDepth @ . 
+"\tcheck: " . . cr
+0 var, checked
+0 maxDepth @ bottomUpTree var, longLivedTree
+
+(
+  0 checked !
+  \ depth
+  maxDepth @ over n:- minDepth @ n:+ 2 swap n:^
+  \ depth iterations
+  dup >r
+  1 swap
+  \ depth 1..iterations
+  (
+    \ depth ix
+    over 2dup
+    \ depth ix depth ix depth
+      bottomUpTree itemcheck checked n:+!
+      swap n:neg swap
+      bottomUpTree itemcheck checked n:+!
+  ) -rot loop
+  r> 2 n:*  "%<10d trees of depth %<5d" s:strfmt .  "\tcheck: " . checked @ . cr
+  2 step
+)
+minDepth @ 
+maxDepth @ loop
+"long lived tree of depth  " . maxDepth @ . "\tcheck: " . 
+longLivedTree @ 
+  itemcheck . cr
+0 longLivedTree !
+
+d:msec start @ n:- . " msec" . cr
+rusage "rss" m:@ osdiv n:/ 
+"%.1f MB RSS used\n" s:strfmt .
+\ ns:n (stat) . cr
+\ ns:a (stat) . cr
+bye

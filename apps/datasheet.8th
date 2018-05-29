@@ -1,0 +1,263 @@
+\ A simple (!) datasheet (spreadsheet) which displays an 8x8 grid of values
+\ The data are stored in a database, the sheet itself is not limited in size
+"datasheet" appname !
+
+\ Namespace: 'ds' for 'datasheet'
+ns: ds
+with: ds
+
+\ The database we are using:
+null var, db-name
+var db
+\ SQL queries:
+var q-cell
+var q-put-cell
+
+\ Where we are in the grid
+1 var, top-row
+1 var, top-col
+
+\ Prompt user to press key; wait for key-press:
+: press-key
+  "Press any key to continue..." con:print
+  con:key drop ;
+
+\ Show help text, wait for key:
+: help 
+  con:cls 
+  quote *
+Welcome to the 8th datasheet sample, the coolest spreadsheet you've ever used!
+
+Each cell contains an 8th expression which is evaluated and then displayed.  Any
+8th word can be used.  Two special ones included are:
+
+  cell \ row col -- value        returns the value of the cell in row,col
+  sum  \ r1 c1 r2 c2 -- value    sum of the cells in the range r1,c1 - r2,c2
+
+Rows and columns are numbered from 1.
+
+The data are shown in an 8 row by 8 column grid.  Navigate using the arrow keys.
+If you change the contents of a cell, the change is retained.
+
+* . cr press-key ;
+
+\ History for prompted values:
+[] var, rc-hist
+[] var, val-hist
+
+\ Regular-expressions to parse the user input:
+/([0-9]+)[^0-9]+([0-9]+)/ var, rc-regex
+/([0-9]+)[^0-9]+([0-9]+)\s(.*)/ var, exp-regex
+
+\ Get user input, returning the match count and regex:
+: prompt-input \ hist prompt regex -- regex matchcount
+  \ save the regex for later
+  >r
+  \ print the prompt
+  con:print
+  \ get the input
+  1000 swap con:accept
+  \ check if it's valid
+  null? if
+    \ cancelled
+    drop r> 0
+  else
+    r> r:match 
+  then ;
+
+\ Inform the user of bad input:
+: invalid-input
+  cr "Sorry, the input was in an invalid format" . 
+  cr "The row and column are numbers separated by a space or comma" .
+  cr "Any other value is separated from the row and column by spaces" .
+  cr press-key ;
+
+\ Ask for a row, column and value (to put in a cell)
+: ask-value \ quit | v
+  val-hist @  "Enter the row, column and value: " exp-regex @
+  prompt-input
+  4 n:= if
+    1 r:@ swap 2 r:@ swap 3 r:@ nip
+  else
+	invalid-input ;;;
+  then ;
+
+\ Ask user for row and column to get:
+: ask-row-col \ quit | r c
+  rc-hist @ "Enter the row and column: " rc-regex @ 
+  prompt-input
+  3 n:= if
+    1 r:@ swap 2 r:@ nip
+  else
+	invalid-input ;;;
+  then ;
+
+\ Get the raw contents of the cell in row,col.  
+\ Does not evaluate it!
+: cell@ \ r c -- v
+  null >r
+  q-cell @ 
+  swap 2 db:bind
+  swap 1 db:bind
+  db @ swap
+  ( 0 db:col  r! ) 
+  swap db:exec-cb drop r> ;
+
+\ Store the raw value 'v' in the cell at row,col:
+: cell! \ r c v --
+  q-put-cell @
+  swap 3 db:bind
+  swap 2 db:bind
+  swap 1 db:bind
+  db @ swap
+  db:exec drop ;
+
+\ Utility word to print a number of spaces:
+: spaces ( 32 putc ) swap times ;
+
+\ Given an item, evaluate it.  If it is null, return an empty string.
+\ If it is a string, try to evaluate it; return the evaluated value:
+: eval? \ x -- y
+  null? if drop "" ;then
+  dup eval! if nip then ;
+
+\ In response to the user's "@" command, ask for the row,col to get and
+\ present it and its evaluation:
+: get-cell
+  ask-row-col
+  cell@ 
+  "\nCell contents: " . dup .  
+  "\nCell value: " . eval? . cr 
+  press-key ;
+
+\ In response to user's "!" command, ask for row,col value and set it:
+: change-cell 
+  ask-value
+  cell!  ;
+
+\ Ask for a key, and then do an appropriate action based on it:
+: doact \ -- 
+  con:key 
+  dup '@ n:= if " get\n" . drop get-cell ;then
+  dup '! n:= if " put\n" . drop change-cell ;then
+  dup '? n:= if drop help ;then
+  \ down:
+  dup 0xe80f n:= if drop 8 top-row n:+! ;then
+  \ up:
+  dup 0xe80e n:= if drop top-row @ 8 n:- 1 max top-row ! ;then
+  \ right:
+  dup 0xe811 n:= if drop 8 top-col n:+! ;then
+  \ left:
+  dup 0xe810 n:= if drop top-col @ 8 n:- 1 max top-col ! ;then
+  dup 'Q n:= over 'q n:= or if " Quit\n" . cr drop 0 die then
+  \ else:
+  drop ;
+ 
+\ Utility to say if a value is a string
+: s? \ x -- x f
+  dup >kind ns:s n:= ;
+
+\ Utility to say if a value is a number
+: n? \ x -- x f
+  dup >kind ns:n n:= ;
+
+\ if the result is not a string, make it one:
+: >s?
+  s? not if >s then ;
+
+\ if the result is not a number, convert it to one; return 0 if unable:
+: >n?
+  n? not if
+    s? if >n then
+	n? not if drop 0 then
+  then ;
+
+\ Get the evaluated value of the cell at (row,col)
+: cell \ r c -- value
+  cell@ eval?   ;
+
+\ Print the cell at (row,col) for the table
+: show-cell \ r c -- r
+  \ r c 
+  0 c# 0 <#
+  2dup cell >s?
+  32 c# 9 <# s:fmt .
+  space drop ;
+
+\ Display one row of the table:
+: show-row \ r --
+  dup 
+  '0 c# 5 #> . space
+  ' show-cell 
+  top-col @ dup 7 n:+ loop
+  cr drop ;
+
+\ Print the column numbers etc for the table:
+: table-header
+  cr 6 spaces
+  ( 9 <# . space ) 
+  top-col @ dup 7 n:+ loop cr ;
+
+\ Print the instructions etc for the table:
+: table-footer
+  cr 
+  "@=get !=put Q=quit ?=help arrows=move >" con:print ;
+
+\ Display the current table (8x8 grid starting at top-row, top-col)
+: show-table
+  con:cls
+  table-header
+  top-col @ 
+  ' show-row top-row @ 
+  dup 7 n:+ loop drop 
+  table-footer ;
+
+\ sum the contents of the row "r" from column c1 through c2
+: sum-row \ c1 c2 r -- c1 c2 n
+  >r 2dup 0 -rot
+  ( r@ swap cell >n? n:+ ) 
+  -rot loop 
+  rdrop ;
+
+\ Fun word to sum the cells from (r1,c1) through (r2,c2)
+: sum \ r1 c1 r2 c2 -- n
+  0 >r rot swap 2swap
+  ( sum-row r> n:+ >r )  
+  -rot loop 
+  2drop r> ;
+
+
+\ Use the default database or one given on the command line:
+: get-db-name \ -- n
+  \ if a name is given on the command line, use it:
+  0 args null? if
+	\ no name given, use default name
+	drop app:datadir "ds.db" s:+ 
+  then
+  dup db-name ! ;
+
+\ Ensure there is a schema for the database:
+: create-schema \ db --
+  "begin;" db:exec
+  "create table if not exists cells (row INT,col INT,val TEXT);" db:exec
+  "create index if not exists cell1 on cells (row);" db:exec
+  "create unique index if not exists cell2 on cells (row,col);" db:exec
+  "commit;" db:exec
+  "select val from cells where row=? and col=?" db:prepare q-cell !
+  "insert or replace into cells values (?,?,?)" db:prepare q-put-cell !
+  drop ;
+
+\ Open the database:
+: load-db \ --
+  get-db-name
+  db:open dup db !  
+  create-schema ;
+
+\ main loop of app:
+: run \ --
+  show-table
+  doact recurse ;
+
+: app:main
+  help load-db
+  run ;

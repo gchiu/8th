@@ -1,0 +1,27 @@
+\ Sample of the use of the word 'only', which makes a specific class the only
+\ one which may be used
+
+
+\ lets create a few 'user-available' words:
+ns: user
+: hi "hello, world!" . cr ;
+: bye "goodbye, cruel world!" . G:bye ;
+: undo null only ;
+ns: G
+: start ns:user only ;
+
+\ Now tell the user to do something
+quote * 
+In this sample, you will see the power of the word 'only'.  What that word does
+is to make one and only one class available to the user.  In this case, the
+class is "ns:user" and contains just three words: hi, bye and undo.
+
+First note that you have access to any class you want.  For example, type
+"words" and see that you get the words list.
+
+Next, type 'start' to activate 'ns:user only'.  After you have done that, you
+will only be able to type 'hi', 'bye' or 'undo'.  If you type 'undo', you'll
+have access to all words again.
+
+Go ahead, try it!
+* . 

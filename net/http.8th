@@ -1,0 +1,16 @@
+\ grab a file from a URL and save to disk:
+needs net/http
+
+\ This will complain if it fails to download the file, otherwise it will save it
+
+: get-file \ url filename --
+  "You must specify a URL and a file to save to" thrownull
+  >r net:get if
+	  r@ f:create swap f:write drop f:close
+    "Wrote to " . r> . cr
+  else
+	  rdrop "Unable to get the URL\n" . 
+  then ;
+
+\ use command-line parameters
+0 args 1 args get-file  bye

@@ -1,0 +1,58 @@
+\ generate syntax highlighting file for emacs, using the help.db
+\ Writes the syntax file on stdout
+
+\ grab the name of every last word.  we do it here to avoid getting words we
+\ define in this file:
+null words-like var, allwords
+
+: emacs-start
+quote ~
+; 8th.el: syntax highlighting for 8th
+; Maintainer:   Ron Aaron <ron@aaron-tech.com>
+; URL:          http://8th-dev.com/
+; Filetypes:    *.8th
+~ .
+"; Version:      " . 8thver? . cr ;
+
+: escape    
+	"\\" "\\\\" s:replace!  
+	"\"" "\\\"" s:replace! ;
+
+"\n(setq 8th-keywords '(" var, ewrds
+
+: add-word \ s --
+	"\"" swap s:+ "\" " s:+
+	ewrds @ swap s:+ ewrds !
+	ewrds @ s:len nip 90 n:> if
+		ewrds @ 
+		") )" s:+ .
+		"\n(setq 8th-keywords '(" ewrds !
+	then ;
+
+: emacs-word \ ix fqname --
+  \ keep both the fqname and the unqualified name:
+	escape
+  dup add-word 
+  ': s:search n:1+ n:neg s:rsub add-word
+  drop ;
+
+: emacs-end
+quote ~
+
+; postprocess and cleanup
+(setq 8th-keywords-regexp (regexp-opt 8th-keywords 'words)
+(setq 8th-keywords nil)
+(setq 8th-font-lock-keywords
+  `(
+    (,8th-keywords-regexp . font-lock-keyword-face)
+))
+(provide '8th-mode)
+~ . ;
+
+\ The actual dumper:
+
+  emacs-start
+  allwords @ ' emacs-word a:each drop
+  emacs-end
+
+bye

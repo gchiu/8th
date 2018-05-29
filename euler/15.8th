@@ -1,0 +1,34 @@
+\ Starting in the top left corner of a 2×2 grid, and only being able to move to
+\ the right and down, there are exactly 6 routes to the bottom right corner.
+\ How many such routes are there through a 20×20 grid?
+
+
+20 var, gridsize
+
+gridsize @ n:1+ var, realgridsize
+realgridsize @ sqr var, elem-count
+
+[ ] var, grid
+
+: init-bottom grid @ ( 1 a:! ) elem-count @ dup realgridsize @ n:- swap n:1- loop drop ;
+: init-right grid @ ( realgridsize @ n:* gridsize @ n:+ 1 a:! ) 0 gridsize @ loop drop ;
+: init-grid grid @ ( 0 a:! ) 0 elem-count @ n:1- loop drop init-bottom init-right ;
+
+: solve
+  init-grid
+  grid @
+  (
+    dup gridsize @ n:- realgridsize @ n:mod 0 = if
+	  drop
+	else
+	  tuck n:1+ a:@ -rot swap
+	  tuck realgridsize @ n:+ a:@
+	  >r swap rot r> n:+ a:!
+	then
+  )
+  0 elem-count @ n:1- realgridsize @ n:- n:1- loop-
+  0 a:@ . cr
+  drop
+;
+
+solve bye

@@ -1,0 +1,213 @@
+{
+  "kind" : "win",
+  "title" : "24 Game",
+  "wide" : 800,
+  "high" : 600,
+  "center" : `mobile? not ` ,
+	"fullscreen": `mobile? ` ,
+  "bg" : 0xffffd36b,
+  "timer" : "update-clock",
+  "timer-period" : 1000,
+  "children" : 
+  [
+    {
+      "kind" : "tab",
+      "name" : "tab",
+      "bounds" : "0,0,parent.width,parent.height",
+      "tab-depth" : 0,
+      "init" : "oninit",
+      "bg" : 0xffffd36b,
+      "tabs" :
+      [
+        \ 0 : help
+        {
+          "kind" : "box",
+          "bounds" : "0,0,parent.width,parent.height",
+          "children" :
+          [
+            {
+              "kind" : "edit",
+              "bounds" : "4,4,parent.width-4, parent.height-50",
+              "bg" : 0xffffd36b,
+              "name" : "txt",
+              "multi" : true,
+              "size" : ' setfont ,
+              "ro" : true
+            },
+            {
+              "kind" : "btn",
+              "name" : "ok1",
+              "size" : ' setfont2 ,
+              "click" : ' startgame  ,
+              "bounds" : "8, txt.bottom+4, left+parent.width/4, parent.height-4"
+            },
+            {
+              "kind" : "btn",
+              "name" : "abt",
+              "size" : ' setfont2 ,
+              "click" : ( "http://8th-dev.com/24game.html" net:browse ) ,
+              "bounds" : "ok1.right+8, ok1.top, left+parent.width/4, parent.height-4"
+            },
+            {
+              "kind" : "combo",
+              "items" :
+              [
+                "English",
+                "Español"
+              ],
+              "name" : "lng",
+              "size" : ' setfont2 ,
+              "changed" : ' combochanged ,
+			  "selected" : 0,
+              "bounds" : "abt.right+8, ok1.top, q1.left-8, parent.height-4"
+            },
+            {
+              "kind" : "btn",
+              "name" : "q1",
+              "click" : ( g:quit ) ,
+              "size" : ' setfont2 ,
+              "bounds" : "parent.width-(parent.width/4)-24, ok1.top, parent.width-8, parent.height-4"
+            }
+          ]
+        },
+        \ 1 : main
+        {
+          "kind" : "box",
+          "bounds" : "0,0,parent.width,parent.height",
+          "bg" : 0xffffd36b,
+          "children" :
+          [
+            \ Top row: expression
+			\ Put it last so it doesn't get the keyboard focus and pop up an
+			\ irritating keyboard on mobile devices
+            {
+              "kind" : "edit",
+              "bounds" : "2,2,parent.width-2, parent.height/8",
+              "name" : "expr",
+              "multi" : false,
+              "size" : ' setfont2 ,
+              "border" : 8,
+              "ro" : false,
+              "return-pressed" : ' check-input ,
+              "escape-pressed" : ' new-game ,
+			  "wants-kbd" : false
+            },
+            \ Next row: digit buttons
+            {
+              "kind" : "btn",
+              "bounds" : "8,expr.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "one",
+              "size" : ' setfont2 ,
+              "label" : "1",
+              "click" : ' clickadd ,
+			  "wants-kbd" : true
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "one.right+parent.width/10,expr.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "two",
+              "size" : ' setfont2 ,
+              "label" : "2",
+              "click" : ' clickadd 
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "two.right+parent.width/10,expr.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "three",
+              "size" : ' setfont2 ,
+              "label" : "3",
+              "click" : ' clickadd 
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "three.right+parent.width/10,expr.bottom+parent.height/10,parent.width-8, top+parent.height/8",
+              "name" : "four",
+              "size" : ' setfont2 ,
+              "label" : "4",
+              "click" : ' clickadd
+            },
+
+            \ Next row: operator buttons
+            {
+              "kind" : "btn",
+              "bounds" : "8,one.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "plus",
+              "size" : ' setfont2 ,
+              "label" : "+",
+              "click" : ' clickadd
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "plus.right+parent.width/10,one.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "minus",
+              "size" : ' setfont2 ,
+              "label" : "-",
+              "click" : ' clickadd
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "minus.right+parent.width/10,one.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "times",
+              "size" : ' setfont2 ,
+              "label" : "*",
+              "click" : ' clickadd
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "times.right+parent.width/10,one.bottom+parent.height/10,parent.width-8, top+parent.height/8",
+              "name" : "divide",
+              "size" : ' setfont2 ,
+              "label" : "/",
+              "click" : ' clickadd
+            },
+
+            \ Next row: delete evaluate, skip, quit
+            {
+              "kind" : "btn",
+              "bounds" : "8,plus.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "del",
+              "size" : ' setfont2 ,
+              "click" : ' delete-last
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "del.right+parent.width/10,plus.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "eval",
+              "size" : ' setfont2 ,
+              "click" : ' check-input
+            },
+            {
+              "kind" : "btn",
+              "bounds" : "eval.right+parent.width/10,plus.bottom+parent.height/10,left+parent.width/6, top+parent.height/8",
+              "name" : "skip",
+              "size" : ' setfont2 ,
+              "click" : ' new-game
+            },
+            {
+              "kind" : "btn",
+              "name" : "q2",
+              "bounds" : "skip.right+parent.width/10,plus.bottom+parent.height/10,parent.width-8, top+parent.height/8",
+              "size" : ' setfont2 ,
+              "click" : ' g:quit
+            },
+
+            \ Bottom row: score and time
+            {
+              "kind" : "label",
+              "bounds" : "4,parent.height-(parent.height/8),parent.width/2, parent.height-4",
+              "name" : "score",
+              "size" : ' setfont2            },
+            {
+              "kind" : "label",
+              "bounds" : "score.right,parent.height-(parent.height/8),parent.width-4, parent.height-4",
+              "justify" : ["right"],
+              "name" : "time",
+              "size" : ' setfont2 ,
+              "label" : "0:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

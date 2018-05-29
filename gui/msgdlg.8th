@@ -1,0 +1,50 @@
+true app:isgui !
+
+needs gui/msgdlg
+
+: lbl! >r "lbl" g:child r> g:text ;
+
+: myquit "Goodbye" log bye ;
+: mycancel "Cancelled" log  free ;
+
+: (ok) drop g:root free ;
+
+: myok "OK!" lbl! 
+  g:root >r
+  {"msg":"Really, it's OK!", "buttonlist" : ["OK", "!@#!"], "cb": ' (ok) }
+  "parent" r> m:!
+  g:msgdlg ;
+
+: mywut 
+  "green" g:bg g:invalidate
+  "What is Wut?" lbl! ;
+
+
+: mycb [ ' myquit , ' mycancel , ' myok , ' mywut ] case ;
+
+: wc \   --
+   {
+      "title" : "Quit?",
+      "msg" : "Do you really want to Quit?",
+      "cb" : ' mycb ,
+\      "wide" : 400,
+\      "high" : 100,
+      "bg" : "lightgreen",
+      "buttonlist" : ["Quit", "Cancel", "OK", "Wut?"]
+   } 
+   g:msgdlg ;
+
+
+: app:main
+  {
+    "kind" : "win",
+    "bg" : "pink",
+    "center" : true,
+    "children" : [
+      {
+        "kind" : "btn",
+        "click" : ' wc  ,
+        "label" : "click here"
+      }
+    ]
+  } g:new ;

@@ -1,0 +1,56 @@
+\ From Rosettacode: http://rosettacode.org/wiki/Strip_a_set_of_characters_from_a_string
+\ print stripchars("She was a soul stripper. She took my heart!","aei")
+\ Sh ws  soul strppr. Sh took my hrt!
+
+: orig "She was a soul stripper. She took my heart!" ;
+\ using regular expression and replace!
+: stripchars1 \ orig filt -- dest
+  "[%s]" s:strfmt
+  r:new "" s:replace!  ;
+
+\ using s:each and s:search
+: stripchars2 \ orig filter -- dest
+  \ stash the filter away, set up a blank string as the destination:
+  >r "" swap 
+  (
+    nip
+    \ for each char in the original, see if it is in the filter
+    r@ over s:search null? nip if
+      \ it is not, so append the char to the destination
+      drop s:+
+      else
+      \ it is, so get rid of it
+      2drop
+    then
+  ) s:each rdrop ;
+
+\ like stripchars2, but convert filter to array instead of s:search
+: stripchars3 \ orig filt -- dest
+  \ convert filter to array-of-chars
+  null s:/    
+  \ create lookup table from the array-of-chars:
+  [] const swap ( nip 0 s:@ nip 1 a:! ) a:each drop \ orig array-of-chars-present
+  \ now iterate over the original string:
+  >r "" swap
+  (
+    nip
+    \ note we use an array lookup here instead of s:search
+    r@ over a:@ nip
+    \ dest char flag
+    not if s:+ else drop then
+  ) s:each rdrop ;
+
+"Original string: " . cr
+orig . cr
+
+"Stripping using regex and s:replace! :" . cr
+orig "aei" stripchars1 . cr 
+
+"Stripping using s:each and s:search :" . cr
+orig "aei" stripchars2 . cr 
+
+"Stripping using s:each and lookup table :" . cr
+orig "aei" stripchars3 . cr 
+
+bye
+

@@ -1,0 +1,43 @@
+\ How to read/write File objects:
+: okfail if "OK" else "FAIL" then . cr bye ;
+
+\ This is the file name we'll use
+tempfilename var, fname
+
+\ Create the File:
+fname @ f:create var, f
+
+\ Was there a problem?
+f @ f:err? ( if "Failed!" . cr bye then ) exec
+
+\ Write stuff to the file:
+"Going to write: " . 
+f @ "This is some text I want to write" dup . cr f:write
+. " bytes written\n" .
+
+\ close the file:
+f:close
+
+\ re-open the file:
+fname @ f:open f !
+
+\ seek to position 8
+f @ 8 f:seek
+
+\ and read four bytes:
+"" 4 f:read 
+. " bytes read at position 8: " . . cr
+
+\ read five bytes from end of file:
+-5 f:seek
+
+"" tuck 5 f:read
+. " bytes read at position -5: " . . cr
+drop >r
+\ remove temp file:
+fname @ f:rm
+
+\ Did we read what we should have?
+r> "write" 
+s:= okfail
+

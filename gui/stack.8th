@@ -1,0 +1,114 @@
+: setstack  \ g ix
+  swap g:parent g:parent swap 
+  g:stackix ; 
+
+: doprev  
+  g:parent 
+  g:prev ;
+
+1 var, num
+: addnew 
+  g:parent "stack" g:child 
+  {"kind":"btn", "name" : "g", "font" : 40, "label" : "prev", "bg":"green", "click" : "doprev", "bounds":"0,0,parent.width, parent.height"} 
+  const
+  "label" "prev " num @ >s s:+ m:!
+  1 num n:+!
+  g:new .s cr g:push ;
+
+true app:isgui !
+\ a "color" lets you select from a palette of colors
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "white",
+	"resize-corner" : 20,
+	"children" :
+	[
+		{
+			"kind" : "stack",
+			"name" : "stack",
+			"bg" : "blue",
+			"animator" : "fade",
+			\ 0 = right, 1 = top, 2 = left, 3= bottom
+			"dir" : 2,
+			"transition" : [100,1,1],
+			"stackix" : 0,
+			"bounds" : "0,0,parent.width,parent.height-40",
+			"stack" : 
+			[
+				{
+					"kind" : "box",
+					"bg" : "gray40",
+					"bounds" : "0,0,parent.width, parent.height",
+					"children":
+					[
+						{
+							"kind" : "btn",
+							"label" : "first",
+							"bg" : "red1",
+							"font" : 40,
+							"click" : ( g:parent g:parent g:next  ) ,
+							"bounds" : "0,parent.height/2,parent.width, parent.height"
+						}
+					]
+				},
+				{
+					"kind" : "box",
+					"bg" : "gray50",
+					"bounds" : "0,0,parent.width, parent.height",
+					"children":
+					[
+						{
+							"kind" : "btn",
+							"label" : "second",
+							"bg" : "white1",
+							"font" : 40,
+							"click" : ( g:parent g:parent g:next  ) ,
+							"bounds" : "0,parent.height/4,parent.width, top+parent.height/2"
+						}
+					]
+				},
+				{
+					"kind" : "box",
+					"bg" : "gray60",
+					"bounds" : "0,0,parent.width, parent.height",
+					"children":
+					[
+						{
+							"kind" : "btn",
+							"label" : "third",
+							"bg" : "blue1",
+							"font" : 40,
+							"click" : ( g:parent g:parent g:next  ) ,
+							"bounds" : "0,0,parent.width, top+parent.height/2"
+						}
+					]
+				}
+			]
+		},
+		{
+			"kind" : "btn",
+			"label" : "push",
+			"bg" : "gray80",
+			"font" : 20,
+			"click" : ' addnew ,
+			"bounds" : "0,parent.height-40,parent.width/2, parent.height"
+		},
+		{
+			"kind" : "btn",
+			"label" : "pop",
+			"bg" : "gray90",
+			"font" : 20,
+			"click" : ( g:parent "stack" g:child g:pop  ) ,
+			"bounds" : "parent.width/2,parent.height-40,parent.width, parent.height"
+		}
+	]
+} var, guiobj
+
+var gui
+
+: app:main
+	guiobj @ g:new 
+	g:show dup gui ! ;

@@ -1,0 +1,111 @@
+\ thehouse.8th
+\
+\ This example demonstrates how to work with small graphs
+\ and simple graph algorithms with 8th.
+\ It is a port of one of my old Reva samples.
+\
+\ Author: Danny Reinhold / Reinhold Software Services
+
+: <> n:= not ;
+
+
+: infos 
+quote %
+ This program calculates all solutions for the popular graph drawing problem.
+ The house looks like this:
+         N3
+         /\
+        /  \
+       /    \
+      /      \
+     /        \
+ N4 X----------X N2
+    |\        /|
+    | \      / |
+    |  \    /  |
+    |   \  /   |
+    |    \/    |
+    |    /\    |
+    |   /  \   |
+    |  /    \  |
+    | /      \ |
+    |/        \|
+ N0 X----------X N1
+
+% .  ;
+
+8 var, nof-edges
+5 var, nof-nodes
+
+nof-edges @ 1- var, last-edge
+nof-nodes @ 1- var, last-node
+
+\ connection matrix
+\ =================
+\ The rows are the nodes of the graph.
+\ The columns are the edges.
+
+[ 1, 0, 0, 0, 1, 0, 0, 1,
+  1, 1, 0, 0, 0, 0, 1, 0,
+  0, 1, 1, 0, 0, 1, 0, 1,
+  0, 0, 1, 1, 0, 0, 0, 0,
+  0, 0, 0, 1, 1, 1, 1, 0 ] var, connections
+
+
+ns:a new var, edge-visiting-data
+
+\ a var is automatically set to the number 0, so no need to init:
+var nof-solutions
+
+nof-edges @ n:1+  st:new var, path
+
+: show-path
+  nof-solutions @ . ". solution: " .
+  path @ ( "N" . st:pop dup >r . " -> " . ) nof-edges @ times  "N" . st:pop dup >r  .
+  ( r> st:push ) nof-edges @ n:1+ times
+  drop
+  cr
+;
+
+: visited! edge-visiting-data @ -rot a:! drop ;
+: visited? edge-visiting-data @ swap a:@ nip ;
+: visit    1 visited! ;
+: unvisit  0 visited! ;
+: connected? swap  nof-edges @ n:* n:+ connections @ swap a:@ 0 <> nip ;
+: solution? 1 ( visited? and ) 0 last-edge @ loop ;
+
+: unvisit-all ' unvisit 0 last-edge @ loop ;
+
+: other-node 
+	( 2 pick over n:= if drop ;then
+		2dup swap connected?  if 
+			nip nip break 
+		else 
+			drop
+		then 
+	) 0 last-node @ loop ;
+
+
+\ ( node -- )
+: search
+  dup
+  path @ swap st:push drop
+
+  ( 2dup connected? over visited? not and if dup visit 2dup other-node search unvisit else drop then ) 0 last-edge @ loop
+
+  solution?  if  1 nof-solutions n:+! show-path  then
+
+  path @ st:pop 2drop
+  drop
+;
+
+: house
+  infos
+
+  unvisit-all
+  ' search 0 last-node @ loop
+
+  cr " Number of solutions: " . nof-solutions @ . cr
+;
+
+: app:main house bye ;

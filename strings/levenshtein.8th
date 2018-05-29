@@ -1,0 +1,110 @@
+\ Non-recursive calculation of Levenshtein distance
+\ http://rosettacode.org/wiki/Levenshtein_distance
+
+ns: 2d
+
+\ utility '2-dimensional array' words
+: new \ rows cols -- arr
+  2dup n:* >r
+  2 a:close
+  ( 0 a:push ) r> times ;
+
+: cols \ arr -- arr cols
+  1 a:@ ;
+
+: rows \ arr -- arr rows
+  0 a:@ ;
+
+\ Calculate the correct offset in the array for row r and column c:
+: ofs \ arr r c -- arr ix
+  rot             \ r c arr
+  1 a:@
+  2swap           \ arr cols r c
+  >r n:* r> n:+
+  2 n:+ ;
+
+: @ \ arr r c -- arr arr[r,c]
+  ofs a:@ ;
+
+: ! \ arr r c x -- arr
+  >r ofs r> a:! ;
+
+
+ns: user
+
+: third 2 pick ;
+: fourth 3 pick ;
+: fifth 4 pick ;
+
+: levenshtein \ s t -- n
+  \ step one: get initial sizes
+  s:len                         \ s t tlen
+  \ if t is zero len, then slen
+  dup not if 2drop s:len nip ;then
+
+  \ same thing for s:
+  rot s:len                
+  dup not if 2drop nip ;then
+
+  \ t tlen s slen
+  rot 
+  \ the matrix is 1 bigger than the size of each string:
+  n:1+ swap n:1+                \ t s tlen slen
+  2d:new                        \ t s arr
+  \ fill row 0 with 0..t
+  2d:cols ( 0 swap dup 2d:! ) 1 rot loop
+
+  \ fill the col with 0..s       \ t s arr
+  2d:rows ( 0 over 2d:! ) 1 rot loop
+
+  \ t s arr
+
+  \ fill the array with appropriate values:
+  \ save the array in the r-stack
+  >r 
+  \ s1 s2
+  over
+  \ s1 s2 s1
+  (
+    \ s1 s2 r s1[r]
+    third
+    (
+      \ s1 s2 r s1[r] c s2[c] r:arr
+      \ ignore 's1 s2' at bottom, they're irrelevant to understanding the code:
+      third n:= if 0 else 1 then            \ r t[r] c \\ cost[r,c]
+      
+      \ remember: the r,c here are string indices.  The matrix starts at 1 for
+      \ our purposes:
+      \ calculate arr[row-1, col-1] + cost
+      \ r s1[r] c cost 
+      fourth                                \ r s1[r] c cost r
+      third                                 \ r s1[r] c cost r c
+      r@ -rot 2d:@ rot n:+ >r               \ r s1[r] c arr \\ arr a[r,c]+cost 
+
+      \ we're sticking the interim values on the r-stack...
+      \ calculate:     [r-1,c]+1
+      fourth third n:1+ 2d:@ n:1+ >r
+
+      \ calculate:     [r,c-1]+1
+      fourth n:1+ third 2d:@ n:1+ 
+      r> r> n:min n:min >r
+
+      \ this is arr[row,col]
+      fourth n:1+ third n:1+ r> 2d:!
+      \ clean up for next iter
+      2drop
+    ) s:each
+    2drop
+  ) s:each 
+  2drop r> 
+  \ next to last item is the one we want
+  a:pop drop a:pop nip ;
+ 
+: app:main
+  argc 2 n:< if
+    "You need to specify two strings on the command-line" . cr bye
+  then
+  0 args dup . space 
+  1 args dup . space 
+  levenshtein . cr
+  bye ;

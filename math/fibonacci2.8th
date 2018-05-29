@@ -1,0 +1,30 @@
+\ This is an iterative version of the Fibonacci series.
+
+: fibon \ n -- fib(n)
+  >r 0 1 
+  ( tuck n:+ ) \ fib(n-2) fib(n-1) -- fib(n-1) fib(n)
+  r> n:1- times ;
+
+: fib \ n -- fib(n)
+  dup 1 n:= if 1 ;then
+  fibon nip ;
+
+\ Test code: sample values:
+[ 1,2,3,4,5,100,1000 ] ( nip dup . space fib . cr ) a:each drop
+
+\ Treat 100000 specially, because it is too big for the 'bigint' and
+\ therefore becomes a 'bigfloat':
+"100000 " .
+
+\ mark the elapsed time:
+d:msec >r
+100000 fib
+d:msec r> n:- >r
+
+\ Convert to just an 'int' string:
+"%.f" strfmt
+s:len . " digits:" . cr
+dup 40 s:lsub . " upper 40 digits" . cr
+40 s:rsub . " lower 40 digits" . cr
+r> . " msec" . cr
+bye

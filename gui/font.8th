@@ -1,0 +1,26 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Font Demo",
+	"bg" : "yellow",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "theBigButton",
+			"bounds" : "10, 10, parent.width-20, parent.height-20",
+			"bg"   : "red",
+			"font" : "*quicksand-light.otf 30",
+			"click" : "clicked",
+			"label" : "Big button"
+		}
+	]
+} var, guiobj
+var gui
+
+: clicked "bye" . cr g:quit ;
+: app:main
+	guiobj @ g:new gui !
+	gui @ g:show ;

@@ -1,0 +1,42 @@
+\ Show how to verify/validate a certificate:
+
+\ This is the 8th-dev.com certificate; we are going to 'pin' to this certificate
+\ so the get will fail otherwise
+\ needs net/http
+needs net/http
+"verify.crt" app:asset var, cert
+"root.crt" app:asset var, certchain
+
+\ return the original string if it is not bigger than 'n' chars.
+\ otherwise, truncate to 'n' and add a '...'
+: ... \ s n -- s2
+  over s:len  nip
+  over n:> if
+    s:lsub "..." s:+
+  else
+    drop
+  then ;
+
+\ Print the outcome of the get:
+: .net 
+  >s 256 ... . cr ;
+
+{
+  "url" : "https://8th-dev.com/Contact.html",
+  "verify" : true,
+  "expire" : true,
+  "vhost" : true
+\ "vhostname" : "www.8th-dev.com",
+\  "vchain" : true,
+\ "pincert" : ` cert @ ` ,
+\ "rootcert" : ` certchain @ ` ,
+\  "sni"   : true,
+\  "sniname" : "joe.bob.com",
+}
+
+: test
+  net:get if .net else
+    "Sorry, failed" . cr
+  then ;
+
+test bye

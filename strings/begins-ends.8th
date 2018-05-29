@@ -1,0 +1,34 @@
+\ takes an item (may be null or a number) and the desired offset; returns true
+\ only if the item is a number and is equal to the offset, otherwise false:
+: isvalid? \ x offset -- f
+  over null? nip if
+    2drop false
+  else
+    n:=
+  then ;
+
+: s:begins \ s1 s2 -- s1 f
+  \ the offset must be 0 to match at the beginning of the string:
+  s:search 0 isvalid? ;
+
+: s:ends \ s1 s2 -- s1 f
+  \ calculate the offset s2 must be at, to be at the end of the string:
+  2dup s:len nip swap s:len nip swap n:- >r
+  s:rsearch r> isvalid? ;
+
+"This is a sample string" var, sample
+
+
+"Does the sample \"" .  sample @ . "\" begin with \"This\"? " .
+    sample @ "This" s:begins . cr
+
+"Does it end with \"ing\"? "  .
+  "ing" s:ends . cr
+
+"Does it begin with \"ing\"? "  .
+  "ing" s:begins . cr 
+
+"Does it end with \"This\"? "  .
+  "This" s:ends . cr
+
+bye

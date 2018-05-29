@@ -1,0 +1,10 @@
+\ Test that tail-recursion works as expected
+
+10000000 var, lim
+
+: x n:1+ lim @ over n:< if ;then x ;
+
+"Starting: " . cr
+1 x 
+"Done: " . . cr
+bye

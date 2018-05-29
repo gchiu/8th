@@ -1,0 +1,55 @@
+\ An annoying example of "task".  It starts two tasks, one which prints "a"
+\ every second, and the other prints "b" twice a second
+
+quote |
+This program will create three tasks:
+
+The first will wait for items to appear in its queue, and print them when they
+appear.
+
+The second will loop, waiting 1 second and pushing a random value to the first
+task's queue
+
+The third will wait for ten seconds, then kill 8th.
+| . cr
+
+var task.a
+var task.b
+var task.c
+
+: a 
+  repeat 
+    -1 t:q-wait 
+    t:pop null? if drop else
+      "A %d\n" s:strfmt . 
+    then
+  again ;
+
+: b 
+  repeat 
+    rand dup "B %d\n" s:strfmt . 
+    task.a @ dup rot
+    t:push
+    t:q-notify
+    1 sleep
+  again ;
+
+
+: c 
+  task.a @ t:notify
+  task.b @ t:notify
+  10 sleep 
+  t:main t:notify ;
+
+
+: app:main
+	"Going to start tasks\n" .
+
+	' a t:task task.a !
+	' b t:task task.b !
+	' c t:task task.c !
+
+	"all tasks started, waiting to die...\n" .
+  -1 sleep 
+  "After sleep, quitting main\n" .
+  bye ;

@@ -1,0 +1,10 @@
+\ least common multiple sample.  uses the gcd library
+
+: demo-lcm \ n m -- 
+	2dup "LCM of " . . " and " . . " = " . n:lcm . ;	
+ 
+12 18 demo-lcm cr
+6 14 demo-lcm cr
+35  0 demo-lcm cr
+ 
+bye

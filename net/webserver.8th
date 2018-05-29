@@ -1,0 +1,67 @@
+\ A simple web-server
+\ This is just a sample... don't use it as-is for anything important!
+\ The SSL certs are from https://github.com/letsencrypt/letsencrypt
+\ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 10000 -nodes
+
+\ Define the server parameters:
+{
+  "port": 8080,
+  "recv": "onRecv",
+  "root": "index.html", 
+  "dir": "pages/"
+} var, http-params
+null var, http-server
+
+{
+  "port": 8081,
+  "recv": "onRecv",
+  "root": "index2.html", 
+  "dir": "pages/", 
+  "tls": true,
+  "cert": ` "cert/cert.pem" app:asset `,
+  "key": ` "cert/key.pem" app:asset `
+} var, https-params
+null var, https-server
+
+"HTTP/1.1 200 OK\r\nContent-length: %d\r\nContent-type: text/html\r\n\r\n" var, http-header
+
+/GET\s+(\S+)\s/ var, get-rx
+
+1 var, serial
+: onRecv
+  \ simple-minded.  Look at the 'GET /page HTTP...' and figure out what to give
+  \ back:
+  >s get-rx @ r:match
+  dup not if 
+    2drop false 
+  else
+    1 n:> if
+      1 r:@ nip
+      \ the url to get.  "/" is root
+      dup "/" s:= if
+        drop net:opts "root" m:@ nip
+      else
+        -1 s:rsub
+      then
+      >r 
+      net:opts "dir" m:@ nip
+      clone nip r> s:+ app:asset
+      null? if drop "No such page" else >s then
+      serial @ "%05d" s:strfmt s:+
+      1 serial n:+!
+
+      s:len swap >r
+      http-header @ clone nip s:strfmt
+      net:write drop
+      r> net:write drop
+      true
+    then
+    false
+  then ;
+
+
+: app:main
+  http-params @ net:server http-server ! 
+  https-params @ net:server https-server ! 
+  "Serving HTTP on 8080, HTTPS on 8081\n" . 
+  ;

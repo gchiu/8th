@@ -1,0 +1,198 @@
+\ 8th script to generate a Codeless Language Module for BBEdit and TextWrangler
+\
+\ Version: 1.5
+\ Updated 2017/08/14
+\ Author: Richard A. Mead
+\ Contact: Richard {at} InfoMontage.com
+\ Copyright: (c) 2016 Information Montage
+\ Non-exclusive distribution rights are herein granted to Aaron High-Tech, Ltd.
+\
+\ BBEdit and TextWrangler are developed by Bare Bones Software, Inc.
+\ <http://www.barebones.com/>
+\
+\ Usage: 8th bbedit.8th > 8th.plist
+\        Copy the '8th.plist' file to the appropriate folder, e.g.:
+\        ~/Library/Application Support/BBEdit/Language Modules or
+\        ~/Library/Application Support/TextWrangler/Language Modules
+
+
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\"
+	\"http://www.apple.com/DTDs/PropertyList-1.0. testW du\">
+<plist version=\"1.0\">
+		
+<dict>
+	<!-- Identify the plist as a CLM: -->
+	<key>BBEditDocumentType</key>
+	<string>CodelessLanguageModule</string>
+	
+	<!-- Identify the language: -->
+	<key>BBLMLanguageDisplayName</key>  <string>8th</string>
+	<key>BBLMLanguageCode</key>         <string>8th</string>
+	
+	<key>BBLMSuffixMap</key>
+	<array>
+		<dict>
+			<key>BBLMLanguageSuffix</key>       <string>.8th</string>
+		</dict>
+	</array>
+	
+	
+	<key>BBLMColorsSyntax</key>         	<true/>
+	
+	<key>BBLMIsCaseSensitive</key>			<true/>
+
+	<key>BBLMSupportsTextCompletion</key>	<false/>
+	
+	
+	<key>BBLMPredefinedNameList</key>
+	<array>
+"
+
+[ "G::","G:;","G:i;","G:(","G:)" ]
+"ns:" words-like a:+
+"I:" words-like a:+
+"C:" words-like a:+
+"X:" words-like a:+
+
+null words-like
+(
+	true >r
+	swap
+	( nip over s:= if rdrop false >r break then ) a:each
+	nip r>
+) a:filter
+nip
+
+{} >r
+( nip dup
+	/[^:]*:/ "" s:replace
+	r@ swap null m:!?
+	swap null m:!? drop
+) a:each drop
+
+r>
+{ "#then":0, "#else":0 } m:+
+
+(
+	drop
+	"		<string><![CDATA[" s:<+ "]]></string>\n" s:+
+	s:+
+) m:each drop
+
+"	</array>
+
+	<key>BBLMKeywordList</key>
+	<array>
+" s:+
+
+[ "[","]","{","}",":","G::",";","G:;","i;","G:i;","(","G:(",")","G:)" ]
+( nip "		<string><![CDATA[" s:<+ "]]></string>\n" s:+ s:+ ) a:each drop
+
+quote %
+
+	</array>
+	
+	
+	<!-- Specify a comment-out string: -->
+	<key>BBLMCommentLineDefault</key>   <string>\ </string>
+	
+	<key>BBLMScansFunctions</key>   <true/>
+	
+	<key>Language Features</key>
+	<dict>
+		<key>Identifier and Keyword Character Class</key>
+		<string>\S</string>
+
+		<key>Comment Pattern</key>
+		<string><![CDATA[
+			(?x:				(?# Line comment)
+				(?<=^|\s|\[|\{|\,)
+				(
+					(?:
+						(?:
+							(?:G:)?
+							(?:--|\\|\#!)
+						)(?:$|\s.*?$)
+					)
+					|			(?# Multi-line comment)
+					(?:
+						(?:
+							(?:G:)?
+							(?:\(\*)(?:\s|$)
+						)(?s:.*?\*\))
+					)
+				)
+			)
+		]]></string>
+
+		<key>String Pattern</key>
+		<string><![CDATA[
+			(?x:				(?# Double-quote)
+				(?=
+					\/[^\s]
+					(?s:
+						(?>\\/|[^\/])*?
+					)
+				)(*ACCEPT)(*FAIL)
+				|
+				(?:
+					(?<=^|\s|\[|\{)
+					|
+					(?<=\,)			(?# This should be only within {} or [])
+				)
+				(
+					("(\\"|[^"])*")
+					|
+					(
+						(?<=G:quote\s|quote\s|G:quote$|quote$)
+						(?P<delim>.)
+						(?s:.*?)(?P=delim)
+					)
+				)
+			)
+		]]></string>
+
+		<key>Escape Char in Strings 1</key>
+		<string>\</string>
+
+		<key>Function Pattern</key>
+		<string><![CDATA[
+			(?x: 
+				(?<=^|\s)
+				(?P<function>
+					(
+						(?:\[(?s:(?>(?P>string)|[^\[\]]|(?R))*?)\])
+						|
+						(?:\{(?s:(?>(?P>string)|[^\{\}]|(?R))*?)\})
+						|
+						(?:\/[^\s](?s:(?>\\/|[^\/]|(?R))*?)\/)
+						|
+						(?:\([^\s](?s:(?>(?P>string)|[^\(\)]|(?R))*?)(?:^|\s)\))
+						|
+						(?:
+							(?:G:)?:\s+
+							(?P<function_name>
+								\S+
+							)
+							(?s:.*?)
+							(?:^|\s)(?:G:)?i?;
+						)
+					)(?=\s)
+				)
+			)
+		]]></string>
+		
+		<key>Skip Pattern</key>
+		<string><![CDATA[
+			(?x:
+				(?P>string) |
+				(?P>comment)
+			)
+		]]></string>
+		
+	</dict> 
+</dict>
+</plist>% s:+
+
+. cr bye

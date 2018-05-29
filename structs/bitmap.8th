@@ -1,0 +1,23 @@
+\ Not a graphics bitmap but a map of bits!
+
+\ This creates a bitmap sufficient for 'maxbits' bits:
+: bitmap \ maxbits -- b
+  8 n:/mod swap 
+  if n:1+ then 
+  b:new b:clear ;
+
+\ test code:
+1000 bitmap 
+  100 1 b:bit!
+  110 true b:bit!
+  440 -1 b:bit!
+  999 1 b:bit!
+
+\ now iterate over the entire bitmap and print the bits which are set.  
+"The bitmap has these bits set: " .
+( tuck b:bit@ rot swap if . space else drop then  ) 0 1000 loop cr
+
+"Should be 100 110 440 999\n" .  cr
+
+"The bitmap looks like:" . dump
+bye

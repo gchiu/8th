@@ -1,0 +1,32 @@
+needs net/zmq
+var ctx
+var sub
+
+: init
+  zmq:ctx-new  ctx !
+  ctx @ zmq:SUB zmq:socket sub !
+   sub @ "tcp://localhost:5550" zmq:connect not if
+    sub @ "Testing" zmq:subscribe 
+   then ;
+
+: deinit
+ sub @ zmq:close drop
+ ctx @ zmq:ctx-destroy ;
+
+: app:main
+  init
+
+  repeat
+    sub @ zmq:getmsg[] null? if
+      drop "Nothing received" . cr 
+      0.3 sleep
+    else
+      (
+        swap . cr dump
+        cr
+      ) a:each drop
+    then
+  again
+
+  deinit
+  bye ;

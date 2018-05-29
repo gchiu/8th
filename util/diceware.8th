@@ -1,0 +1,122 @@
+\ generate diceware passphrase
+\
+\   aut: Mark Probert
+\   dat: 2017-11-18
+\   rev: 1.0
+\   
+\   Modified slightly by Ron Aaron for inclusion in the samples
+
+needs utils/args      \ for commandline processing
+
+ns: dw                \ diceware name-space
+with: dw
+
+\ ------------ application defaults
+
+"beale.dice" var, WSRC \ def. wordlist to load
+
+1   var, N-PHRASE     \ def. number of phrases req.
+5   var, N-WORDS      \ def. number of words / phrase
+" " var, WORD-SEP     \ def. used to separate the words
+17  var, MIN-LEN      \ minimum passphrase length
+ 4  var, MIN-WORDS    \ minimum words allowed in phrase
+
+\ ------------ globals
+ 
+var dw-words          \ holds the word map
+
+\ ------------ application-specific words
+
+: rand-range          \ low hi -- rand
+  n:1+ over n:- rand n:abs   \ use the real random pool
+  swap n:mod n:+ ;           \ this code from Ron
+
+
+: dice-roll           \ -- n
+  1 6 rand-range >s ;        \ we want a string
+
+
+: gen-key             \ -- s (5-digit string)
+  ' dice-roll 5 times        \ 5 random dice
+  s:+ s:+ s:+ s:+ ;          \ then join up rolls
+
+
+: get-word            \ key -- str-value 
+  dw-words @ swap "---" m:@? nip ;
+
+
+: rand-word           \ -- string
+  gen-key get-word ;
+
+
+: add-sep             \ s -- s
+  WORD-SEP @ s:+ ;
+
+
+: join-words          \ s s -- "s s"
+  add-sep swap s:+ ;
+
+
+: gen-raw-phrase      \ n-words -- raw-passphrase
+  dup >r                    \ our loop counter for constuction
+  ' rand-word swap times    \ place n-words on the stack
+  r> n:1-                   \ put the count back
+  ' join-words swap times ; \ concat the words
+
+
+: gen-passphrase      \ n-words -- passphrase
+  repeat
+    gen-raw-phrase          \ generate a phrase
+    s:size MIN-LEN @ n:<     \ then check to see if it
+  while! ;                  \ is long enough
+
+
+: show-phrase         \ print out a phrase
+  N-WORDS @ gen-passphrase . cr ;
+
+
+: load \ s -- x       \ load an asset as an item:
+  dup app:asset null? if
+    "FATAL: The file specified doesn't exist: " swap s:+ . cr
+    bye
+  then
+  json> ;         \ if not valid JSON, we're hooped
+
+\ ------------ commandline processing
+
+: usage               \ helpful message
+  "diceware [opts] -- generate Diceware passphrases" . cr
+  "  opts:" . cr
+  "    -h       this message" . cr
+  "    -n <n>    number of phrases to show (def: 1)" . cr
+  "    -s <str>  string used to separate words in a phrase (def: <space>)" . cr 
+  "    -w <file> use word list found in <file> (def: beale.8th)" . cr  
+  bye ;
+
+: set-iterations       \ number of phrases to produce
+  next-arg >n N-PHRASE ! ;
+
+: set-sep-str          \ place between words
+  next-arg WORD-SEP ! ;
+
+: set-wordlist         \ set the wordlist
+  next-arg WSRC ! ;
+
+\ arg processing
+{
+  "-h" : ' usage ,
+  "-n" : ' set-iterations ,
+  "-s" : ' set-sep-str ,
+  "-w" : ' set-wordlist 
+} var, arglist
+
+\ ============ mainline application
+
+: app:main
+  arglist @ process-args          \ process the cmdline
+  WSRC @ load dw-words !          \ load the wordlist
+  ' show-phrase N-PHRASE @ times  \ show the phrases
+  ;
+
+app:main
+bye

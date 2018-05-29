@@ -1,0 +1,32 @@
+
+4 var, #tasks
+
+: dorand
+  rand n:abs 100 n:mod ;
+
+: a  \ number -- 
+  dorand dup "me" t:!
+ 
+  ( "me" t:@ n:1+ "me" t:! ) 100 times
+
+  \ push result to the main task's queue
+  t:main "me" t:@ t:push  ;
+
+: app:main
+	"Going to start tasks\n" .
+  dorand "me" t:!
+
+  "Main: " . "me" t:@ . cr
+
+  \ create #tasks, put handles into array:
+  a:new ( ' a t:task a:push ) #tasks @ times
+  \ wait on the array
+  t:wait
+
+  "Tasks gave: " . cr
+  (
+    t:pop . cr
+  ) t:qlen times
+  
+  "Main: " . "me" t:@ . cr
+  bye ;

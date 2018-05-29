@@ -1,0 +1,35 @@
+needs date/hebrew
+needs geo/location
+needs date/sunrise
+
+\ get today's date
+d:new
+
+\ print it
+dup d. 
+
+\ convert to the hebrew date
+d:>fixed d:fixed>hebrew
+
+\ print the hebrew date
+" which is " .
+d:.hebrew " on the Hebrew calendar" . cr 
+
+\ get the location for Jerusalem
+"Jerusalem" loc:find "Could not find in locations" thrownull
+"loc" m:@ .  " is at latitude: " . "lat" m:@ .
+", longitude: " . "lon" m:@ . cr
+
+d:location!  drop
+
+d:new dup >r d:sunrise swap
+"(may be 1hr off due to summer vs winter time)" . cr
+"Sunrise today: " . d:.time cr
+"Sunset today : " . d:.time cr
+d:do-dusk r@ d:sunrise nip
+"Dusk         : " . d:.time cr
+d:do-dawn r> d:sunrise drop
+"Dawn         : " . d:.time cr
+
+
+bye

@@ -1,0 +1,74 @@
+\ A REST web-server
+\ This is just a sample... don't use it as-is for anything important!
+
+needs net/http
+
+\ Define the server parameters:
+{
+  "port": 8081,
+  "recv": "onRecv",
+  "tls": true,
+  "cert": ` "cert/cert.pem" app:asset `,
+  "key": ` "cert/key.pem" app:asset `
+} var, https-params
+null var, https-server
+
+"HTTP/1.1 200 OK\r\nContent-length: %d\r\nContent-type: application/json\r\n\r\n%s" var, http-header
+
+/(GET|POST)\s+(\S+)\s/ var, get-rx
+
+\ Incoming requests will be like this:
+\ POST /joe HTTP/1.1
+\ Host: 127.0.0.1
+\ User-Agent: 8th
+\ Content-length: 12
+\  
+\ {"a":"xxxx"}
+
+: parse-header \ b -- map verb
+  >s "\r\n" s:/
+  a:shift swap
+  net:split-header swap ;
+
+: >out \ net obj -- net
+  >json s:len http-header @
+  s:strfmt net:write ;
+
+: parse-verb \ s -- a[s]|null
+  get-rx @ r:match not if
+    drop a:new
+  else
+    1 r:@ swap
+    2 r:@  nip
+    2 a:close
+  then ;
+
+: v1info
+  {"msg": "info", "api" : 1}
+  "data" r@ m:!  >out ;
+
+{
+  "/api/v1/info" : ' v1info
+} var, known-apis
+ 
+
+1 var, serial
+: onRecv
+  \ got a buffer with the headers and the request.  Let's parse out the data:
+  net:split-body
+  swap >s json> >r
+  parse-header
+  parse-verb
+
+  \ drop what we don't need:
+  nip a:open nip
+  \ call the appropriate api
+  known-apis @ swap caseof null? if drop {"err":"no such api"} >out then
+  \ clean up
+  rdrop true ;
+
+: app:main
+  https-params @ net:server https-server ! 
+  "Serving REST APIs over HTTPS on 8081\n" . 
+  "Go here: " . "https://localhost:8081/api/v1/info\n" .
+  ;

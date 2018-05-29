@@ -1,0 +1,30 @@
+\ Euler problem #40
+\ contributed by dag256
+\ https://8th-dev.com/forum/index.php/topic,1622.msg8904.html
+
+
+with: n
+
+: champernowne  \ n -- n
+    >r 1 "" 
+    repeat
+      over >s s:+  
+      swap 1+ swap
+      s:len r@ < 
+    while!
+    nip rdrop ;
+
+1000000 champernowne
+[1,
+ 10,
+ 100,
+ 1000,
+ 10000,
+ 100000,
+ 1000000] ( >r 1- s:@ '0 - r> * ) 1 a:reduce nip
+
+;with
+
+"The solution to Project Euler problem 40 is " . . cr
+bye
+

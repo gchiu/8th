@@ -1,0 +1,44 @@
+\ Crypto hash sample:
+
+\ These are the hashes we know about in 8th:
+[
+  "blake",
+  "blake2b",
+  "md5",
+  "rmd128",
+  "rmd160",
+  "rmd256",
+  "rmd320",
+  "sha1",
+  "sha256",
+  "sha384",
+  "sha512",
+  "sha3-224",
+  "sha3-256",
+  "sha3-384",
+  "sha3-512",
+  "tiger",
+  "whirlpool"
+] var, known_hashes
+
+: fox "The quick brown fox jumps over the lazy dog" ;
+
+: intro
+  "This will print the hash of '" .
+  fox . 
+  "' for all the hashes known to 8th" . cr ;
+
+: solong
+  "Done\n" . bye ;
+
+: .hash \ ix s --
+  nip dup cr:hash!
+  fox cr:hash cr:hash>s 
+  swap
+  "%-10s: %s\n" s:strfmt .  ;
+
+: app:main
+  intro
+  known_hashes @ ' .hash a:each drop
+  solong ;
+

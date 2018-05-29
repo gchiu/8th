@@ -1,0 +1,97 @@
+\ filtering images:
+var image
+
+\ The filters
+{
+  "unity" :
+    [ 
+      0, 0, 0, 
+      0, 1, 0, 
+      0, 0, 0 
+    ],
+
+  "blur" :
+    [ 
+      .1, .1, .1,
+      .1, .1, .1,
+      .1, .1, .1
+    ],
+  "edge-enhance" :
+    [ 
+      0, 0, 0, 
+      -1, 2, 0, 
+      0, 0, 0 
+    ],
+  "edge-detect" : 
+    [ 
+      0,  1.02, 0, 
+      1.02, -4, 1.02, 
+      0 , 1.02, 0 
+    ],
+  "sharpen" : 
+    [ 
+      0, -1, 0, 
+      -1, 5, -1, 
+      0 , -1, 0 
+    ],
+  "diag" : 
+    [ 
+      .33,0,0,
+      0,.33,0,
+      0,0,.33
+    ],
+  "emboss":   
+    [ 
+      -2, -1, 0, 
+      -1,  1, 1, 
+      0, 1, 2 
+    ],
+  "sobel1":   
+    [ 
+      -1, 0, 1, 
+      -2, 0, 2, 
+      -1, 0, 1 
+    ],
+  "sobel2":   
+    [ 
+      -1, -2, -1, 
+       0, 0, 0, 
+       1, 2, 1 
+    ],
+  "blur2":   
+    {
+      "mat" :
+        [ 
+          1, 1, 1,
+          1, 1, 1,
+          1, 1, 1
+        ],
+      "normalize" : .8,
+      "mode": 3
+    }
+} var, filters
+
+: do-filter \ name matrix -- 
+  swap dup . space
+  \ create a file name to use:
+  ".png" s:+ dup >r f:rm drop
+  \ run the filter:
+  image @ swap 
+  d:msec >r
+  img:filter
+  d:msec r> n:- . cr
+  \ save the image 
+  r@ img:>file
+  \ display it:
+  r> null f:launch ;
+
+: app:main
+  0 args dup . null? if drop "image.png" app:asset else f:slurp then
+  img:new 
+  null? if "Image could not be loaded" . cr bye then
+  image !
+  "This will take the original image 'image.png' and run it through a few filters" . cr
+  filters @ 
+  ' do-filter
+  m:each drop
+  "Done" . cr bye ;

@@ -1,0 +1,15 @@
+\ Example of parametrized string substitution
+needs string/tsub
+
+"Hi, %name%!  How's it %what%?"
+
+"Template: " . dup . cr
+
+{
+  "name" : "Joe",
+  "what" : "going"
+}
+s:tsub
+
+"After substitution: " . . cr
+bye

@@ -1,0 +1,34 @@
+needs utils/args
+
+false var, recursive
+var pattern
+
+: search-files \ filespec --
+  recursive @ if f:rglob else f:glob then
+  \ [files]
+  (
+    nip dup
+    f:open-ro
+    (
+      \ filename file string
+      pattern @ r:match if
+        2 pick . ": " .
+        r:str . cr
+      then
+      drop
+    ) f:eachline
+    f:close drop
+  ) a:each drop
+  ;
+
+: app:main
+  {
+    "-r" : ( true recursive ! )
+  } process-args
+
+  \ pattern is first
+  last-arg @ n:1- args r:new pattern !
+
+  \ iterate the files to search:
+  ( args search-files ) last-arg @ argc n:1- loop
+  bye ;

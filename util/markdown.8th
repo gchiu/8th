@@ -1,0 +1,201 @@
+"This sample is not yet working" throw
+\ A simple "markdown" syntax processor.  Outputs HTML from a simplified version
+\ of markdown.
+\
+\ Specifically:
+\   # at the start of a line begins a H1 
+\   ## "" H2, etc up until ###### which starts an H6
+\   These items must be on one line
+\
+\   * or _ begins (and ends) and <em> span (not surrounded by space)
+\   ** or __is <strong> 
+\   
+\   lists
+\      * one (or - one or + one)
+\      1. one 
+\
+\   paragraphs delimited by empty lines
+
+ns: md
+
+var outfile
+var infile
+\ accumulated text in the paragraph
+"" var, text
+
+\ track some state:
+true var, startpara
+
+\ "file-out": write the string to our output file:
+: fout \ s --
+  outfile @ 
+  swap f:write 
+  2drop ;
+
+: textout text @ s:len if
+    /\*\*([^*]+)\*\*/  "<strong>\\1</strong>" s:replace!
+    /\*([^*]+)\*/  "<em>\\1</em>" s:replace!
+    /__([^_]+)__/  "<strong>\\1</strong>" s:replace!
+    /_([^*]+)_/  "<em>\\1</em>" s:replace!
+    fout "" text ! 
+  else drop then ;
+
+: output-header \ -- 
+  "<html><head></head><body>\n" fout ;
+
+: output-footer \  --
+  "</body></html>\n" fout ;
+
+\ regex to capture a header (H1 etc) :
+/^(#+)\s+(.*)/ var, h-rx
+
+\ regexes for lists:
+/^(\s*)[0-9]+\.\s+(.*)/ var, ol-rx
+/^(\s*)[*+-]\s+(.*)/ var, ul-rx
+
+: header? \ s -- s 
+  dup h-rx @ r:match
+  \ s null | s n
+  null? nip not if
+    \ matches, so process the header and return to parent caller
+    drop 
+    \ get the header kind:
+    h-rx @ 1 r:@ s:len >r
+    \ get the header text:
+    drop   2 r:@ nip
+    \ remove any trailing #
+    /#+$/ "" s:replace s:trim 
+    \ format the header for output:
+    r> tuck "<h%d>%s</h%d>\n" 
+    s:strfmt fout ;;;
+  then ;
+
+\ This will be 'ul' or 'ol'
+[] var, curlist
+
+\ Return current list type (null if not in a list)
+: get-curlist
+  curlist @ -1 a:@ nip ;
+
+: listtype? \ s -- f
+  >r get-curlist null? if 
+    drop false
+  else
+    r@ s:=
+  then rdrop ;
+
+: isol?  "ol" listtype? ;
+: isul?  "ul" listtype? ;
+
+: /list
+  curlist @ a:pop nip
+  null? if drop else
+    "</%s>\n" s:strfmt fout
+  then ;
+
+: list \ s --
+  dup "<%s>" s:strfmt fout
+  curlist @ swap a:push ;
+    
+: li-out
+  2 r:@ s:trim
+  "<li>%s</li>\n" s:strfmt 
+  fout drop ;
+
+: indent-level \ r -- r n
+  1 r:@ null? if
+    drop 0
+  else
+    "\t" "  " s:replace!
+    s:len nip 2 n:/ n:int
+  then ;
+
+: dolist \ s "ul" rx --
+  \ see if there isn't yet a list item:
+  get-curlist null? if
+    \ no current list.  so make this the current list
+    drop swap list drop
+    li-out ;;
+  then
+  drop
+
+  \ see if the nesting level is changed
+  indent-level 
+  \ ul rx nl
+  curlist @ a:len n:1- nip n:-
+
+  dup 0 n:> if
+    \ indenting
+    (
+      swap list swap
+    ) swap times 
+    nip
+  else 
+    dup 0 n:< if
+      \ outdenting
+      ( /list ) swap n:neg times 
+      nip
+    else
+      \ staying the same level
+      drop nip
+    then
+  then 
+  li-out ;
+
+\ make the list entry
+: ul? \ s -- s|exit
+  dup ul-rx @ r:match
+  null? nip if 
+    get-curlist null? if drop
+    else
+      "ol" s:= if /list then
+    then
+  else
+    textout drop
+    "ul" ul-rx @ dolist ;;;
+  then ;
+
+
+: ol? \ s -- s|exit
+  dup ol-rx @ r:match
+  null? nip if 
+    get-curlist null? if drop
+    else
+      "ul" s:= if /list then
+    then
+  else
+    textout drop
+    "ol" ol-rx @ dolist ;;;
+  then ;
+  
+: para? \ s --  s | exit
+  dup /^\s*$/ r:match
+  null? nip not if 
+    drop true startpara ! ;;;
+  then ;
+
+: process-line \ s -- 
+  ul?
+  ol?
+  para?
+  header? 
+
+  \ ordinary line, just accumulate it
+  startpara @ if "<p>" swap s:+ false startpara ! then
+  text @ " " s:+ swap s:+ text !  ;
+
+: process-file
+  output-header
+  infile @ ' process-line f:eachline
+  textout
+  output-footer 
+
+  outfile @ f:close
+  infile  @ f:close ;
+
+: app:main
+  1 args "An output file is required!" thrownull
+  0 args "A file is required!" thrownull
+  f:open-ro infile !
+  f:create outfile !
+  process-file bye ;

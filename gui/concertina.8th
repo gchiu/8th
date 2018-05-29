@@ -1,0 +1,49 @@
+true app:isgui !
+\ a "concertina" lets you put multiple panels inside it
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 300,
+	"center" : true,
+	"bg" : "white",
+	"children" :
+	[
+		{
+			"kind" : "concertina",
+			"bounds" : "0,0,parent.width,parent.height",
+			"bg":"pink",
+			"panels" :
+			[
+				{
+					"kind" : "btn",
+					"name" : "btn",
+					"label" : "A Button",
+					"bounds" : "0,30,parent.width, parent.height",
+					"bg" : "green",
+					"header" : "Just a Button",
+					"headersize" : 30,
+					"headerclr" : "yellow"
+				},
+				{
+					"kind" : "color",
+					"name" : "color",
+					"bg" : "green",
+					"changed" : "color-change",
+					"header" : "Color chooser",
+					"bounds" : "0,30,parent.width, parent.height",
+					"headersize" : 30,
+					"headerclr" : "pink"
+				}
+			]
+		}
+	]
+} var, guiobj
+
+var gui
+: color-change \ gui clr --
+	>r gui @ "btn" g:child r> g:bg
+	;
+: app:main
+	guiobj @ g:new 
+	g:show gui !
+	;

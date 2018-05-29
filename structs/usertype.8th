@@ -1,0 +1,24 @@
+\ Define a user-defined type (udt).
+\ A "udt" in 8th is any item from a namespace the user created (including the
+\ 'user' namespace.  It contains a map which may be used to store anything, and
+\ because it is allocated from a particular namespace it is "type safe".
+
+
+"Create a new namespace for our user-defined-type (udt):\n" .
+ns: udt 
+
+"Create some init and deinit words (these are special words called by 8th):\n" .
+: udt:__init__
+  "UDT created: " . . cr ;
+
+: udt:__deinit__
+  "UDT destroyed: " . . cr ;
+
+"Allocate a new udt:\n" .
+ns:udt new
+
+"Get rid of it:\n" . 
+drop
+.s cr
+
+bye

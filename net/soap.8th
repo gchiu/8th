@@ -1,0 +1,35 @@
+\ Include the SOAP library:
+needs net/soap
+
+\ Helper to print XML:
+: .xml  \ xml -- xml
+ dup xml:>s . cr ;
+
+\ The map which describes the SOAP call we want to make
+\ NOTE that it shares in common the 'url' key with the normal 
+\ net: calls
+{
+	"url" : "http://www.webservicex.net/geoipservice.asmx",
+	"action" : "http://www.webservicex.net/GetGeoIP",
+	"api" :
+	{
+		"api" : "GetGeoIP",
+		"ns"  : "http://www.webservicex.net/"
+	},
+	"params" : 
+	{
+		"IPAddress" : "178.79.158.233" 
+	} 
+}
+
+\ Say what's going on:
+"SOAP demo\nThis may take a bit...\n" . 
+
+\ make the actual SOAP call:
+SOAP:call 
+
+\ Complain bitterly if it was not successful:
+"Could not connect" thrownull
+
+\ Otherwise dump the XML and go away:
+.xml cr bye

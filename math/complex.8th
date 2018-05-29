@@ -1,0 +1,21 @@
+\ Complex math:
+
+needs math/complex 
+
+\ Create a new number:
+"New number 1+2i: " . cr
+1 2 c:new dup . cr
+
+"New number -3-.5i: " . cr
+-3 -.5 c:new dup . cr
+
+"Their sum is: " . 
+2dup c:+ dup . cr
+
+"Its abs, arg is: " .
+dup c:abs . space c:arg . cr
+
+"Their product is: " .
+c:* dup . cr
+
+bye

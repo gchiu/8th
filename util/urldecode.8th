@@ -1,0 +1,5 @@
+\ Decode a "URL-encoded" bit of text from the command-line, and print it out
+\ again:
+0 args 
+net:url> . cr
+bye

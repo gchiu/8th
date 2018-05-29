@@ -1,0 +1,24 @@
+\ Use of 'roll', 'pluck' and implementation of 'poke'
+\ vim: sw=2 ts=2 et sts=2 :
+
+\ "pokes" the item "val" into position "n" of the stack
+: poke \  val n
+  swap >r
+  dup >r
+  roll drop
+  r> r> swap n:neg roll ;
+
+
+1 2 3 4 5 
+
+"Stack: " . .s cr
+
+4 roll
+"Stack after 4 roll: " . .s cr
+-4 roll
+"Stack after -4 roll should be back to the original: " . .s cr
+
+21 3 poke
+"Stack after 21 3 poke: " . .s cr
+
+bye

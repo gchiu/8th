@@ -1,0 +1,17 @@
+\ vim: ft=8th :
+{
+  "g1" : {
+    "bg" : "beige"
+  },
+  "g2" : {
+    "bg" : "pink",
+    "font" : 40,
+    "justify" : ["left", "top"]
+  },
+  "g3" : {
+    "bg" : "blue",
+    "fg" : "white",
+    \ You can also run arbitrary code: use with caution!
+    "code" : ( dup >s g:say ) 
+  }
+}

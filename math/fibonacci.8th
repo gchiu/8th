@@ -1,0 +1,53 @@
+\ n -- fib(n)
+\ Fibonacci sequence with error detection as well as memoization:
+\ vim: sw=4 ts=4 ea  :
+
+\ memoization array.  fib(n) is in the 'nth' place
+var fibs [0,1,1] fibs !
+
+: fibo@ \ n -- fib(n)
+	fibs @ swap 
+	a:@ nip ;
+
+: fibo!  \ fib(n) n --
+	>r fibs @ 
+	swap r> 
+	swap a:! drop ; 
+
+: fibo \ n -- fib(n)
+	dup 2 n:> if
+		\ does the number already exist? 
+		dup >r
+		fibo@ null? if
+			\ it does not.  so calculate it
+			drop \ the null
+			r@ 
+			n:1- dup n:1-
+			recurse swap recurse n:+
+			dup r@ fibo!
+		then
+		rdrop
+		\ fibo(n) should be in TOS
+	else
+		dup 0 n:< if 
+			drop null
+		else
+			fibo@
+		then
+	then ;
+
+: announce \ low hi -- low hi
+	2dup swap 
+	"Fibonacci numbers from %d to %d:\n" s:strfmt . cr ;
+
+: dofibo \ n --
+  ( dup 3 #> . space fibo . cr )  
+  -rot loop ;
+
+: okfail 
+  if "OK" else "BAD" then 
+  . cr ;
+
+: app:main
+   1 70 announce dofibo
+   60 fibo 1548008755920 n:=  okfail cr bye ;

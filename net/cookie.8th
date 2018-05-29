@@ -1,0 +1,24 @@
+\ How to send/receive cookies:
+
+needs net/http
+: app:main
+  { 
+    "url":"http://8th-dev.com/forum", 
+    "cookies" : [
+      "user=joe",
+      "mama=fat"
+    ]
+  } net:get if
+    drop
+    "Got a response.\nHeaders:\n" .
+    dup . cr
+    "Raw headers:\n" .
+    "raw-headers" m:@ dup . cr
+    "Cookies:\n" .
+    "set-cookie" m:@ . cr cr
+  else
+    "We didn't get a response: \n" .
+    . cr
+  then 
+  bye ;
+

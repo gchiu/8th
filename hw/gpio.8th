@@ -1,0 +1,26 @@
+\ This will toggle the GPIO pin #18 on an RPI twice a second for three seconds:
+"hw:gpio" w:find "The Free edition does not have GPIO support" thrownull
+
+18 var, pin
+
+\ tell the system we want to use that pin to write:
+pin @ false hw:gpio var, gp
+
+\ Set the specific pin to the value, and sleep half a second:
+: set'n'sleep \ pin value --
+  hw:gpio! 0.1 sleep ;
+
+: toggle \ -- 
+  "Toggle....\n" .
+  gp @ 
+  0 set'n'sleep
+  1 set'n'sleep drop ;
+
+\ see if we can run:
+: ok?
+  os 5 n:= not if "Sorry, this only runs on Raspberry Pi" throw then ;
+  
+\ do our thing: toggle on and off 10 times:
+ok? ' toggle 10 times 
+gp @ 0 hw:gpio!
+bye

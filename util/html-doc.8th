@@ -1,0 +1,115 @@
+#! /usr/bin/env 8th
+
+\ Dump the 8th help file as HTML documentation:
+
+needs utils/help
+
+var word-details
+
+: nbsp " &nbsp; " . ;
+
+: >html \ s -- s2
+  "&" "&amp;" s:replace!
+  "<" "&lt;" s:replace!
+  ">" "&gt;" s:replace!
+  ;
+
+: >fmt \ s1 -- s2
+  \ Convert a @xx@ to the class format
+  /@(.*?)@/ "<span class='cls'>\\1</span>" s:replace!
+  /__(.*?)__/ "<span class='tt'>\\1</span>" s:replace!
+  ;
+
+: one-word
+  "<div class='wordhdr'>" .
+  "<span class='nm'>" . 0 db:col >html . "</span>" .
+  "<span class='st'>( " . 1 db:col >html . " )</span>" .
+  "</div>" . cr 
+  "<div class='worddesc'>" .
+  3 db:col if
+    "<b>IMMEDIATE</b></br>" .
+  then
+  4 db:col s:len if
+    "<span class='lib'>needs " . >html . "</span></br>" .
+  else
+    drop
+  then
+  2 db:col >html >fmt .
+  "</div>" . cr ;
+
+: class-header
+  "<h2>Index of namespaces</h2>" . cr
+  ;
+
+: one-class-header 
+  \ print the header for this
+  "<a class='clsix' href='" .
+  4 db:col >s "#cls" swap s:+ .
+  "'>" . 
+  0 db:col >html . nbsp "-" . nbsp
+  1 db:col >html . 
+  " (" . 2 db:col >html . ")" .
+  "</a>" . cr ;
+
+: one-class
+  \ print the header for this
+  "<div class='clshdr'><div class='ch' id='cls" .
+  4 db:col >s .  "'>" .
+  0 db:col dup >r >html . nbsp
+  1 db:col >html .
+  " - " . 
+  2 db:col >html .
+  "</div></div>" . cr
+  \ get all the known words in this class:
+  over
+    ' one-word
+    word-details @ r> 1 db:bind
+    db:exec-cb
+  drop ;
+
+: html-header
+  "<html><head><title>8th " .  8thver? .  " words list</title>" .
+  "<style>" . cr
+  "body { font-family: Open Sans, sans-serif; margin: 20px;}" . cr
+  ".clshdr { background-color: #22F; color: #FFF; margin-top: 64px; margin-bottom: 16px; height: 64px; text-align: center;}" . cr
+  ".ch {  text-align: center; vertical-align: center; line-height: 64px; }" . cr
+  ".clsix { display: block; }" . cr
+  ".wordhdr { background-color: #55F; color: #FFF; margin-top: 12px; margin-bottom: 8px;}" . cr
+  ".nm { font-family: monospace; font-size: 10pt; font-weight: bold; margin-right: 32px; }" . cr
+  ".st { font-family: monospace; font-size: 10pt; }" . cr
+  ".cls { font-family: monospace; color: #2A2; }" . cr
+  ".tt { font-family: monospace; font-style: oblique;}" . cr
+  ".lib { font-family: monospace; font-size: 10pt; font-weight: bold}" . cr
+  ".worddesc { font-size: 12pt;}" . cr
+  "</style>" . cr
+  "</head></body>" . cr
+  "<h1>8th " .  8thver? .  " words list by namespace</h1>" .
+  ;
+
+: html-footer
+  "</body></html>" . cr ;
+  
+: app:main
+  I:init-help
+
+  \ Set up the word-detail query:
+  I:help_db @  "SELECT nm,st,desc,immed,lib FROM words WHERE cls=? ORDER BY nm COLLATE NOCASE"
+  db:prepare word-details !
+
+  \ Output the html header
+  html-header
+  
+  \ Show namespace index:
+  class-header
+  ' one-class-header
+  "SELECT nm,desc,desc2,(SELECT count(nm) FROM words WHERE cls=c.nm) as x, id FROM classes as c WHERE x>0 ORDER BY nm COLLATE NOCASE"
+  db:exec-cb 
+
+  \ Iterate each namespace which has words defined:
+  ' one-class
+  "SELECT nm,desc,desc2,(SELECT count(nm) FROM words WHERE cls=c.nm) as x, id FROM classes as c WHERE x>0 ORDER BY nm COLLATE NOCASE"
+  db:exec-cb drop
+  
+  \ Output the html-footer
+  html-footer
+  bye ;

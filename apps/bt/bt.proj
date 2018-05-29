@@ -1,0 +1,37 @@
+{
+   "perms":
+   [
+      "CAMERA",
+      "INTERNET",
+      "RECORD_AUDIO",
+      "MODIFY_AUDIO_SETTINGS",
+      "WRITE_EXTERNAL_STORAGE",
+      "ACCESS_NETWORK_STATE",
+      "READ_PHONE_STATE",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "BLUETOOTH",
+      "BLUETOOTH_ADMIN"
+   
+],
+   "ignore-paths":
+   [
+      ".*"
+   
+],
+   "ignore-files":
+   [
+    "tests.8th",
+],
+   "enc":true,
+   "gui":false,
+   "app-ver":"1.0",
+   "app-name":"bt",
+   "source":"bt.8th",
+   "icon":"project.png",
+   "windows":false,
+   "osx":true,
+   "linux":false,
+   "rpi":false,
+   "android":false,
+   "ios":false}

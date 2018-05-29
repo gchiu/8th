@@ -1,0 +1,37 @@
+\ vim: ft=8th: 
+"es" curlang !
+
+\ no need for date names at all
+
+\ string to translate is the key, the value is the value to retrieve:
+{
+"name" : "24",
+"txt" : "Bienvenido a '24'
+
+Se le van a mostrar cuatro números del 1 al 9 elegidos al azar.
+
+Usando los cuatro números sólo una vez, y en cualquier combinación de operación suma (+), sustracción (-), multiplicación (*), y división (/), debe crear una expresión cuyo resultado es el número 24.
+
+La expresión debe usar RPN (Reverse Polish Notation), lo que significa que en lugar de sumar dos números usando '1+2', debe usar '1 2 +'.  Por ejemplo, dados los números '1 1 3 6', la expresión '6 3 1 + 1* *' dará el resultado anticipado.  No puede combinar números.
+
+Si la expresión es correcta, gana dos puntos; si la expresion es incorrecta, pierde un punto.  Si presiona 'saltear' no pierde ni gana puntos.  Después de cada instancia se le darán otros cuatro números.
+
+Su meta es obtener 10 puntos en 5 minutos.
+
+Buena suerte!",
+"score" : "Puntos: ",
+"great" : "\"%0%\" es correcta!",
+"bad" : "Números incorrectos. Trate de nuevo.",
+"del" : "Borrar",
+"eval" : "Probar",
+"skip" : "Saltear",
+"q1" : "Salir",
+"q2" : "Salir",
+"win" : "Si! Ha ganado!",
+"lose" : "Mejor suerte en la próxima!",
+"wrong" : "Esa expresión es incorrecta.",
+"ok1" : "Continúe…",
+"abt" : "Sobre…"
+}
+s:intl!
+

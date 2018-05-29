@@ -1,0 +1,138 @@
+#! /usr/bin/env 8th
+\ Simple hour-tracker.  Can be used one per project:
+
+needs math/quantize
+
+\ A few global variables:
+15 var, quantum   \ Time quantum, minutes
+25 var, minimum   \ Minimum minutes to charge for a day with any work at all
+3 quantize!       \ Do 'nearest' quantization: (0=none, 1=up, 2=down, 3=nearest)
+0 var, mm         \ Total accumulated minutes
+0 var, today      \ Today's accumulated minutes
+[] var, comment   \ Today's accumulated comments, if any
+"" var, ymd       \ The last date processed
+
+\ Formatting and printing:
+\ Convert "2:30" to  150 (minutes, that is):
+: >hhmm \ "hh:mm" -- 60hh+mm
+  ":" s:/ a:open 
+  >n swap >n 
+  60 n:* n:+ ;
+
+\ Convert a number of minutes into a nicely formated HH:MM string
+\ We allow up to three digits on the hours, because we're accumulating monthly
+\ data and could reach 100+ hours:
+: hhmm> \ min -- "hh:mm"
+  60 /mod
+  "%3d:%02d" s:strfmt ;
+
+\ If 'today' has a non-zero number of minutes, print the data
+: printday
+  today @ dup if
+    ymd @ . space
+    hhmm> . space
+    \ coalesce the comments:
+    comment @ ", " a:join . cr 
+  else
+    drop
+  then ;
+
+\ Ensure that if there is any amount for a given day, it is at least the 'minimum'
+\ Returns true if the original value is the returned value:
+: minimum? \ n -- m flag
+  dup dup if minimum @ n:max then 
+  tuck n:= ;
+
+\ If the date is different from the last one processed, print the data for the last date.  
+\ In any case, process the data and accumulate:
+: newday? \ date min -- 
+  over
+
+  ymd @ s:= not if
+    \ new day, print old day and zero accumulators
+    today @ minimum? if quantum @ n:quantize  then 
+    dup today !
+    mm n:+!
+    printday
+    0 today !
+    comment @ a:clear drop
+  then
+
+  \ accumulate day's info
+  today n:+!
+  ymd !
+  r> s:trim s:len if
+    comment @ swap a:push 
+  then drop ;
+
+\ Processes the parsed line.  Converts a 'null' comment (meaning that there
+\ isn't one) to a blank string.  Converts the string time data into a total
+\ number of minutes:
+: process-line \ date start stop comment --
+  null? if drop "" then >r
+  >hhmm swap >hhmm n:- 
+  dup 0 n:< if
+    \ the end time was less than the start-time.  Either the user made a
+    \ mistake, or is working past midnight.  We'll assume the latter:
+    1440 n:+ 
+  then
+  newday? ;
+
+\ Prints the summary of the report and quits:
+: footer 
+  \ Process the last day's data:
+  "" dup >r 0 newday? 
+
+  mm @ 60 /mod "\nTotal: %5d:%02d hours\n" 
+  s:strfmt .  bye ;
+
+\ Prints the report header:
+: header 
+  "\nDate      Hours Notes\n--------  ----- ------\n" . ;
+
+\ Utility word which lets you write your hours in a nice manner.  
+\ It uses a regex to parse them and prints the results:
+: | \ -- 
+  \ Parse to end-of-line, save the raw data on r-stack in case we need to show it:
+  parseln dup >r
+  /(\d+)\s+(\d\d:\d\d)-(\d\d:\d\d)(.*)/ r:match not if
+    "Could not parse: " . r> . drop cr  ;;
+  then
+  \ regex sub-matches start at 1:
+  ( r:@ swap ) 1 4 loop drop
+  process-line rdrop ;
+
+\ HOURS GO HERE!  Sandwich them between 'header' and 'footer'
+header
+| 20170601 16:30-17:15 Project X
+| 20170601 17:23-17:38 add comments
+| 20170602 08:00-08:02 minimal amount (s/b `"minimal @")
+| 20170604 08:02-11:17 debug crash
+| 20170604 11:59-12:59 more debug
+| 20170604 13:00-13:30
+| 20170604 13:34-14:35 checkin to git
+| 20170605 09:00-09:05 review
+| 20170606 23:55-00:05 burning midnight oil
+footer
+
+\ Old data can go after 'report', since it does 'bye' and therefore this won't
+\ be seen.  Good for archival purposes
+| 20170515 16:30-17:15 Project Y
+| 20170516 17:23-17:38 blah
+
+
+\ If you're a vim user, you can take advantage of some nice shortcuts to
+\ start/stop a time value.  Just put the following in your vimrc:
+
+: func! AddTime()
+  :/^report/-
+  :put=\"\| \".strftime(\"%Y%m%d %H:%M\").\"-  :   \"
+: endfun
+
+: func! EndTime()
+  :/^report/-
+  :s/-\zs...../\=strftime("%H:%M")/
+: endfun
+
+:map ,ts :call AddTime()<cr>
+:map ,te :call EndTime()<cr>

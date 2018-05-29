@@ -1,0 +1,233 @@
+\ the main screen:
+true app:isgui !
+
+
+
+
+{
+"kind" : "win",
+"title":"8th!",
+"center" : true,
+"destroy":"main-destroy",
+"wide":400,
+"high":400,
+"size":"clock-resize",
+"bg":"grey:80",
+"fg" : "white" ,
+"font" : "42",
+"mouse-up":"loc-click",
+"draw":"clock-draw",
+"init" : ( 
+  null g:>img
+  "3min.png" f:rm drop
+  "3min.png" img:>file
+  "Saved the screen to '3min.png'" log
+  )
+} var, mainpage-obj
+	
+var mainpage
+var hebrew
+
+: hebrew?  hebrew @ a:@ nip ;
+: motto? 
+	[ ["8th:", "One effort", "Multiple platforms"] , ["8th:", "מאמץ אחד", "הרבה פלטפורמות", "בבת אחת"] ]
+	hebrew? ;
+	
+: text? hebrew @ if "texthe" else "text" then ;
+: blurb? hebrew @ if "blurbhe" else "blurb" then ;
+
+\ eight colors for the eight ideas:
+[
+	{"bg":"#b9cee4", "fg":"white", 
+		"text":"single effort",
+		"texthe":"מאמץ אחד",
+		"blurb": "Write once\nOne click\nMany platforms" ,
+		"blurbhe": "כותבים קוד אחד\nכפתור אחד\nהפקת אפליקציות רבות" 
+	}, 
+	{"bg":"#a1bedb", "fg":"white", 
+		"text":"TCO",
+		"texthe":"TCO",
+		"blurb": "Time to market\nReduce dev costs\nNo specialists",
+		"blurbhe": "זמן לשוק\nעלות פיתוח נמוכה\nללא מומחים"
+	}, 
+	{"bg":"#8aaed2", "fg":"white", 
+		"text":"security",
+		"texthe":"אבטחת מידע",
+		"blurb": "Encrypts app\nEncrypts libs\nEncrypts IP", 
+		"blurbhe": "מצפין אפליקציה\nמצפין ספריות\nמצפין IP"}, 
+
+	{"bg":"#739dc9", "fg":"white", 
+		"text":"stability",
+		"texthe":"יציבות",
+		"blurb": "Add feature once\nFix bugs once\nRuntime checks" , 
+		"blurbhe": "תוספות בקוד מופקות\nגם תיקוני באגים\nבדיקות זמן אמת" }, 
+
+	{"bg":"#5b8dc0", "fg":"white", 
+		"text":"validation",
+		"texthe":"ולידציה",
+		"blurb": "Validate code immediately\nValidate app before QA\nReduce errors" , 
+		"blurbhe": "אימות קוד בעת כתיבה\nאימות אפליקציה לפני QA\nמצמצם שגיאות" }, 
+
+	{"bg":"#447db7", "fg":"white", 
+		"text":"interactive",
+		"texthe":"אינטראקטיבי",
+		"blurb": "User friendly\nEasy to learn\nImmediate feedback", 
+		"blurbhe": "ידידותי למשתמש\nקל ללמוד\nפידבק מיידי"}, 
+
+	{"bg":"#2d6dae", "fg":"white", 
+		"text":"QA",
+		"texthe":"QA",
+		"blurb": "More efficient\nAutomate regression tests\nQA scripting", 
+		"blurbhe": "יותר יעיל\nבדיקות רגרסיהs\nממשקים ל-QA"}, 
+
+	{"bg":"#165da5", "fg":"white", 
+		"text":"HAL/FFI",
+		"texthe":"HAL/FFI",
+		"blurb": "Efficient x-platform\nUnified hw\nEasy lib", 
+		"blurbhe": "מולטי-פלטפרומות\nגישה אחידה לחומרה\nגישה קלה לספריות"}
+] var, wedges
+
+var clock-hi
+var clock-wide
+var clock-draw-wide
+\ Here is an example of OS-specific code:
+\ The word "os" returns 0 for linux, 1 for windows, etc...
+: set-textfont [ "David CLM 14", "Tahoma 20", "Arial 24", "7", "8", "14" ] os a:@ nip dup g:default-font g:setfont ;
+
+var mid-ring
+var end-ring
+var temp
+
+: clock-resize \ gui x y wide hi
+	2 n:/ clock-hi !
+	2 n:/ clock-wide !
+	clock-hi @ clock-wide @ n:min clock-draw-wide !
+	clock-draw-wide @ dup 1 3 n:*/  n:- mid-ring !
+	mid-ring @ clock-draw-wide @ over n:- 2 / + end-ring !
+	;
+
+: one-wedge
+	\  ix item
+	nip \ don't need the index
+	\ get the color from the item and  set the color:
+	"bg" m:@ 
+	r@ g:save
+
+	\ Draw the pie section:
+	g:save
+	swap g:fcolor
+	0 0 g:moveto
+	0 0 clock-draw-wide @ 0 45 .6 g:pie
+	g:fill
+	g:restore
+
+	\ draw text over it:
+	"black"  g:scolor
+	22.5 g:rotate 
+	end-ring @  0  g:translate
+	90 g:rotate
+	0 0  g:moveto
+
+	swap text? m:@ nip
+	g:draw-text
+
+	g:restore
+
+	\ rotate the gui 45 degrees for the next wedge:
+	45 g:rotate
+	drop ;
+
+with: g 
+: draw-wedges
+	-22.5 rotate
+	c-text
+	>r 
+	\ iterate over the wedges array and process:
+	wedges @   ' one-wedge   a:each drop
+	r>  \ restore the gui
+	;
+
+: empty-interior
+	\ empty the interior
+	path
+	20 line-width
+	"white" g:fcolor
+	"red" g:scolor
+	0 0 clock-draw-wide @ 0.6 n:* 0 360 0 pie
+	/path stroke-fill ;
+
+: draw-inside
+	22.5 rotate
+	90 rotate
+
+	\ draw the inside
+	"black" g:scolor
+  g:c-text
+	"Xj" textsize temp ! drop
+	\ hebrew @ if mottohe @ else motto @ then swap
+	motto? swap
+	0 temp @ n:neg 2 * moveto over 0 a:@ nip draw-text	
+	0  0  moveto over 1 a:@ nip draw-text	
+	0  temp @ moveto swap 2 a:@ nip draw-text	
+	;
+
+: clock-draw  \ gui
+	\ make the center of the window the origin:
+	clock-wide @ clock-hi @ translate
+	\ make the "0" point be at the top instead of 3'oclock:
+	-90 rotate
+	2 line-width
+	set-textfont
+	empty-interior
+	draw-wedges
+	draw-inside 
+	;
+
+: coords-to-wedge \ x y -- angle
+	swap clock-wide @ n:- swap
+	clock-hi @ n:- n:neg
+	n:atan2 rad>deg 382.5 + 360 mod 45 / round 8 mod
+	wedges @ swap a:@
+	blurb? 
+	m:@ nip ;
+
+: switchlang? \ x y -- x y 
+	over over
+	clock-hi @ n:- n:sqr swap
+	clock-wide @ n:- n:sqr n:+
+	n:sqrt mid-ring @ n:< if
+		hebrew @ n:1+ 2 mod hebrew !
+		mainpage @ invalidate drop 
+		true
+	else
+		false
+	then ;
+
+: mysay 
+  g:top g:size? rot g:xy? rot drop
+  {"fg":"red","buttonlist":["OK"],"center":false} 
+  "top" rot 16 n:+ m:!
+  "left" rot 16 n:+ m:!
+  "high" rot 32 n:- m:!
+  "wide" rot 32 n:- m:!
+   
+  "title" appname @  m:!  
+  "rtl" hebrew @ m:!
+  swap "msg" swap m:!  
+  g:say ;
+
+: loc-click 
+	switchlang?  not if 
+		coords-to-wedge mysay
+	then ;
+
+: main-destroy quit false ; 
+
+: prepare
+    10 mid-ring !
+	10 end-ring !  ;
+: app:main
+	prepare
+	mainpage-obj @ g:new 
+	dup mainpage !
+	show ;

@@ -1,0 +1,63 @@
+\ 'duck-typing' example
+\
+\ What is meant is that an 'object' responds to a method call, and the caller
+\ doesn't have to know what the type is or even if it knows how to respond:
+
+\ Say whether TOS is a word or not:
+: word? 
+  dup >kind
+  ns:w n:= ;
+
+\ If TOS is a string, print it; otherwise just drop it
+: .str? \ x -- 
+  dup >kind ns:s n:= 
+  if . else drop then ;
+
+\ This will invoke the word named by "method" in the map or user-defined item
+\ "item", if it exists and is a word.  Nothing happens otherwise
+\ If it *does* invoke the word, the original map or user-defined item will be in
+\ r@ rather than on the data stack:
+
+: dcall \ params... item method -- results... 
+  m:@ null? if drop else 
+    \ make sure the item is a word:
+    word? if 
+      \ put the item on the r-stack for access:
+      swap >r w:exec r> 
+    else drop then
+  then drop ;
+
+\ Now with that settled, let's try some tests:
+
+: name r@ "name" m:@ nip .str? ;
+
+: dog r@ "ident" dcall " BARK\n" . ;
+: cat r@ "ident" dcall " MEOW\n" . ;
+: bird r@ "ident" dcall " CHIRP\n" . ;
+
+[
+  {
+    "name" : "Fido",
+    "ident" : ' name ,
+    "what" : ' dog
+  } , 
+  {
+    "name" : "Sweet Pea",
+    "ident" : ' name ,
+    "what" : ' cat
+  } , 
+  {
+    "name" : "Tweety",
+    "ident" : ' name ,
+    "what" : ' bird
+  } , 
+  {
+    "name" : "Cthulhu",
+    "ident" : ' name
+  } 
+] var, things
+
+things @  ( nip "what" dcall ) a:each drop
+
+"Obviously, Cthulhu is silent...\n" .
+bye

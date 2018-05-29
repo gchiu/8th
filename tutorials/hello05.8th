@@ -1,0 +1,3 @@
+\ ok, this is getting ridiculous:
+
+[ "hello", ", " , "world", "!\n" ] ( . drop ) a:each bye

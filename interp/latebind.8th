@@ -1,0 +1,15 @@
+quote * Example of what 'late binding' does:
+
+The following word 'l+' uses '+' in a late-bound mode.  So the precise '+' word
+to use is determined at run-time, as if it were entered then in the REPL:
+* . cr
+
+: l+ l: + ;
+
+"Give it two numbers:\n" .
+123 321 l+ . cr
+
+"Now give it two strings:\n" .
+"cat in the " "hat" l+ . cr
+
+bye

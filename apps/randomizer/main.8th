@@ -1,0 +1,75 @@
+\ Simple application to select one of N :
+
+\ Define the gui:
+true app:isgui !
+
+\ Choose fonts appropriate for the system:
+24 var, default-font-size
+[
+  "Ubuntu",
+  "Verdana",
+  "Monaco",
+  "Droid",
+  "Helvetica",
+  "Ubuntu"
+] var, default-font-list
+
+: font-string \ size --  fontstr
+  default-font-list @ os a:@ nip 
+  "%s %d" s:strfmt ;
+
+default-font-size @ font-string g:default-font
+
+100 var, upperlimit
+var rlbl
+var gui
+
+{
+  "kind" : "win",
+  "wide" : "300",
+  "high" : "500",
+  "bg"   : "deepskyblue1",
+  "title" : "The Randomizer",
+  "children" : [
+    {
+      "kind" : "label",
+      "label" : "What's the limit?",
+      "name"  : "lnum",
+      "bounds" : "0,0, 0.75*parent.width, top + 32"
+    },
+    {
+      "kind" : "edit",
+      "name" : "edit",
+      "bounds" : "lnum.right,4, parent.width-4, lnum.bottom",
+      "text-changed" : ( g:text? >n upperlimit ! ) ,
+      "init" : ( upperlimit @ >s g:text )
+    },
+    {
+      "kind" : "btn",
+      "label" : "Randomize!",
+      "name" : "btn",
+      "bounds" : "0,lnum.bottom+12,parent.width, top+64",
+      "click" : "select-random"
+    },
+    {
+      "kind" : "label",
+      "justify" : ["hcenter", "vcenter"],
+      "name" : "rand",
+      "font" : `default-font-size @ 3 n:* font-string`,
+      "fg" : "white",
+      "bounds" : "0,btn.bottom,parent.width,parent.height",
+      "init" : ( rlbl ! )
+    }
+  ]
+} var, gui-def
+
+\ Select a number from 1 .. upperlimit, inclusive, and set the text of the
+\ 'rand' label to that value:
+: select-random 
+  rlbl @ 
+  rand n:abs 
+  upperlimit @ n:mod n:1+
+  >s g:text ;
+
+: app:main
+  gui-def @ g:new  ;

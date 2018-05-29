@@ -1,0 +1,344 @@
+\ :vim et ts=2 sfs=2 :
+\ Generate four random digits and display to the user then get an expression
+\ from the user using +, -, / and * and the digits the result must equal 24
+
+true app:isgui !
+needs string/tsub
+
+: myhandler "So sorry! " swap >s s:+ . cr cr false ; ' myhandler is handler
+
+\ Only the words in namespace 'user' are available to the player (via 'eval'):
+ns: user
+: + n:+ ;
+: - n:- ;
+: * n:* ;
+: / n:/ ;
+
+\ Put our app in its own namespace:
+ns: game
+
+\ ------------- SOME GLOBAL STATE ---------------
+var score                   \ the current score
+var elapsed                 \ how many seconds have elapsed during the game
+var gui                     \ the gui itself (created from the guiobj)
+var expr
+false var, clock-enabled    \ is the clock running or not
+var random-digits           \ the array which holds the generated random numbers
+var gui-buttons             \ an array holding the buttons with the digits
+defer: setlang              \ deferred word for setting the language in use
+false var, said             \ keep track of whether or now we 'said' something
+var clean                   \ do we need to clean the input area
+var resetting               \ are we at the end of the game and resetting it?
+-1 var, thesetlang
+
+\ Is 'now' past the timeout for the 'clean'?
+: clean?  \ -- f
+  clean @ dup 
+  if d:msec n:< then ;
+
+\ These words control the font being used for display:
+: fontname \ n -- s
+   >s "*fonts/Alef-regular.ttf " swap s:+ ;
+: (setfont)
+	fontname g:setfont ;
+
+: setfont2  \ g x y -- 
+  nip 0.6 n:* (setfont) ;
+
+: setfont \ gui wide high -- 
+  nip 21 n:/ 
+  fontname  dup >r g:setfont 
+  \ this is for the combo drop-down (pop-up...)
+  r> g:set-popup-font ;
+
+\ End of game determination:
+: timeout? \ -- f
+  elapsed @ 300 n:> ;  
+: win? \ -- f
+  score @ 9 n:> ;
+
+\ Time format for the elapsed time:
+: hh:mm \ n -- s'
+  60 /mod
+  >s ":" s:+ swap
+  '0 c# 2 #> >s s:+ ;
+
+var sounds
+
+: playsound \ n --
+  sounds @ swap a:@
+  snd:play ;
+
+\ Reset the display after "i'llsay" (but only then):
+: don'tsay
+  said @ if
+    false said !
+    expr @ 
+    "white" g:bg
+    "" g:text
+	g:invalidate drop
+    true clock-enabled !
+  then ;
+
+\ Print the string in the input area; set the background reddish or greenish
+\ depending on the flag on TOS:
+: i'llsay \  s f --
+  true said ! 
+  expr @ swap
+  if "olivedrab1" else "salmon1" then g:bg
+  swap g:text drop ;
+\  drop ;
+\  2drop ;
+
+\ Wait a second before cleaning the input area:
+: in-a-sec
+  1000 d:msec n:+ 
+  clean ! ;
+
+\ Announce the winner, play congratulatory music:
+: winner 
+  true resetting ! in-a-sec
+  0 playsound 
+  "win" s:intl true 
+  i'llsay ;
+
+\ Announce the loser, play error sound:
+: loser 
+  true resetting ! in-a-sec 
+  ( 1 playsound ) g:do
+  "lose" s:intl false i'llsay ;
+
+\ Reset the timer and enabled the clock:
+: reset-timer 
+  0 elapsed !
+  true clock-enabled ! ;
+
+\ Utility to make a specific 'tab' visible:
+: goto \ n -- 
+  gui @ "tab" 
+  g:child swap g:settab drop ;
+
+\ Get the user's input from the 'expr' text box:
+: user-input \ -- s
+  expr @ g:text? nip ;
+
+\ Generate one random digit between 1 and 9 
+: one-digit \ -- n
+  rand-pcg n:abs 9 n:mod n:1+ ;
+
+\ Generate an array with four random digits, in sorted order, and save to the
+\ global variable 'random-digits':
+: gen-digits \ --
+  a:new random-digits !
+  ' one-digit 4 times
+  4 a:close
+  ' n:cmp a:sort
+  random-digits !  ;
+
+\ Make sure the PCG gives a different result each time the game is run:
+: randomize
+  rand d:msec rand-pcg-seed ;
+
+\ Clear the 'expr' text field, and put the generated random digits in the
+\ appropriate buttons:
+: new-game
+  randomize
+  gen-digits 
+  expr @ "" g:text drop
+  (
+    gui-buttons @ over a:@ nip
+    random-digits @ rot a:@ nip 
+    >s g:text drop
+  ) 0 3 loop 
+  gui-buttons @ 0 a:@ nip g:focus drop
+  ;
+
+\ This task (e.g. 'thread') updates the time elapsed.
+\ It also checks to see if the user has won or lost:
+: update-clock
+    clean?  if 0 clean !  don'tsay then
+
+    resetting @ if 
+		0 score !
+		new-game
+		reset-timer
+		false resetting !
+		then
+
+    clock-enabled @ if
+      1 elapsed n:+!
+      gui @ "time" g:child
+      elapsed @ hh:mm g:text 
+      drop
+    then
+
+    win? if
+      winner
+    else
+      timeout? if loser reset-timer then
+    then
+  ;
+
+\ Add the text of the clicked button to the expression input:
+: clickadd \ g -- g
+  don'tsay
+  g:text? >r
+  expr @ g:text?
+  " " s:+ r> s:+ g:text ;
+
+\ Remove the last bit of entered text from the expression input:
+: delete-last
+  don'tsay
+  expr @ g:text?
+  /\s*\S+\s*$/ " " s:replace
+  g:text ;
+  
+\ Iterate over the input array of digits and comare with the randomly generated
+\ ones.  Returns whether or not the digits match:
+: compare-digits \ a -- f
+  true swap
+  (
+    \ inputed-array index
+    dup >r
+    a:@ 
+    random-digits @ r> a:@ nip
+    n:= not if
+      break
+      swap drop false swap
+    then
+  ) 0 3 loop drop ;
+
+\ We use this regex to capture the input digits.  
+/^\D*(\d)\D+(\d)\D+(\d)\D+(\d)\D*$/  var, digits-regex
+
+\ Did the user enter all the digits?
+: all-digits? 
+  user-input  digits-regex @ r:match 
+  dup null? if false else
+    5 = not if
+      false
+    else
+      \ convert the captured digits in the regex into a sorted array:
+      digits-regex @ 
+      ( r:@ >n swap ) 1 4 loop drop
+      4 a:close ' n:cmp a:sort
+      compare-digits
+    then
+  then ;
+
+\ update the displayed score:
+: score-update \ n --
+  score @ n:+ 0 n:max
+  dup score !  >s 
+  gui @ "score" g:child 
+  swap "score" s:intl clone nip swap s:+
+  g:text ;
+
+\ Check to make sure the expression evaluates to 24
+\ NOTE: We put the user in a sandbox using "only", so there is no chance of
+\ crashing by random input:
+: does-eval?
+  0 user-input 
+  eval 24 n:=  ; 
+
+\ Look at the user's input and check to see if
+\ 1) it uses all the digits properly
+\ 2) evaluates to 24
+
+: dobad
+	3 playsound
+	"bad" s:intl 
+	false i'llsay
+	in-a-sec
+	reset ;
+
+: noeval
+	3 playsound
+	"wrong" s:intl 
+	false i'llsay 
+	-1 score-update
+	in-a-sec reset ;
+
+: dogood
+	2 playsound
+	user-input >r
+	new-game
+	"great" s:intl
+	r> 1 a:close s:tsub
+	true i'llsay
+	in-a-sec
+    2 score-update reset ;
+
+: in-check-input
+  false clock-enabled !
+  all-digits?  not if dobad ;; then 
+  does-eval? not if noeval ;; then
+  dogood ;
+
+: check-input
+	' in-check-input g:do ;
+
+: combochanged 
+	drop
+	dup thesetlang @ n:= not if
+		["en","es"] swap a:@ nip setlang 
+	then ;
+
+: startgame  
+  1 goto 
+	gui-buttons @ 
+  0 a:@ nip 
+  g:focus drop
+	reset-timer ;
+
+\ Set the text of the named control to the corresponding localized text:
+: set.ctrl.lang \ name -- 
+  gui @ over g:child
+  swap s:intl g:text ;
+
+\ These are the names of the items to localize.  The lang file has to have
+\ corresponding keys!
+[ "txt", "del", "eval", "skip", "q1", "score", "ok1", "q2" , "abt" ] var, to-localize
+
+\ When the language is changed, this will be called:
+( \ lang --
+  s:lang
+  to-localize @ ( set.ctrl.lang ) a:each drop 
+  0 score-update
+  noop
+) is setlang
+
+\ The main entry point must be in the G(lobal) namespace:
+ns: G
+
+\ But our stuff is all in the 'game' namespace, so make it the first place to
+\ look for words:
+with: game
+
+: oninit
+  new-game 
+
+  \ don't allow the user to leave the sandbox:
+  ns:user only ;
+
+\ This is the main entry point:
+: app:main
+  \ Sounds for winner and loser:
+  [ "snd/win.mp3", "snd/lose.mp3", "snd/ok.mp3" , "snd/err.mp3" ]
+  ( app:asset snd:new )
+  a:map sounds !
+
+  \ define the gui:
+  "24-game.gui" app:asset eval
+  g:new dup gui ! 
+  dup
+
+  \ Iterate over the gui we created, and pluck out the button controls and put
+  \ them in an array so we can access them more easily.  We do it a lot:
+  ["one", "two", "three", "four"] 
+  (
+    over swap g:child
+  ) a:map gui-buttons !
+  
+  "expr" g:child expr ! ;
+

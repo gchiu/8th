@@ -1,0 +1,28 @@
+\ "Generator"
+
+\ A generator is a kind of executable item which keeps state so that each time
+\ it is invoked, it returns the next item in sequence.
+
+: square
+  [0] \ store our value-to-modify in an array
+  0 a:@ n:1+ tuck   \ get the current value, increment it and store it back
+  0 swap a:! 
+  drop
+  n:sqr ;
+  
+\ finally, do something with the value
+
+( square . cr ) 10 times 
+
+\ You can of course do the same with currying, and more flexibly:
+: (square)
+  0 a:@ n:1+ tuck   \ get the current value, increment it and store it back
+  0 swap a:! 
+  drop
+  n:sqr ;
+
+[0] ' (square) curry: square2
+
+( square2 . cr ) 10 times
+
+bye

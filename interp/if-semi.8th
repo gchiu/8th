@@ -1,0 +1,13 @@
+\ The "if;" word evaluates TOS and if it is false, drops it and returns to the
+\ caller of the word if; is in.  Otherwise, it continues as if nothing happened:
+
+: t if; "-" . ;
+: b "B" . t "B" . ;
+: a "A" . b "A" . ;
+
+"Should print ABBA" . cr
+true a cr
+
+"Should print AB-BA" . cr
+false a cr
+bye

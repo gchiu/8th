@@ -1,0 +1,25 @@
+\ How to find the maximum element in an array of numbers?
+\ The simplest way is to just use the 'a:reduce' word like so:
+
+[ 1.0, 2.3, 1.1, 5.0, 3, 2.8, 2.01, 3.14159 ] var, arr
+
+"Find the maximum element of the array: " .
+arr @ . cr 
+
+"Max element using 'a:reduce' is: " .
+arr @ ' n:max 0 a:reduce
+. cr
+
+\ That works by setting the maximum to the initial value of '0', and utilizing
+\ the a:reduce to iterate over the elements of the array and pass the current
+\ maximum along with the current element.  It does not modify the array.
+
+\ If you need the array to be sorted, you could also sort it and pick the first
+\ or last element out (depending on the direction of the sort)
+"Max element using 'a:sort' is: " .
+arr @ ' n:cmp a:sort
+-1 a:@ . cr
+"and now the array is: " . . cr
+
+
+bye

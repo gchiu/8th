@@ -1,0 +1,24 @@
+\ take a list (array) and flatten it:
+
+: (flatten)  \ a -- a
+	(
+		\ is it a number?
+		dup >kind ns:n n:= if
+			\ yes.  so add to the list
+			r> swap a:push >r
+		else
+			\ it is not, so flatten it
+			(flatten)
+		then
+		drop
+	) a:each drop ;
+	
+: flatten \ a -- a
+	[] const >r (flatten) r> ;
+
+[[1], 2, [[3,4], 5], [[[]]], [[[6]]], 7, 8, []]
+"Original list:    " . dup . cr
+flatten 
+"after flattening: " . . cr 
+bye
+

@@ -1,0 +1,73 @@
+\ Demonstrates use of FFI to communicate with external library.
+\ In this case, we want to talk to 'ffilib.so' which we compiled.
+\ You'll need to have something like LD_LIBRARY_PATH=. in order for Linux to
+\ find it (DYLD_... on macOS)
+
+\ First, declare the library:
+"ffilib.so" lib ffilib
+
+ffilib "System could not load 'ffilib.so', please check your LD_LIBRARY_PATH etc" thrownull drop
+
+"PP" "callme5" func: callme5
+
+"Calling callme5.  Result should be 110: " . cr
+10 "i" ptr:pack dup >r
+callme5
+"i" ptr:cast
+ptr:unpack . cr
+rdrop
+
+\ Now define the functions in the library:
+\ First char is the return value, a Number.  Next is the parameters list:
+\ Number, Zstring (ASCIIZ string):
+"NNZ" "callme1" func: callme
+
+\ This second one takes a word (which is a callback):
+"NNW" "callme2" func: callme2
+
+\ Then let's give it a call:
+
+100 "Before callme: " . dup . cr
+"Hi there" callme
+\ And see what it gave back (should be 110)
+"After callme (expecting 110): " . . cr
+
+\ Before we get all excited and call 'callme2', we have to create a callback:
+(
+  \ the callback can be anonymous, the caller doesn't care:
+  "in cb" log
+  dup . cr
+  2 n:*
+)
+\ But you do need to get the parameter list correct!  Currently, only N and Z
+\ parameters are recognized:
+"NN" w:cb
+
+\ Now we've got a callback on TOS
+
+200 "Before callme2: " . dup . cr
+swap callme2
+\ And see what it gave back (should be 400)
+"After callme2 (expecting 400): " . . cr
+
+\ This time, let's pass a pointer to a buffer
+
+"VPN" "callme3" func: callme3
+
+"hi there" b:new var, b1
+
+b1 @ dump
+
+b1 @ "b" ptr:pack dup ptr:len
+callme3
+\ Because 'callme3' actually modifies the pointer it's passed (to point to the
+\ byte after the last it's munged, you MUST use unpack_orig:
+ptr:unpack_orig 
+dump
+
+"Now for a vararg call:" . cr
+"ZZ" "callme4" func: callme4
+
+["Testing %d %s", ["NZ", 123, "yeah!!!"]] callme4
+"After call: " . . cr 
+bye

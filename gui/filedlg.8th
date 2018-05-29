@@ -1,0 +1,38 @@
+true app:isgui !
+needs gui/filedlg
+
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "white",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"label" : "Select a file…\nבחר קובץ",
+			"click" : "fileselect",
+			"bounds" : "0,0,parent.width/2, parent.height",
+			"bg" : "green"
+		}
+	]
+} var, guiobj
+
+var gui
+
+: my-cb "my-cb" log .s cr ;
+
+: fileselect 
+	{
+	 "title": "Select a file",
+	 "flags": ["open", "tree", "file", "multi" ],
+	 "filter": "*.8th",
+	 "cb" : ' my-cb 
+	}
+	g:filedlg ;
+
+: app:main
+	guiobj @ g:new 
+	g:show gui !  ;

@@ -1,0 +1,77 @@
+\ Contributed by djouniot
+\ Original: https://8th-dev.com/forum/index.php/topic,1494.msg8111.html#msg8111
+
+needs db/postgres
+
+with: pg
+
+\ Must insert the right connection sentence. 
+"host=localhost port=5432 dbname=Test user=postgres password=toto" var, conninfo
+var PGconn
+var create_table
+var select1
+var insert1
+var drop1
+var result
+
+: test-connection
+  "Tentative de connexion : " . cr
+  conninfo @ PQconnectdb PGconn !
+
+  "Test du Status (doit rendre 0) :" .
+  PGconn @ PQstatus dup . cr ;
+
+: app:main
+  test-connection if
+    "Failed connection" . cr bye
+  then
+
+
+  "Retourne dbname :" .
+  PGconn @ PQdb . cr
+
+  "Retourne user :" .
+  PGconn @ PQuser . cr
+
+  \ Lancement d'une requete
+  "create table table_test ( id int primary key not null, nom varchar(20), prenom varchar(20));" create_table !
+  "select * from table_test;" select1 !
+  "insert into table_test values ( %d, '%s', '%s');" insert1 !
+  "drop table table_test;" drop1 !
+
+  \ On cree la table
+  PGconn @ create_table @ PQexec result !
+  result @ PQresultStatus PQresStatus "Result of Create : " . . cr
+
+  \ Quelques inserts
+  PGconn @ "Dominique" " Jouniot" 1 insert1 @ s:strfmt PQexec PQclear
+  PGconn @ "Cécile" " Jouniot" 2 insert1 @ s:strfmt PQexec PQclear
+  PGconn @ "Alexandre" " Jouniot" 3 insert1 @ s:strfmt PQexec PQclear
+  PGconn @ "Maxime" " Jouniot" 4 insert1 @ s:strfmt PQexec PQclear
+
+  \ On test le select
+  PGconn @ select1 @ PQexec result !
+
+  \ On test le resultat 
+  result @ PQresultStatus PQresStatus "Le resultat du SELECT : " . . cr
+
+  \ On analyse le résultat
+  result @ PQntuples "Number of lines return : " . . cr
+  result @ PQnfields "Number of column in each lines : " . . cr
+  result @ "nom" PQfnumber "Number of column 'nom' : " . . cr
+  result @ 2 PQfname "Name of column 2 : " . . cr
+  result @ 2 2 PQgetvalue "Value of 3 line / 3 column : " . . cr
+
+  \ On purge result 
+  result @ PQclear
+  "OK pour PQclear ... " . cr
+
+  \ On drop la table
+  PGconn @ drop1 @ PQexec
+  PQresultStatus PQresStatus "Result of Drop Table : " . . cr
+
+  "Tente de se déconnecter :" . cr
+  PGconn @ PQfinish
+  cr 
+  "C'est fait" . cr 
+  bye ;

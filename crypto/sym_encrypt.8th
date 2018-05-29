@@ -1,0 +1,126 @@
+\ Symmetric encryption example
+
+\ First, our plain-text:
+"Secret message" var, ptext
+
+\ the generated keys:
+var skey
+
+\ the encrypted text:
+var ctext
+
+\ the decrypted text:
+var dtext
+
+\ the IV (if needed)
+var IV
+defer: doiv
+defer: dopad
+
+: ctriv IV @ ;
+: pad \ buf -- buf'
+  b:len 8 n:mod
+  dup if
+    8 swap n:-
+    b:new b:clear b:+
+  else drop then ;
+
+defer: doctr
+: ctr 1 ;
+: aad null ; 
+
+: create-key
+	cr "Please enter a password (up to 10 characters ) to use for encryption: " con:print
+	10 con:accept-pwd cr
+	"salt" 10000 cr:genkey dup skey ! 
+	" The generated key is: " . cr 
+	skey @ dump ;
+
+: show-plain
+	cr "The plain text is: " . ptext @ . cr ;
+	
+
+\ show some of the encrypted text:
+: show-encrypted
+	cr "The encrypted data is: " .
+	ctext @ dump cr ;
+
+: enc doiv doctr cr:encrypt ctext ! ;
+: dec doiv doctr cr:decrypt dtext ! ;
+
+: encrypt-text
+	ptext @ b:new 
+  dopad dup ptext ! 
+  skey @ enc ;
+
+: decrypt-text
+	ctext @ skey @ dec ;
+  
+\ it's a buffer, make it a String again and show it:
+: show-decrypted
+	"This should be our plain-text again: " . 
+	dtext @ >s . cr  ;
+
+: initiv 16 randbuf IV !  ;
+
+: is-ok?
+	ptext @ >s
+	dtext @ >s 
+	s:= if
+		"\net voilà!\n" .
+	else
+		"\nso sorry, the decrypted text does not match the original!\n" .
+	then ;
+
+true var, do-choose-mode
+var mode
+: .c . "/" . mode @ . cr ;
+{
+  "AES (Rijndael)" : ( "AES" .c "aes" cr:cipher! ) ,
+  "Twofish" : ( "Twofish" .c "twofish" cr:cipher! ) ,
+  "Camellia" : ( "Camellia" .c "camellia" cr:cipher! ) ,
+  "DES" : ( "DES" .c "des" cr:cipher! ) ,
+  "3DES" : ( "3DES" .c "3des" cr:cipher! ) ,
+  "CAST5" : ( "CAST5" .c "cast5" cr:cipher! ) ,
+  "Blowfish" : ( "Blowfish" .c "blowfish" cr:cipher! ) ,
+  "ChaCha20" : ( "ChaCha20" .c "chacha" cr:cipher! ' ctriv w:is doiv ' ctr w:is doctr false do-choose-mode ! ) ,
+  "ChaCha20Poly1305" : ( "ChaCha20Poly1305" .c "chacha1305" cr:cipher! ' ctriv w:is doiv ' aad w:is doctr false do-choose-mode ! ) 
+} var, choices
+
+{
+  "GCM (AES, Twofish and Camellia)" : ( "GCM" mode ! cr:GCM ) ,
+  "CTR" : ( "CTR" mode ! cr:CTR ' ctriv w:is doiv ) ,
+  "CFB" : ( "CFB" mode ! cr:CFB ' ctriv w:is doiv ) ,
+  "OFB" : ( "OFB" mode ! cr:OFB ' ctriv w:is doiv ) ,
+  "CBC" : ( "CBC" mode ! cr:CBC ' ctriv w:is doiv ' pad w:is dopad ) ,
+  "ECB" : ( "ECB" mode ! cr:ECB ' pad w:is dopad ) 
+} var, mode-choices
+
+: make-choice \ map -- 
+  m:keys ' s:cmp a:sort a:len >r
+  ( swap n:1+ . ". " . . cr ) a:each 
+  cr con:key '1 r> '0 n:+ n:clamp '1 n:-
+  a:@ nip
+  caseof ;
+
+: choose-mode
+  do-choose-mode @ if
+  cr "Choose the mode you wish to use for encryption:" . cr
+  mode-choices @ make-choice then ;
+
+: choose-cipher
+  cr "Choose the cipher-suite to use by typing the number of your choice:" . cr
+  choices @ make-choice ;
+
+: app:main
+  initiv
+	choose-cipher
+	choose-mode
+	create-key
+	show-plain
+	encrypt-text
+	show-encrypted
+	decrypt-text
+	show-decrypted
+	is-ok?
+	bye ;

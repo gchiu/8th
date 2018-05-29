@@ -1,0 +1,55 @@
+\ Demonstrate use of the cr:>aes256gcm and aes256gcm> "boxing" words.
+\ Also demonstrates the resilience of the AEAD cipher suites:
+
+\ Encrypt an item with the given key, using AES-256-GCM.  The key will be run
+\ through pbkdf2 with 10000 repetitions if it is not a 32-byte buffer (e.g. an
+\ acceptable 256-bit key). 
+\
+\ The 'box' consist of an 8-byte header which identifies this as a AES-256-GCM
+\ box, followed by a 16 byte IV and a 16 byte tag.  The header is treated as
+\ AAD, so modifying any byte of the box will cause the decryption to fail.
+\
+\ The encrypted data follows the 8-16-16 header-IV-tag.
+
+\ If you want to try 128 bit, include this and change the 256 to 128 appropriately:
+
+needs crypto/aes128gcm
+
+defer: enc
+defer: dec
+
+: aes256 "AES256GCM" . cr ' cr:>aes256gcm w:is enc ' cr:aes256gcm> w:is dec ;
+: aes128 "AES128GCM" . cr ' cr:>aes128gcm w:is enc ' cr:aes128gcm> w:is dec ;
+: chacha "ChaCha20Poly1305" . cr ' cr:>cp w:is enc ' cr:cp> w:is dec ;
+
+: plain "what's up?" ;
+: pwd "joe" ;
+
+: test 
+  plain pwd enc dup dump
+
+  \ Iterate over the encrypted box, and try to get it to decrypt a modified
+  \ buffer:
+  dup b:len n:1-
+  (
+    \ buf ix
+    over swap
+    dup >r
+    \ modify one bit
+    b:@ 0x01 n:bxor
+    r> swap b:!
+    pwd dec 
+    null? if "o" . else "!" . then drop
+  ) 0 rot loop
+  \ Finally, do the actual decryption:
+  pwd dec >s cr . cr ;
+
+: app:main
+  "This will encrypt the plaintext \"" . plain .  "\" with the password \"" . pwd . cr
+  "using various 'boxing' routines.  It will then try decrypting after each byte of the 'box' has been corrupted" . cr
+  "Then it will decrypt the original crypto-box" . cr
+
+  aes256  test
+  aes128  test
+  chacha  test
+  bye ;

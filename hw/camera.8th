@@ -1,0 +1,217 @@
+\ A simple web-cam application
+\ needs debug/nicer
+
+true app:isgui !
+var gui
+
+\ this holds the detected cameras
+hw:camera? var, cameras
+
+false var, saving
+null var, cam_hw
+var screen
+var btn
+var count
+var fps
+var write-task
+false var, single
+var done
+
+100 t:def-queue
+
+: camera>name \ obj -- obj name
+  "name" m:@ null? if
+    drop "front" m:@ null? if
+      drop "id" m:@ "Camera%d" s:strfmt
+    else
+      if "Front" else "Back" then
+    then
+  then ;
+
+: add-one-camera \ menuarray ix obj
+	swap >r \ men obj
+	camera>name
+	rot swap a:push \ obj men
+	nip
+	r> 1000 n:+ a:push ;
+
+: say
+  m:new "msg" rot m:!
+  "parent" gui @ m:!
+  g:say ;
+
+: add-cameras
+
+	[ "Cameras", 0 ] const
+	cameras @ null? if
+		drop
+		"No cameras" a:push
+		0 a:push
+		os 5 n:= if
+		  "Could not find a camera.  Did you remember to load the 'bcm2835-v4l2' module?" say
+		then
+	else
+		\ menuarray, camarray
+		' add-one-camera a:each drop
+	then
+	;
+\ Create a gui to hold the camera preview etc
+[
+    "App", 0,
+    "Single shot", {"id":2},
+    "Save images", {"id":3},
+    "Quit", 1
+] var, appmenu
+{
+  "kind" : "win",
+  "title" : "Web-cam demo",
+  "timer" : "ontimer",
+  "timer-period" : 1000,
+  "bg" : "white",
+  "children" :
+  [
+	{
+	  "kind" : "menubar",
+	  "bounds" : "0,0,parent.width, 30",
+	  "menu-selected" : "onMenuSelected" ,
+    "name" : "menu",
+	  "menu" :
+	  [
+    ` appmenu @ ` ,
+		\ Let's dynamically add the camera choices:
+		` add-cameras `
+	  ]
+	},
+	{
+		\ this is where we'll put the camera preview
+	  "kind" : "image",
+	  "bounds" : "0,menu.bottom, parent.width, parent.height - 30",
+	  "bg" : "lightgreen",
+	  "name" : "screen",
+    "init" : ( screen ! ) 
+	},
+	{
+		"kind" : "btn",
+		"bounds" : "4, parent.height-26, parent.width/4, parent.height-4",
+		"label" : "Go!",
+		"name" : "btn",
+		"click" : "onSnap"
+	},
+	{
+		"kind" : "label",
+		"bounds" : "parent.width-60, parent.height-40, parent.width, parent.height",
+		"label" : "",
+		"name" : "fps",
+    "init" : ( fps ! ) ,
+		"font" : "30"
+	}
+  ]
+} var, guiobj
+
+
+: ontimer
+  drop
+  0 count lock xchg count unlock drop
+	dup if 
+    fps @ swap >s g:text 
+  else drop then ;
+
+var frame#
+: nextfile
+	frame# @ dup n:1+ frame# !
+	"frame%04d.png" s:strfmt dup f:rm drop ;
+
+: image-writer
+  \ make the queue not throw; new items overwrite old ones if the queue is full
+  t:getq true q:overwrite false q:throwing drop
+  repeat
+    -1 t:q-wait
+    t:pop
+    nextfile img:>file
+  again ;
+
+: setimg
+  "img" m:@
+  screen @ swap g:setimage 2drop ;
+
+\ We're trying to reduce the amount of time we spend in this callback.
+\ So we're pushing the image update to the main task w g:do
+\ and if writing the image, we push to a writer task
+: image-cb \ img
+	1 count lock n:+!  count unlock drop
+
+  dup {"cb": ' setimg } "img" rot m:! g:do
+  saving @ if write-task @ dup rot t:push t:q-notify then
+  done @ dup if false done ! then not ;
+
+defer: onSnap
+var snappers
+
+: setsnap
+  snappers @ swap a:@ nip
+  w:is onSnap ;
+
+[
+  \ waiting to start
+  ( 
+    cam_hw @ null? if
+      drop "You need to select a camera first" say
+    else
+      ' image-cb hw:camera-img 
+      single @ if 
+        true done !
+      else
+        swap "Stop!" g:text swap
+        1 setsnap
+      then
+    then 
+  ) ,
+  \ wating to stop
+  ( 
+    true done !
+    "Go!" g:text
+      0 setsnap
+  )
+] snappers !
+
+snappers @ 0 a:@ nip w:is onSnap
+
+\ Take a menu item and check or uncheck it:
+: toggle-menu \ menubar flag ix -- menubar
+  appmenu @ swap a:@ nip 
+  "checked" rot m:!  drop
+  null  g:menu-update ;
+
+: toggle-single
+  drop single @ not dup single !
+  3 toggle-menu ;
+
+: toggle-saving
+  drop saving @ not dup saving !
+  5 toggle-menu ;
+
+[
+	' noop ,
+	( true single ! .1 sleep  g:quit ) ,
+	' toggle-single ,
+  ' toggle-saving 
+] var, menu-actions
+
+: onMenuSelected \ menu ix1 ix2 -- menu 
+  nip menu-actions @ over caseof null? if
+    drop
+    \ convert the index to an index we can use:
+    1000 n:- 
+    \ get the camera identifier 
+    cameras @ swap a:@ null? not if
+      \ and instantiate it
+      hw:camera 
+      cam_hw !
+    then
+    drop
+  then ;
+
+\ Start the app:
+: app:main
+	guiobj @ g:new gui !
+  ' image-writer t:task write-task ! ;

@@ -1,0 +1,60 @@
+\ This shows how to create an encrypted database
+\ NOTE: it does NOT demonstrate good key-handling!
+
+\ Create a key to use: we need to use the same key in order to read the database:
+\ If you run it once with one value and then change any of the parameters,
+\ you'll get a db:err.  Likewise, if you change even one bit of the database file:
+\
+\ If you have a non-encrypted database you wish to encrypt, use "db:rekey";
+\ likewise if you want to change the password.
+
+true var, isfirst
+null var, db
+var dkey
+
+: first-time? \ -- 
+  cr
+  "encrypted.db" dup f:exists? if
+    \ second or later time
+	false isfirst !
+	"Enter the same password you used before: " 
+  else
+    \ first time
+	"Enter a password to use to encrypt the database: " 
+  then 
+  con:print
+  db:open db ! ;
+
+: get-password
+  16 con:accept-pwd
+  "salt" 10000 cr:genkey dkey ! ;
+
+: set-key
+  db @ dkey @ db:key drop ;
+
+: create-db
+  db @
+  cr "Creating database" . cr
+  "create table joe (x int primary key, y int)" db:exec
+  "insert into joe values (1,123), (2,456), (3,789)" db:exec drop ;
+
+: show-db
+  cr "Reading database" . cr
+  db @ ( 0 db:col . space 1 db:col . cr )
+  "select * from joe" db:exec-cb
+  cr dup db:err? if 
+	"The database was not encrypted, was corrupted, or you gave an incorrect password" 
+  else
+    "Wonderful! You successfully read the data"
+  then
+  . cr db:close ;
+
+
+: app:main
+  first-time? 
+  get-password
+  set-key
+  isfirst @ if create-db then
+  show-db 
+  isfirst @ if cr "Run again to see you can read the encrypted database!" . cr then
+  bye ;

@@ -1,0 +1,29 @@
+\ Print a string as a diamond:
+
+defer: rotate
+( a:shift a:push ) w:is rotate 
+
+: aout  \ a -- a
+  dup 
+  "" a:join . 
+  a:rev ;
+
+: half-diamond \ a -- a
+  aout aout cr
+  rotate ;
+
+: do-half \ a n -- a
+  ' half-diamond
+  swap times ;
+
+: diamond \ s --
+  null s:/
+  a:len tuck
+  do-half
+  ( a:pop a:slide ) w:is rotate 
+  rotate rotate swap
+  n:1- do-half
+  drop ;
+
+"Have some fun with 8th!" diamond 
+bye

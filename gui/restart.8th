@@ -1,0 +1,36 @@
+true app:isgui !
+
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Restart Demo",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+      "min-wide" : 150,
+      "min-high" : 150,
+      "max-high" : 450,
+			"bg"   : "pink",
+			"font" : "20",
+			"click" : "clicked",
+			"label" : "Restart!"
+		}
+	]
+} var, guiobj
+
+: clicked app:restart ;  
+
+: app:main
+  
+	guiobj @ 
+  "__restarted__" getenv null? nip not if
+    "label" "Restart again" m:!
+    "bg" "red" m:!
+  then
+  g:new ;

@@ -1,0 +1,42 @@
+"Creating a database and adding data:\n" .
+
+\ remove previous db:
+"mytest.db" f:rm
+
+\ open a database:
+"mytest.db" db:open 
+
+\ create a table:
+"create table joe(x,y)" db:exec
+
+\ make a prepared statement, store it in 'r':
+"select * from joe where x=? limit 1" db:prepare >r
+
+\ insert into table (data is on TOS from before)
+	"begin; " db:exec
+	"insert into joe values (1,'hi')"		db:exec
+	"insert into joe values (2,'there'),(3,'bye'),(4,'sky')"    db:exec 
+	"commit" db:exec
+
+"Getting data with a parameterized query:\n" .
+\ do parameterized query (leaves query on TOS)
+r> 3 1 db:bind
+
+\ stack is now:  data query ; now do the query with a callback:
+	( 0 db:col . space 1 db:col . space cr )  swap db:exec-cb 
+
+\ and close the database
+db:close
+
+"Now re-open the existing database, as a buffer (rather than a file; it is now read-only)\n" .
+
+"mytest.db" f:slurp "No database" thrownull
+
+db:open
+( 0 db:col . space 1 db:col . space cr )  
+"select * from joe"
+db:exec-cb  
+db:close
+
+"Done!\n" .
+bye

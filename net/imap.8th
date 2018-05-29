@@ -1,0 +1,68 @@
+\ An IMAP sample
+\ contributed by d.k
+
+needs net/imap
+
+\ Set your server here as appropriate:
+\ 
+
+\ Encryption: STARTTLS
+\ IMAP: firemail.de Port: 143
+{ "server" : "firemail.de", "port" : 143, "secure" : "tls" } var, opts
+
+
+\ parameters to program are:  username password
+
+: run
+  "Connecting to IMAP server" log
+  opts @
+    "user" 0 args m:!
+    "pwd"  1 args m:!
+    "debug" false m:!
+  imap:new 
+
+  "err" m:exists? if
+    "The server was not reachable" log
+    bye
+  then
+
+  "Connected" log
+
+  "Login..." log 
+  with: imap
+  login if \ imap -- imap
+\   CAPABILITY
+    select-inbox "EXISTS" m:@ dup if
+      . " mail(s) in folder inbox found." log
+      drop "Search query: " . "UNSEEN" \ "NEW" \ "ALL" (s. RFC 3501: SEARCH command)
+      dup log 
+      search  
+      ' print-mail a:each  
+      drop \ a:mails or keep them for further processing
+    else
+      2drop "No mails found." log
+    then 
+    "Logout..." log
+    logout
+  then 
+
+  "net:close..." log 
+  net@ net:close
+  "Done" log 
+
+  ;with ;
+
+: parse-date \ "YYYY-MM-DD HH:MM:SS" -- d
+  b:new    \ convert to a buffer for 'unpack'
+  "4bx2bx2bx2bx2bx2bx"
+  unpack
+  (
+    >s >n
+  ) a:map
+  d:join ;
+
+: app:main
+
+   run
+
+   bye ;

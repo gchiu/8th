@@ -1,0 +1,8 @@
+\ The word 'break' also can serve to quit interpretation of a file:
+
+"hi! you should see this\n" . 
+: app:main
+  bye ;
+break
+
+"you should NOTsee this\n" . 

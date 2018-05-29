@@ -1,0 +1,114 @@
+\ Draws a clock on the screen.  Original code by jalih:
+\   https://8th-dev.com/forum/index.php/topic,1573.msg8661.html
+\
+\ Adapted and refactored a bit.
+
+false log-async
+needs math/trigd
+
+true app:isgui !
+
+var h
+var w
+var ycenter
+var xcenter
+var radius
+
+["03","02","01","12","11","10","09","08","07","06","05","04"] var, hours
+
+: circleptx  \ x r deg
+  n:cosd n:* n:+ ;
+
+: circlepty \ y r deg
+  n:sind n:* n:- ;
+
+: onsize
+  2dup h ! w !
+  2dup 2 n:/ ycenter !
+  2dup 2 n:/ xcenter !
+  n:min 2 n:/ 8 n:- radius !  ;
+
+: xc-rad \ n -- m
+  xcenter @ radius @ rot n:* ;
+
+: yc-rad \ n -- m
+  ycenter @ radius @ rot n:* ;
+
+: xcyc \ -- x y
+  xcenter @ ycenter @ ;
+
+: draw-indicator \ gui width size --
+  -rot g:line-width
+  xcyc g:moveto
+  over xc-rad r@ circleptx
+  rot yc-rad r> circlepty
+  g:lineto g:stroke ;
+
+: draw-clock
+  \ get current time (just HH MM SS):
+  d:new d:/ 3 3 a:slice a:open
+  -rot swap over
+
+  \ hour: (hour min)
+  >r 90 swap 5 n:* r> 10 n:/ n:+ 6 n:* n:- >r
+
+  \ minutes:
+  90 swap 6 n:* n:- >r 
+
+  \ seconds:
+  90 swap 6 n:* n:- >r
+
+  xcyc radius @ 0 360 g:arc
+  "black" g:scolor 2 g:line-width
+  g:stroke
+
+  "black" g:fcolor
+  (
+    >r
+    0.95 xc-rad r@ 360 60 n:*/ circleptx
+    0.95 yc-rad r> 360 60 n:*/ circlepty
+    2 0 360 g:arc
+  ) 0 59 loop
+
+  "20" g:setfont
+  g:c-text
+  (
+    >r
+    0.95 xc-rad r@ 360 12 n:*/ circleptx
+    0.95 yc-rad r@ 360 12 n:*/ circlepty
+    4 0 360 g:arc
+
+    0.80 xc-rad r@ 360 12 n:*/ circleptx
+    0.80 yc-rad r@ 360 12 n:*/ circlepty
+    hours @ r> caseof g:draw-text-at
+  ) 0 11 loop
+  g:fill
+
+  2 0.90 draw-indicator
+  6 0.85 draw-indicator 
+  10 0.65 draw-indicator
+
+  xcyc 10 0 360 g:arc
+  g:fill ;
+
+{
+  "kind" : "win",
+  "title" : "Simple Analog Clock",
+  "wide" : 300,
+  "high" : 300,
+  "min-wide" : 300,
+  "min-high" : 300,
+  "max-wide" : 500,
+  "max-high" : 500,
+  "center" : true,
+  "bg" : "white",
+  "resize-corner" : 20,
+  "font" : "Arial 10",
+  "draw" : "draw-clock",
+  "timer" : ( g:invalidate ) ,
+  "size" : "onsize",
+  "timer-period" : 1000
+} var, gui-desc
+
+: app:main
+  gui-desc @ g:new ;

@@ -1,0 +1,126 @@
+\ Crypto 'sign' boxes
+\ Note that the rsabox and edbox are built-in.
+\ We add 'eccbox' for your review...
+
+G:ns? >r ns: cr
+
+: eccbox-sig 
+  \ The numbers must be byte-sized and unique. [1,0,0] is RSA and [1,1,0] is Ed25519
+  [ 1, 2, 0 ] const 
+  cr:sbox-sig ;
+: >eccbox \ x key -- box
+  swap blakehash 
+  ecc-sign
+  eccbox-sig swap b:+ ;
+
+: eccbox> \ pubkey message box -- flag
+  \ first see if it could be a valid box
+  [8] const b:/ a:open swap
+  \ pubkey message signature boxheader
+  eccbox-sig b:= not if
+    \ invalid because the header is wrong
+    2drop drop false
+  else
+    \ pubkey message signature
+    >r blakehash r>
+    cr:ecc-verify
+  then ;
+
+r> G:ns
+
+\ Test the crypto 'signing' boxes.
+
+var rsa-pub
+var rsa-priv
+var rsa-box
+
+var ecc-pub
+var ecc-priv
+var ecc-box
+
+var ed-pub
+var ed-priv
+var ed-box
+
+"This is the message" var, message
+
+: valid? if "Valid" else "NOT valid" then . cr ;
+
+: test-rsa
+  "First, we'll create RSA keys:\n" .
+  2048 cr:rsagenkey rsa-pub !  rsa-priv !
+  "Done. Now, we'll create an 'rsabox' which contains the signature of that message\n" .
+  message @ rsa-priv @ cr:>rsabox dup rsa-box !
+  "Done.  The box looks like this:\n" . dump
+  "Now we'll verify the signature in the box:\n" .
+  rsa-pub @ message @ rsa-box @ cr:rsabox> valid? ;
+  
+: test-ed25519
+  "\n\nNow for Ed25519 keys:\n" .
+  64 cr:dh-genkey ed-pub ! ed-priv !
+\  ed-pub @ dup dump ed-priv @ dup dump
+  "Done. Now, we'll create an 'edbox' which contains the signature of that message\n" .
+  message @ ed-priv @ cr:>edbox dup ed-box !
+  "Done.  The box looks like this:\n" . dump
+  "Now we'll verify the signature in the box:\n" .
+  ed-pub @ message @ ed-box @ cr:edbox> valid? ;
+
+: test-ecc
+  "\n\nNow for ECC keys:\n" .
+  32 cr:ecc-genkey ecc-pub ! ecc-priv !
+  "Done. Now, we'll create an 'eccbox' which contains the signature of that message\n" .
+  message @ ecc-priv @ cr:>eccbox dup ecc-box !
+  "Done.  The box looks like this:\n" . dump
+  "Now we'll verify the signature in the box:\n" .
+  ecc-pub @ message @ ecc-box @ cr:eccbox> valid? ;
+  
+: test-rsa-ecc
+  "\nNow try to verify the RSA box using an ECC key\n" .
+  ecc-pub @ message @ rsa-box @ cr:rsabox> valid? ;
+
+: test-rsa-ed
+  "\nNow try to verify the RSA box using an Ed25519 key\n" .
+  ed-pub @ message @ rsa-box @ cr:rsabox> valid? ;
+
+: test-ed
+  "\nNow try to verify the Ed25519 box if a byte is corrupted\n" .
+  ed-pub @ message @ ed-box @ 20 b:@ 10 n:bxor 20 swap b:! cr:edbox> valid? ;
+
+: test-ecc-rsa
+  "\nNow try to verify the ECC box using an RSA key\n" .
+  rsa-pub @ message @ ecc-box @ cr:eccbox> valid? ;
+  
+
+\ This will encrypt the plain-text, then it will sign the encrypted text and
+\ prepend the signature to the encrypted box
+\ Basically, it appends two boxes together: the 72-byte signature and the N-byte
+\ cryptobox
+
+var key
+: app:main
+  "This demonstrates the use of the crypto 'signing boxes'\n" . 
+  test-rsa
+  test-ecc
+  test-ed25519
+
+  test-rsa-ecc
+  test-ecc-rsa
+  test-rsa-ed 
+  test-ed
+
+  "\nFinal test: chacha20poly1305ed25519.  A validated and robust box:\n" .
+  32 randbuf key !
+  message @ key @ ed-priv @ cr:>cpe
+  "After encrypt/sign" . cr
+  dup dump
+
+  "Decrypting/verification" . cr
+  key @ ed-pub @ cr:cpe> null? if
+    drop
+    "So sorry, the decryption or verification failed.\n" .
+  else
+    "Excellent!\n" .
+    dump 
+  then
+
+  bye ;

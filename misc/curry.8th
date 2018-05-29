@@ -1,0 +1,34 @@
+\ "Currying" in functional programming means taking a function which has
+\ multiple parameters, and creating a new function with one less parameter.
+
+
+\ Curry an anonymous word and put it in the var 'w1'
+20 ' n:+ curry var, w1
+
+\ Curry a named word called 'w2'
+10 ' n:+ curry: w2
+
+100 dup . cr
+dup w1 @ w:exec . cr
+w2 . cr 
+
+\ Curry an array and take care to not modify the original:
+[1,2,3] var, arr
+
+arr @ const ( 2 swap 2 ' n:* a:op! ) curry: array-munge
+
+arr @ . cr
+( array-munge . cr ) 3 times
+arr @ . cr
+
+
+\ Curry inside a word
+: c1  \ something -- w
+  ( . space "Curry! " . cr ) curry ;
+
+
+"What?" c1 w:exec
+"More..." c1 w:exec
+  
+
+bye

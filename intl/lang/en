@@ -1,0 +1,10 @@
+\ English
+\ vim: ft=8th :
+"en" curlang !
+{
+	"hi" : "Hello, world!",
+	"bye" : "Goodbye",
+	"today": "Today is %n %d, %W",
+	"sure?" : "Are you sure?"
+}
+s:intl!

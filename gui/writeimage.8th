@@ -1,0 +1,42 @@
+\ Demo of creating and writing to an image:
+
+: get-text \ --
+  cr "Please enter some text for the image (up to 20 characters): " 
+  con:print
+  20 null con:accept null? if drop "Nothing" then  ;
+
+: create-image \ -- img
+  800 600 img:new ;
+  
+: set-font \ img -- img
+  "Arial 60" g:setfont ;
+
+: write-text \ img txt -- img
+  >r
+  "white" g:scolor
+  g:c-text
+  400 300 r>
+  g:draw-text-at ;
+
+: fill-bg \ img -- img
+  "green" g:fillall ;
+
+: save-img
+  "image.png" 
+  dup f:rm drop
+  tuck img:>file 
+  null f:launch ;
+
+: app:main 
+  create-image
+  set-font
+  fill-bg
+  get-text
+  write-text
+  save-img
+  bye ;
+   
+
+
+
+\ vim: sw=2 ts=2 sts=2 et :

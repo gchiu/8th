@@ -1,0 +1,29 @@
+\ Demonstrates use of queue as a circular buffer instead of a regular queue:
+\ vim: et ts=4 sw=4 :
+
+\ queue with 10 spots
+: init \ -- a
+    "Creating a circular-queue ten-deep:" . cr
+    10 q:new 
+    \ make it overwrite old items:
+    true q:overwrite ;
+
+: jam-queue \ q -- q
+    "Filling the queue with 100 items:" . cr
+    \ fill the queue 
+    (
+    q:push
+    ) 1 100 loop ;
+
+\ there should only be the last ten items:
+: print-queue \ q --
+    "Printing last ten items stored:\n" .
+    (
+        q:pop . cr
+    ) 10 times drop ;
+
+: app:main
+    init
+    jam-queue
+    print-queue
+    bye ;

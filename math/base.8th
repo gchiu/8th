@@ -1,0 +1,14 @@
+\ Playing around with numeric bases:
+
+"This sample will print the same number in all bases from 2 to 16\n" . 
+
+1001 \ start with one-thousand and one
+dup . " nights, in other bases:" . cr
+(
+	decimal dup . space
+	base drop
+	dup . cr
+) 2 16 loop
+
+"I don't think \"" . decimal 1001 hex . " nights\" is going to catch on..." . cr
+bye

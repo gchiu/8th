@@ -1,0 +1,29 @@
+\ flatten a map 
+
+\ decare the map:
+{ "a" : 123, "b": 3141 }  var, m
+
+\ make an array to store the results.  an empty array:
+[ ] var, arr
+
+\ take the map:
+m @ 
+
+\ make a word to flatten items. it gets "ix item" on the stack:
+(
+	swap 
+	arr @ swap a:push
+	swap a:push drop
+	true
+)
+
+\ do the flattening:
+m:each
+
+\ print the original map left on TOS by 'm:each':
+"Original map:      " .  . cr
+
+\ print the flattened array:
+"After flattening:  " .  arr @ . cr
+
+bye

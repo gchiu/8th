@@ -1,0 +1,11 @@
+\ From the Rosetta Code "modular inverse" challenge: http://rosettacode.org/wiki/Modular_inverse#.7B.7Bheader.7C8th.7D.7D
+
+: blab \ n m --
+  "The inverse of " . over . " modulo " . dup . " is " . 
+  n:invmod . cr ;
+
+3 7 blab
+42 2017  blab
+3 12 blab
+31 1223442344324212234423443242 blab
+bye

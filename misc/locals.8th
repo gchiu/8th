@@ -1,0 +1,27 @@
+\ Use of "local variables"
+
+locals: 
+: bar 
+  "baz" w:!
+  "in bar, baz is: " .  "baz" w:@ . cr ;
+ 
+\ Interestingly, a word which doesn't "have locals" which is called from one
+\ which does, can access the calling word's locals:
+: internal
+  200 "baz" w:! ;
+
+locals: 
+: foo 
+  dup "baz" w:!
+  "baz" w:@ n:1- 
+  locals: (
+    "baz" w:!
+    internal
+    "in anon, baz is: " . "baz" w:@ . cr
+  ) w:exec
+  10 bar
+  "in foo, baz is: " .  "baz" w:@ . cr ;
+
+
+3 foo 
+bye

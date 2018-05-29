@@ -1,0 +1,21 @@
+os 1 n:= #if
+"Your current path is:\n" . 
+"HKEY_CURRENT_USER\\Environment\\PATH" regbin@ 
+. dump cr 
+
+"Or in text:\n" .
+"HKEY_CURRENT_USER\\Environment\\PATH" reg@ dup >r . cr
+
+"Try to add an item to the PATH:\n"  .
+
+"HKEY_CURRENT_USER\\Environment\\PATH" r@ clone nip ";TEST" s:+ reg! . cr
+"HKEY_CURRENT_USER\\Environment\\PATH" reg@  . cr
+
+"Restore to original value:\n" . 
+"HKEY_CURRENT_USER\\Environment\\PATH" r> reg! . cr
+
+"HKEY_CURRENT_USER\\Environment\\PATH" reg@  . cr
+#else
+  "This sample only works on Windows" . cr 
+#then
+bye

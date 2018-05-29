@@ -1,0 +1,88 @@
+\ Sample which demonstrates connecting to a 'STARTTLS' SMTP server
+
+\ Holds the 'net' over which we talk to the server
+var sock
+
+\ The server settings are provided on the command-line (a
+\ STARTTLS enabled SMTP server) :
+0 args  var, host
+1 args >n var, port
+
+\ Open a socket
+: create-socket \ --  
+  net:INET4 net:STREAM net:socket   sock ! ;
+
+\ Report if there was an error on the socket, and complain and die if there was:
+: sockerr
+  . space sock @ net:err? . cr bye ;
+
+\ Checks if 'null' was on TOS, and then reports it as a socket error:
+: checkok
+  null? if "Error" sockerr then
+  drop cr ;
+
+\ Get the response from the socket:
+: response \ net -- net str
+  "" 10000 net:read checkok ;
+
+\ Send data to the socket and get the response:
+: dosend \ net str -- net str
+  net:write checkok
+  response ;
+
+\ Perform an EHLO SMTP command:
+: EHLO \ net srv -- net response
+  "Sending EHLO:" . cr
+  "EHLO %s\r\n" s:strfmt dosend ;
+
+\ Perform a STARTTLS SMTP command:
+: STARTTLS \ net -- net response
+  "Sending STARTTLS:" . cr
+  "STARTTLS\r\n" dosend ;
+
+\ Start up a the STMP conversation over TLS to the SMTP server:
+: smtp-start \ --
+  sock @ response drop
+  host @ EHLO . cr
+  STARTTLS . cr ;
+
+\ Connect  to the server and port:
+: regular-connect \ -- 
+  host @ port @ net:getaddrinfo
+	"Could not use the internet" thrownull
+  sock @ net:connect ;
+
+\ Do the TLS handshake:
+: tls-connect \ net -- net
+  {"to":5} net:tlshello ;
+
+: app:main
+  argc 2 n:= not if 
+    "You need to provide a server and port on the command-line" . cr bye
+  then
+
+  \ create the bare socket:
+  "Creating socket" . cr
+  create-socket
+  \ connect to the destination:
+  "Connecting" . cr
+  regular-connect ;
+
+: xxx
+  smtp-start
+
+  sock @ net:err? if
+    "Could not connect" . cr bye
+  then
+
+  \ now make a TLS connection:
+  "Trying TLS" . cr
+  tls-connect not if
+    "Could not make a TLS connection" sockerr
+  then 
+  
+  "Successfully performed a TLS handshake, connection secured" . cr 
+  
+  host @ EHLO . cr
+
+  bye ;

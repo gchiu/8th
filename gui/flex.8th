@@ -1,0 +1,75 @@
+\ New in 17.06: "flex" items
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 600,
+	"high" : 480,
+	"title" : "Flex Demo",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[]
+} var, guiobj
+
+
+{
+  "kind" : "box",
+  "bounds" : "0,0,parent.width,parent.height",
+  "flex" : {
+    "dir" : "row",
+    "justify": "center",
+    "align":"start",
+    "wrap" : "wrap"
+  },
+  "next" : ( ["row","col"] a:pop dup >r a:slide drop r> ) ,
+  "mouse-up" : ( 2drop "flex" g:m@ >r "next" g:m@ w:exec r> "dir" rot m:! g:flex! ) ,
+  "children" : [
+    {
+      "kind" : "btn", "bg"   : "pink", "font" : "20",
+      \ This will rotate between the values each time it's invoked:
+      "next" : ( [100,150,200] a:pop dup >r a:slide drop r> ) ,
+      "click" : ( 
+          \ grab the original 'flex' specification:
+          "flex" g:m@ >r
+          \ get the next width:
+          "next" g:m@ w:exec
+          \ insert the new width into the flex and set it:
+          r> "width" rot m:!  g:flex! ) ,
+      "label" : "#1 (click)",
+      "flex" : {
+        "width" : 100, "height" : 100,
+        "margin" :[20],
+        "grow":0,
+        "shrink":0
+      }
+    }
+  ]
+} var, boxobj
+
+: clicked 
+	g:quit ; 
+
+: fill-in-children \ arr ix -- arr
+  {
+    "kind" : "btn", "bg"   : "pink", "font" : "20",
+    "click" : "clicked", "label" : "#4",
+    "flex" : {
+      "width" : 100, "height" : 100,
+      "margin" :[20],
+      "grow":0,
+      "shrink":0
+    }
+  } const
+  "label" rot "#%d" s:strfmt
+  m:! a:push ;
+
+: app:main
+  \ we'll dynamically create our layout:
+  guiobj @ "children" m:@
+	boxobj @ 
+  "children" m:@ 
+  ' fill-in-children 2 9 loop
+  "children" swap m:!
+  a:push 
+  "children" swap
+  m:!  g:new ;

@@ -1,0 +1,37 @@
+\ Demonstration of shared memory
+\ Syntax: 8th sharedmem.8th master
+\ where 'master' is 1 for yes, or '0' for no
+
+var shm
+var sema
+
+: init \ --
+  "sharedmem" 128 false b:shmem shm ! 
+  "oursem" 0 sem sema !  ;
+
+: testing
+  argc 1 n:= not if 
+    "Need one argument: 1 for master, 0 for slave" . cr bye
+  then
+
+  init
+  0 args >n 1 n:= if
+      \ master
+    "Putting the value 'X' at position 100 in the shared memory" . cr
+    shm @ 100 'X b:!
+    "Start the client and see if you get 'X'" . cr
+    sema @ sem-wait
+    "Client done" . cr
+    shm @ 100 b:@ 
+    "They put: " . putc cr
+  else
+      \ slave
+    "Reading the value at offset 100 in the shared memory" . cr
+    shm @ 100 b:@ 
+    "We got: " . putc cr
+    "Changing it to 'Y'" . cr
+    100 'Y b:!
+    sema @ sem-post
+  then  ;
+
+testing bye

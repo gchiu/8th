@@ -1,0 +1,4 @@
+\ let's be more complicated, for no good reason:
+: hi "hello, world!\n" . ;
+
+hi bye

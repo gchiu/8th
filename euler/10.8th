@@ -1,0 +1,97 @@
+\ sum of all primes < 2,000,000
+\ uses code from 7b to generate primes
+
+ns: prime
+
+var primes              \ primes generated so far
+var composites          \ skip values of known composites
+var pi                  \ index of sieving prime
+var psq                 \ square of sieving prime
+var ?n                  \ candidate to test
+5 st:new var, pstack    \ pushback stack
+
+with: n
+
+: get  \ -- a
+    primes @ clone nip ;
+
+: pi@  \ -- p ; current sieving prime
+    primes @ pi @ a:@ nip ;
+
+: pushback  \ --
+    primes @ -1 a:@             \ -- a n; get last item
+    pstack @ swap st:push drop  \ -- a; put on pstack 
+    a:len 1- a:- drop ;         \ a --; delete last item
+
+: reset  \ --
+    a:new primes !      \ list of primes we've found so far
+    pstack @ st:clear   \ clear the pushback buffer
+    3 st:push           \ prime the pump
+    2 st:push drop
+    m:new composites !  \ known composites & skip for next multiple
+    1 pi !              \ sieving prime will be position 1 (= 3)
+    3 ?n !  9 psq ! ;   \ first prime & it's square to test
+
+reset
+
+: !prime  \ n -- ; append prime to array of found primes
+    primes @ swap a:push drop ;
+
+: composite?  \ n -- (skip value or null)
+    composites @ swap >s m:@ nip ;
+
+: !composite  \ n1 n2 -- ; store step value n2 of composite number n1
+    >r repeat  r@ +  dup composite? while!
+    composites @ swap >s r> m:! drop ;
+
+: -composite  \ n1 -- ; remove composite n1 from the dictionary
+    composites @ swap >s m:- drop ;
+
+: sieve-next  \ -- n
+    repeat
+        ?n @ 2 + dup ?n !
+        dup composite? null? not if
+            \ it's composite; update the dictionary with the next multiple of this composite.
+            \
+            over -composite  !composite
+        else
+            drop
+            dup psq @ < if
+                \ not known composite & < (sieving prime)^2 => prime
+                \
+                dup !prime break
+            else
+                \ it's a square, store as known composite and advance to
+                \ the next sieving prime.
+                \
+                pi@ dup + !composite
+                1 pi +!
+                pi@ sqr psq !
+            then
+        then
+    again ;
+
+: next  \ -- n
+    pstack @ st:len 0 > if
+        st:pop nip dup !prime
+    else
+        drop sieve-next
+    then ;
+
+: upto  \ n -- a
+    >r reset
+    repeat next r@ < while!
+    pushback get rdrop ;
+ 
+;with
+ns: user
+
+: euler10
+  prime:next  dup 
+  2000000 n:< not if drop ;then
+  n:+ recurse ;
+
+"The sum of all primes below 2000000 is " . 
+0 euler10 . cr
+
+bye

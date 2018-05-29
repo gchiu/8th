@@ -1,0 +1,42 @@
+\ popup menu
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Popup Menu Demo",
+	"bg" : "lightgrey",
+	"font" : "Monaco 20",
+	"mouse-up" : "clicked",
+  "draw" : "ondraw"
+} var, guiobj
+
+: ondraw \ g
+  "black" g:scolor
+  g:c-text
+  g:size?
+    2 n:/ swap 2 n:/ swap
+    "Right-click to show menu" g:draw-text-at ;
+
+: onpopup \ x --
+  null? if drop 0 then
+  "Popup returned value: %d"
+  s:strfmt g:say ;
+
+: dopopup \ --
+  { 
+    "menu" : ["One", 100,  "Two", 200, null,0, [ "Three.1", 301, "Three.2", 302], "Three" ],
+    "cb" : ' onpopup 
+  }
+  g:popmenu  ;
+
+: clicked 
+	g:mouse? 
+  "pum" m:@ if
+    ' dopopup g:do
+  then
+  ;
+
+: app:main
+	guiobj @ g:new 
+	g:show ;

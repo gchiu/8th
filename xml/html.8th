@@ -1,0 +1,13 @@
+\ Grab some HTML and parse it:
+
+needs net/http
+
+: app:main 
+  "page.html" app:asset >s
+    xml:parse-html null? if
+      drop 
+      "error" m:@ . cr
+    else
+      . cr
+    then
+  bye ;

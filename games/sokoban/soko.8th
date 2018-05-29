@@ -1,0 +1,653 @@
+\
+\ Simple Sokoban game
+\
+\ Original version written for Plan 9 and Inferno operating systems by Andrey Mirtchovski
+\
+
+true app:isgui !
+
+var gui
+
+"levels/easy.slc" var, leveldata
+
+"data/gr.png"     app:asset img:new var, GlendaR
+"data/gl.png"     app:asset img:new var, GlendaL
+"data/t1.png"     app:asset img:new var, Empty
+"data/t2.png"     app:asset img:new var, Wall
+"data/t3.png"     app:asset img:new var, Gargo
+"data/g.png"      app:asset img:new var, Goal
+"data/donet.png"  app:asset img:new var, Victory
+"data/left.png"   app:asset img:new var, Left
+"data/right.png"  app:asset img:new var, Right
+"data/smiley.png" app:asset img:new var, Smiley
+"data/undo.png"   app:asset img:new var, Undo
+
+
+GlendaR @ var, Glenda  \ Image of Glenda the bunny. Default to facing right.
+
+
+needs math/matrix
+needs buf/getb
+\ ---------------------------------------------------------------------------------------------------------------------
+
+\ Level tiles
+: EMPTY      0 ;
+: WALL       1 ;
+: GOAL       2 ;
+
+\ Following can be combined with other elements
+: GARGO      16 ;
+: GLENDA     32 ;
+
+: TILESIZE 36 ;
+
+: TOOLBARHEIGHT 32 ;
+
+: LABELHEIGHT 24 ;
+
+: TOOLBAR+LABEL TOOLBARHEIGHT LABELHEIGHT n:+ ;
+
+
+0 var, levelnum
+
+
+\ ---------------------------------------------------------------------------------------------------------------------
+ns: level
+
+
+var board
+0 var, cols
+0 var, rows
+
+var glenda-x
+var glenda-y
+
+var done
+var moves
+
+2000 st:new var, move-stack
+
+
+: push
+  move-stack @ board @ clone nip glenda-x @ glenda-y @ Glenda @ moves @ 4 a:close extra! st:push drop ;
+
+
+: pop
+  move-stack @ st:len 0 n:= if drop ;; then
+
+  st:pop nip
+  extra@
+  0 a:@ glenda-x !
+  1 a:@ glenda-y !
+  2 a:@ Glenda !
+  3 a:@ moves !
+  drop
+  board ! ;
+
+
+locals:
+: new  \ board-matrix cols rows -- level-matrix
+  "rows" w:!
+  "cols" w:!
+  [] a:new "cols" w:@ a:push "rows" w:@ a:push mat:new "level" w:!
+  "board" w:!
+
+  ( "y" w:! ( dup "x" w:! "y" w:@ "board" w:@ mat:@ nip "x" w:@ "y" w:@ rot "level" w:@ mat:! drop ) 0 "cols" w:@ n:1- loop ) 0 "rows" w:@ n:1- loop
+  "level" w:@ ;
+
+
+: init  \ level --
+  mat:dim?
+  a:open
+  rows !
+  cols !
+  extra@
+  a:open
+  glenda-y !
+  glenda-x !
+  board !
+  GlendaR @ Glenda !
+  false done !
+  0 moves !
+  move-stack @ st:clear drop ;
+
+
+: tile?  \ x y -- tilenum
+  board @ mat:@ nip ;
+
+
+: tile  \ x y tilenum --
+  board @ mat:! drop ;
+
+
+locals:
+: finished?
+  false "break" w:!
+  ( "break" w:@ if drop ;; then "y" w:! ( "y" w:@ tile? GLENDA n:bnot n:band GOAL n:= if true "break" w:! break then ) 0 cols @ n:1- loop ) 0 rows @ n:1- loop
+  "break" w:@ if false else true then ;
+
+
+: draw0
+  "gui" w:@ Empty @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw1
+  "gui" w:@ Wall @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw2
+  "gui" w:@ Goal @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw16
+  "gui" w:@ Empty @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at
+   Gargo @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw18
+  "gui" w:@ Goal @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at
+  Gargo @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw32
+  "gui" w:@ Empty @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at
+   Glenda @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+: draw34
+  "gui" w:@ Goal @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at
+   Glenda @ "x" w:@ TILESIZE n:* "y" w:@ TILESIZE n:* TOOLBAR+LABEL n:+ g:image-at drop ;
+
+
+[  ' draw0 ,
+   ' draw1 ,
+   ' draw2 ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' draw16 ,
+   ' noop ,
+   ' draw18 ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' draw32 ,
+   ' noop ,
+   ' draw34 ] var, drawtable
+
+
+locals:
+: draw
+  "gui" w:!
+  ( "y" w:! ( dup "x" w:! "y" w:@ board @ mat:@ nip drawtable @ swap caseof ) 0 cols @ n:1- loop ) 0 rows @ n:1- loop
+
+  level:finished? if
+    gui @ Victory @ 0 TOOLBAR+LABEL g:image-at drop
+  then ;
+
+
+\ ---------------------------------------------------------------------------------------------------------------------
+ns: levels
+
+
+var levels
+
+var board
+var pglenda \ Coords as [ x, y ] pair. Will be saved as extra into the level board.
+
+0 var, x
+0 var, y
+0 var, max-x
+0 var, max-y
+0 var, nlevels
+0 var, line
+
+
+: levels:get  \ num-level -- level
+  n:1- 0 nlevels @ n:clamp levels @ swap a:@ nip extra@ swap clone nip swap extra! ;
+
+
+: zero-vars
+  a:new levels !
+  [] [20,20] mat:new board !
+  0 x !
+  0 y !
+  0 max-x !
+  0 max-y !
+  0 nlevels !
+  1 line ! ;
+
+
+: print-stats
+  nlevels @ line @ "\nParsed %d lines of text and loaded %d levels.\n" s:strfmt . ;
+
+
+\ skip comment line
+: comment
+  repeat
+    b:getb
+      null? not
+      over 10 n:= not
+      and nip
+  while!
+  1 line n:+!  ;
+
+
+: action-newline
+  1 y n:+!
+  y @ max-y !
+  1 line n:+!
+  0 x !
+  b:getb null? not if
+    dup 10 n:= if
+      drop
+      1 nlevels n:+!
+      \ add code to store board into array of boards
+      board @ max-x @ max-y @ level:new pglenda @ extra! levels @ swap a:push drop
+      [] [20,20] mat:new board !
+      0 max-x !
+      0 max-y !
+      0 y !
+    else
+      b:ungetb
+    then
+  else
+    drop
+  then ;
+
+
+: action-asterix
+  x @ y @ WALL board @ mat:! drop
+  1 x n:+! ;
+
+
+: action-space
+  x @ y @ EMPTY board @ mat:! drop
+  1 x n:+! ;
+
+
+: action-dollar
+  x @ y @ GARGO EMPTY n:bor board @ mat:! drop
+  1 x n:+! ;
+
+
+: action-times
+  x @ y @ GARGO GOAL n:bor board @ mat:! drop
+  1 x n:+! ;
+
+
+: action-dot
+  x @ y @ GOAL board @ mat:! drop
+  1 x n:+! ;
+
+
+: action-at
+  x @ y @  GLENDA EMPTY n:bor board @ mat:! drop
+  x @ y @ 2 a:close pglenda !
+  1 x n:+! ;
+
+
+: action-plus
+  x @ y @ GLENDA GOAL n:bor board @ mat:! drop
+  x @ y @ 2 a:close pglenda !
+  1 x n:+! ;
+
+
+: load  \ fname --
+  zero-vars
+  repeat
+    b:getb null? if
+      drop false
+    else
+      [ 59 , 10, 35, 32 , 36, 42, 46, 64, 43 ] swap
+      ' n:= a:indexof nip
+      null? if x @ n:1+ line @ "Impossible character for level on line: %d at column: %d." s:strfmt throw then
+      [ ' comment , ' action-newline , ' action-asterix , ' action-space , ' action-dollar , ' action-times , ' action-dot , ' action-at , ' action-plus ] swap
+      caseof
+      x @ max-x @ n:max max-x !
+      true
+    then
+  while!
+
+  max-y @ 0 n:= not if
+      1 nlevels n:+!
+      board @ max-x @ max-y @ level:new pglenda @ extra! levels @ swap a:push drop
+  then
+
+  drop ;
+
+
+\ ---------------------------------------------------------------------------------------------------------------------
+ns: user
+
+
+: refresh  \  gui --
+  dup "lbl" g:child level:moves @ "   moves: %d" s:strfmt g:text drop
+  dup "combo" g:child levelnum @ n:1- g:select! drop
+  g:invalidate drop ;
+
+
+: prev-level
+  levelnum @ n:1- 1 levels:nlevels @ n:clamp dup levelnum !
+  levels:get level:init
+  gui @ level:cols @ TILESIZE n:* level:rows @ TILESIZE n:* TOOLBAR+LABEL n:+ g:size
+  refresh ;
+
+
+: next-level
+  levelnum @ n:1+ 1 levels:nlevels @ n:clamp dup levelnum !
+  levels:get level:init
+  gui @ level:cols @ TILESIZE n:* level:rows @ TILESIZE n:* TOOLBAR+LABEL n:+ g:size
+  dup
+  refresh ;
+
+
+: restart
+  levelnum @ levels:get level:init
+  GlendaR @ Glenda !
+  gui @ level:cols @ TILESIZE n:* level:rows @ TILESIZE n:* TOOLBAR+LABEL n:+ g:size
+  refresh ;
+
+
+: undo-move
+  level:done @ if ;; then
+  level:pop
+  gui @ refresh ;
+
+
+: tb-clicked
+  [ ' prev-level , ' next-level , ' restart , ' undo-move ] swap
+  caseof ;
+
+
+: level-changed
+  nip nip >n dup levelnum !
+  levels:get level:init
+  gui @ level:cols @ TILESIZE n:* level:rows @ TILESIZE n:* TOOLBAR+LABEL n:+ g:size
+  g:focus
+  refresh ;
+
+
+{ "cursor up"    : 0,
+  "cursor down"  : 1,
+  "cursor left"  : 2,
+  "cursor right" : 3 } var, keys
+
+
+: move-empty   \ same word works for goal
+  level:push
+  "p1-x" w:@ "p1-y" w:@ "b1" w:@ GLENDA n:bor level:tile
+  true "moved" w:! ;
+
+
+: move-empty-gargo-bor  \ same word works for goal gargo bor
+  "p2-x" w:@ "p2-y" w:@ level:tile? dup >r "b2" w:!
+   r@ EMPTY n:= r> GOAL n:= or if
+     level:push
+     "p1-x" w:@ "p1-y" w:@ "b1" w:@ GARGO n:bnot n:band GLENDA n:bor level:tile
+     "p2-x" w:@ "p2-y" w:@ "b2" w:@ GARGO n:bor level:tile
+     true "moved" w:!
+   then ;
+
+
+[  ' move-empty ,
+   ' noop ,
+   ' move-empty ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' move-empty-gargo-bor ,
+   ' noop ,
+   ' move-empty-gargo-bor ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ,
+   ' noop ] var, movetable
+
+
+: up-key
+  level:done @ if;
+
+  level:glenda-x @ dup "g-x" w:! dup "p1-x" w:! "p2-x" w:!
+  level:glenda-y @ dup "g-y" w:! n:1- dup "p1-y" w:! n:1- "p2-y" w:!
+
+  "p1-x" w:@ "p1-y" w:@ level:tile? "b1" w:!
+  movetable @
+  "b1" w:@ caseof ;
+
+
+: down-key
+  level:done @ if;
+
+  level:glenda-x @ dup "g-x" w:! dup "p1-x" w:! "p2-x" w:!
+  level:glenda-y @ dup "g-y" w:! n:1+ dup "p1-y" w:! n:1+ "p2-y" w:!
+
+  "p1-x" w:@ "p1-y" w:@ level:tile? "b1" w:!
+  movetable @
+  "b1" w:@ caseof ;
+
+
+: left-key
+  true "left" w:!
+  level:done @ if;
+
+  level:glenda-x @ dup "g-x" w:! n:1- dup "p1-x" w:! n:1- "p2-x" w:!
+  level:glenda-y @ dup "g-y" w:! dup "p1-y" w:! "p2-y" w:!
+
+  "p1-x" w:@ "p1-y" w:@ level:tile? "b1" w:!
+  movetable @
+  "b1" w:@ caseof ;
+
+
+: right-key
+  true "right" w:!
+  level:done @ if;
+
+  level:glenda-x @ dup "g-x" w:! n:1+ dup "p1-x" w:! n:1+ "p2-x" w:!
+  level:glenda-y @ dup "g-y" w:! dup "p1-y" w:! "p2-y" w:!
+
+  "p1-x" w:@ "p1-y" w:@ level:tile? "b1" w:!
+  movetable @
+  "b1" w:@ caseof ;
+
+
+locals:
+: onkey
+  level:finished? if drop ;; then
+  false "moved" w:!
+  false "left"  w:!
+  false "right" w:!
+  drop
+  g:keyinfo nip "desc" m:@ nip
+  dup
+  keys @ swap m:exists?
+  if
+    swap m:@ nip
+    [ ' up-key ,' down-key , ' left-key , ' right-key ] swap
+    caseof
+  else
+    2drop
+  then
+  "left" w:@ if
+    GlendaL @ Glenda !
+    g:invalidate
+  else "right" w:@ if
+    GlendaR @ Glenda !
+    g:invalidate
+  then then
+  "moved" w:@ if
+    "g-x" w:@ "g-y" w:@ 2dup level:tile? GLENDA n:bnot n:band level:tile
+    "p1-x" w:@ level:glenda-x !
+    "p1-y" w:@ level:glenda-y !
+    1 level:moves n:+!
+    refresh
+  then
+  true ;
+
+
+: onsize
+  2drop
+  level:cols @ TILESIZE n:* level:rows @ TILESIZE n:* TOOLBAR+LABEL n:+ g:size
+  g:invalidate drop ;
+
+
+: pt-add  \ x1 y1  x2 y2 -- x1+x2 y1+y2
+  rot n:+ -rot n:+ swap ;
+
+
+: pt-eq  \ x1 y1 x2 y2 -- bool
+  rot n:= -rot n:= and ;
+
+
+locals:
+: onclick
+  level:finished? if 2drop drop ;; then
+
+  false "moved" w:!
+  false "left"  w:!
+  false "right" w:!
+
+  swap
+  TILESIZE n:/ n:int swap
+  TILESIZE n:/ n:int
+
+  2dup
+  0 1 pt-add level:glenda-x @ level:glenda-y @ pt-eq if
+    up-key
+  else 2dup 0 -1 pt-add level:glenda-x @ level:glenda-y @ pt-eq if
+    down-key
+  else 2dup 1 0 pt-add level:glenda-x @ level:glenda-y @ pt-eq if
+    left-key
+  else -1 0 pt-add level:glenda-x @ level:glenda-y @ pt-eq if
+    right-key
+  then
+
+  "left" w:@ if
+    GlendaL @ Glenda !
+    g:invalidate
+  else "right" w:@ if
+    GlendaR @ Glenda !
+    g:invalidate
+  then then
+  "moved" w:@ if
+    "g-x" w:@ "g-y" w:@ 2dup level:tile? GLENDA n:bnot n:band level:tile
+    "p1-x" w:@ level:glenda-x !
+    "p1-y" w:@ level:glenda-y !
+    1 level:moves n:+!
+    gui @ refresh
+  then drop ;
+
+
+{
+  "kind" : "win",
+  "buttons" : 5,
+  "title" : "Sokoban",
+  "center" : true,
+  "bg" : "gray",
+  "font" : "Arial 10",
+  "draw" : "level:draw",
+  "key-pressed" : "onkey",
+  "size" : "onsize",
+  "children" :
+  [
+    {
+      "kind" : "toolbar",
+      "bounds" : "0, 0, parent.right, top+32",
+      "bg"   : "gray",
+      "name" : "toolbar",
+      "click" : "tb-clicked",
+      "editingEnabled" : false,
+      "items" :
+      [
+        { "img": "data/left.png",   "id": 0, "label" : "Previous level" },
+        { "img": "data/right.png",  "id": 1, "label" : "Next level" },
+        { "img": "data/smiley.png", "id": 2, "label" : "Restart" },
+        { "img": "data/undo.png",   "id": 3, "label" : "Undo" }
+      ]
+    },
+    {
+      "kind" : "label",
+      "font" : "Arial 18",
+      "label" : " level:",
+      "bounds": "0,toolbar.bottom,left+40,top+24",
+      "justify" : ["hleft"],
+      "name" : "lbl1"
+    },
+    {
+      "kind" : "combo",
+      "font" : "Arial 16",
+      "bounds" : "lbl1.right, toolbar.bottom, left+50,top+24",
+      "bg"   : "gray",
+      "name" : "combo",
+      "changed" : "level-changed"
+    },
+    {
+      "kind" : "label",
+      "font" : "Arial 18",
+      "label" : "",
+      "bounds": "combo.right,toolbar.bottom,parent.right,top+24",
+      "justify" : ["hleft"],
+      "name" : "lbl"
+    },
+    {
+      "kind" : "box",
+      "bounds": "0, lbl.bottom, parent.right, parent.bottom",
+      "name" : "canvas",
+      "mouse-up" : "onclick"
+    }
+  ]
+} var, gui-desc
+
+
+: app:main
+  0 args
+  null? if
+    drop 
+    leveldata @ app:asset
+  then
+  levels:load
+
+  gui-desc @ g:new dup gui ! "combo" g:child >r ( >s r@ swap g:list+ drop ) 1 levels:nlevels @ loop r> 0 g:select! drop
+  next-level ;

@@ -1,0 +1,10 @@
+\ The minimal preprocessor in 8th:
+
+
+true #if 
+"You will see this"
+#else
+"But not this"
+#then
+
+. cr bye

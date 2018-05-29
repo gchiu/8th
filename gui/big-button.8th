@@ -1,0 +1,31 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Big Button Demo",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"opaque" : "false",
+			"effect" : "glow",
+			"name" : "theBigButton",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+      "min-wide" : 150,
+      "min-high" : 150,
+      "max-high" : 450,
+			"bg"   : "pink",
+			"font" : "20",
+			"click" : "clicked",
+			"label" : "Big button"
+		}
+	]
+} var, guiobj
+: clicked 
+	g:bounds? 
+	"The bounds are: " swap s:+ log ;
+: app:main
+	guiobj @ g:new ;

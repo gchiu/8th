@@ -1,0 +1,10 @@
+\ What does "s:map" do?
+
+"HAL" var, original
+var mapped
+
+original @ ' n:1+ s:map mapped !
+
+"Original string : " . original @ . cr
+"After s:map n:1+: " . mapped @ . cr
+bye

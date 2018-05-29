@@ -1,0 +1,123 @@
+' g:new-laf "This sample requires the Professional or Enterprise versions to run" thrownull
+
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 600,
+	"title" : "Look and Feel Sample",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "label",
+			"name" : "lbl",
+			"wide" : 200,
+			"high" : 80,
+			"left" : 10,
+			"top" : 10,
+			"bg"   : "pink",
+			"bg"   : "pink",
+			"label" : "Label"
+		},
+
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"wide" : 200,
+			"high" : 80,
+			"left" : 10,
+			"top" : 105,
+			"bg"   : "blue",
+			"fg"   : "pink",
+			"radius"   : 20,
+			"bg2"   : "black",
+			"font" : "Arial 20",
+			"label" : "MyButton"
+		},
+
+		{
+			"kind" : "combo",
+			"name" : "combo",
+			"wide" : 200,
+			"high" : 80,
+			"left" : 10,
+			"top" : 200,
+			"bg"   : "green",
+			"label" : "Combobox",
+			"items" :
+			[
+				"Item1",
+				"Item2",
+				"Item3"
+			]
+		},
+
+		{
+			"kind" : "edit",
+			"name" : "edit",
+			"wide" : 200,
+			"high" : 80,
+			"left" : 10,
+			"top" : 295,
+			"bg"   : "red",
+			"text" : "Editor",
+			"font" : "Arial 30",
+			"popup-enabled" : true
+		}
+	]
+} var, guiobj
+
+var gui 
+
+{
+	"getLabelFont" : "getLabelFont",
+	"getTextButtonFont" : "getTextButtonFont",
+	"getComboBoxFont" : "getComboBoxFont",
+	"getPopupMenuFont" : "getPopupMenuFont",
+	"drawButtonText" : "drawButtonText",
+	"drawButtonBackground" : "drawButtonBackground"
+} var, lafObj
+
+: getLabelFont
+  "Arial 70,bold" ;
+
+: getTextButtonFont \ gui height -- font
+  drop
+  "font" g:m@ null? if drop "20" then ;
+ 
+: getComboBoxFont
+  "Arial 10,italic" ;
+
+: getPopupMenuFont
+  "Arial 20,italic bold underlined" ;
+
+: drawButtonBackground \ gui bg mouseover buttondown --
+  >r 2drop 
+  \ create the gradient
+  dup >r
+  g:size? \ gui wide high
+  0 0 2swap  
+  r@ "bg" g:m@ swap "bg2" g:m@ nip
+  g:gradient
+  r> g:size? 
+	r@ if 2 2 else 0 0 then
+	2swap 20 g:rrect 
+	g:fill
+	rdrop ;
+
+: drawButtonText2 \ gui mouseover buttondown --
+"drawButtonText" log 
+  2drop \ gui
+  "fg" g:m@ g:fcolor
+  "label" g:m@ >r
+  g:size? \ gui wide high
+  2 n:/ swap 2 n:/ swap
+  \ gui wide/2 high/2
+  r> g:draw-text-at drop ;
+
+: app:main
+    lafObj @ g:new-laf g:laf!
+	guiobj @ g:new dup gui ! g:show ;
+

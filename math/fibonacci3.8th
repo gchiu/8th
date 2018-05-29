@@ -1,0 +1,40 @@
+\ Another fibonacci sample using the Binet formula
+\ http://mathworld.wolfram.com/BinetsFibonacciNumberFormula.html
+\ Original implementation courtesy of bugmagnet
+
+\ This sets the number of digits which will be used in calculations (of bfloat
+\ math).  That is, the *accuracy* of the calculations.  Use a big-enough number
+\ (something like a few digits more than you want to display).  Too big a number
+\ here will slow things down considerably:
+250 n#
+
+\ Constant values:
+5 bfloat n:sqrt var, SQRT5
+1 SQRT5 @ n:/ var, 1/SQRT5
+1 SQRT5 @ n:+ var, 1+SQRT5
+1 SQRT5 @ n:- var, 1-SQRT5
+1+SQRT5 @ 2 n:/ var, (1+SQRT5)/2 
+1-SQRT5 @ 2 n:/ var, (1-SQRT5)/2 
+
+: ((1+SQRT5)/2)^n (1+SQRT5)/2 @ swap n:^ ;
+: ((1-SQRT5)/2)^n (1-SQRT5)/2 @ swap n:^ ;
+
+: ((1+SQRT5)/2)^n-((1-SQRT5)/2)^n dup ((1+SQRT5)/2)^n swap ((1-SQRT5)/2)^n n:- ;
+
+: fib ((1+SQRT5)/2)^n-((1-SQRT5)/2)^n 1/SQRT5 @ n:* ;
+
+\ Print a bfloat as the nearest integer:
+: .f n:round "%.0f" s:strfmt . cr ;
+
+: dofib
+  dup . space 
+  fib .f ;
+
+\ Print values from 1 to 1000:
+ ' dofib 1 1000 loop
+
+\ And display what the last one should be:
+"The last should be: " . cr
+"43466557686937456435688527675040625802564660517371780402481729089536555417949051890403879840079255169295922593080322634775209689623239873322471161642996440906533187938298969649928516003704476137795166849228875" . cr
+
+bye

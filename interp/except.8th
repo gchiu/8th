@@ -1,0 +1,10 @@
+\ how do exceptions work?
+
+
+"Hi, you should see this" . cr
+
+"and this" throw
+
+"But you should not see this" . cr
+
+bye

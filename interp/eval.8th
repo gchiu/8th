@@ -1,0 +1,11 @@
+\ Sample of use of 'eval'
+
+"Before eval:" . cr
+
+\ note that eval can evaluate anything at all:
+
+"\"eval: \" . 123 543 + . cr" eval
+
+"After eval!" . cr
+
+bye

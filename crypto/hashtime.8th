@@ -1,0 +1,50 @@
+
+\ Crypto hash timing sample:
+
+: DATASIZE 100000 ;
+DATASIZE randbuf var, data
+: TIMES 10000 ;
+
+\ These are the hashes we know about in 8th:
+[
+  "blake",
+  "blake2b",
+  "md5",
+  "rmd128",
+  "rmd160",
+  "rmd256",
+  "rmd320",
+  "sha1",
+  "sha256",
+  "sha384",
+  "sha512",
+  "sha3-224",
+  "sha3-256",
+  "sha3-384",
+  "sha3-512",
+  "tiger",
+  "whirlpool"
+] var, known_hashes
+
+: fox "The quick brown fox jumps over the lazy dog" ;
+
+: intro
+  "This will time " . TIMES . 
+  " hashes of a random buffer " . DATASIZE . 
+  " bytes long, for all the hashes known to 8th" . cr ;
+
+: solong
+  "Done\n" . bye ;
+
+: time-hash \ ix s --
+  nip dup cr:hash!
+  d:msec >r
+  ( data @ cr:hash cr:hash>b drop ) TIMES times
+  d:msec r> n:- swap
+  "%-10s: %d\n" s:strfmt .  ;
+
+: app:main
+  intro
+  known_hashes @ ' time-hash a:each drop
+  solong ;
+

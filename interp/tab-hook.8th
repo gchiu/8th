@@ -1,0 +1,37 @@
+\ This is the actual implementation of "tab-hook".   Feel free to modify it
+
+\ Display one word, followed by a space:
+: show . space drop ;
+: filter-choices \ s a -- s a2
+  over ":" s:search nip null? nip if ;then
+  \ we want to do a prefix filter; so get the length of the match string:
+  over s:len swap >r swap
+  \ only items which match the prefix are acceptable:
+  ( over s:lsub r@ s:= ) a:filter
+  rdrop nip ;
+
+\ the cases get the stack picture: \ s [matches]
+[
+  \ case 0: no match.  just signal failure
+  ( 2drop cr false ) ,
+  \ case 1: exact match, return it
+  ( a:pop " " s:+ nip nip cr true ) ,
+  \ case 2: multiple matches, display and return existing string:
+  ( 
+    \ sort to make it easier to read (we don't do this before we have to
+    ' s:cmpi a:sort
+    cr ' show a:each 2drop cr 
+    false
+  ) 
+] var, tab-choices
+
+\ This is the word which "tab-hook" is set to:
+( \ s -- s2 f
+  \ find the words which match.  we 'filter' because the words-like will return
+  \ words which contain the characters even in the middle of the word:
+  dup words-like filter-choices
+  \ s [a]
+  a:len 2 n:min
+  \ cases: 0 (no match) 1 (exact match) 2 (multiple matches)
+  tab-choices @ swap caseof 
+) w:is tab-hook

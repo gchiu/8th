@@ -1,0 +1,51 @@
+\ How to allow commas in numbers?
+
+\ One method: use the last-gasp parser word ???
+\ It has the advantage that it will work inside word definitions
+\ But it will not work inside JSON, since the comma separates array entries:
+: parse-comma-number \ ix s -- n|throw
+  dup
+  "," "" s:replace! >n
+  \ ix s n|null
+  null? if
+    \ not a valid number, throw
+    drop "Unknown: " swap s:+ throw
+  else
+    \ valid, so tell the parser
+    -rot 2drop true
+  then ;
+' parse-comma-number w:is ???
+    
+  
+"This should report 1234: " . 
+1,234 . cr 
+
+\ Revert the ??? word so we don't use the above code:
+' ??? w:undo
+
+\ Another method is to use a defining word like this. Note that we use "i;" so
+\ that it is an *immediate* word, and use "p: literal" so that if it is used
+\ inside a colon-definition it will behave like we expect, e.g. the number gets
+\ compiled into the word definition instead of remaining on the stack:
+
+: ,| \ <nnn|> -- n|throw
+  '| parse 
+  s:trim
+  "," "" s:replace! >n
+  null? if drop "Invalid comma number" throw then p: literal i;
+
+\ Note that leading and trailing space are ignored between the vertical-bars:
+"This should report 3456789: " . 
+,| 3,456,789 |
+. cr
+
+: num
+  ,| 2,331| . cr ;
+
+"There should be nothing on the stack right now" . cr
+.s cr 
+"And this should report 2331: " . 
+num
+
+bye
+

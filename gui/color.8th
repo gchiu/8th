@@ -1,0 +1,52 @@
+true app:isgui !
+\ a "color" lets you select from a palette of colors
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "Pink",
+	"resize-edge" : ["bottom"],
+	"children" :
+	[
+		{
+			\ the only purpose of this box is to 'show through' when alpha is
+			\ on:
+			"kind" : "box",
+			"name" : "box",
+			"label" : "box",
+			"bounds" : "0,parent.height*0.75,parent.width/2,parent.height",
+			"bg" : "blue"
+		},
+		{
+			"kind" : "btn",
+			"name" : "btn",
+			"label" : "A Button",
+			"click" : "showb",
+			"bounds" : "0,0,parent.width/2, parent.height",
+			"bg" : "yellow"
+		},
+		{
+			"kind" : "color",
+			"name" : "color",
+			\ you can also use a number instead of a name 
+			\ but don't forget the high-byte of alpha!
+			"bg" : 0xa0ffFF00,
+			"changed" : "color-change",
+			"bounds" : "parent.width/2,0,parent.width,parent.height-20"
+		}
+	]
+} var, guiobj
+
+var gui
+: showb 
+	.s cr
+	"This should be a bubble" 1000 g:bubble
+	;
+: color-change \ gui clr --
+	>r gui @ "btn" g:child r> g:bg
+	;
+: app:main
+	guiobj @ g:new 
+	g:show gui !
+	;

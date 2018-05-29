@@ -1,0 +1,19 @@
+\ let the service figure out where I am:
+needs net/http
+
+"no result" var, result 
+: getip 
+	{"url": "http://ip-api.com/json"
+  }  
+	net:get if 
+		result ! 
+		"Headers: " . cr
+    "raw-headers" m:@ . cr
+	then 
+	;
+
+getip 
+
+"Result: " . cr
+result @ >s . cr 
+bye

@@ -1,0 +1,20 @@
+with: s
+
+: load \ s -- a
+    app:asset >s "," /
+    ( "\"" "" s:replace! ) a:map
+    ' cmp a:sort ;
+;with
+
+with: n
+: sum-text \ s -- n
+    0 swap  ( nip 'A - + 1+ ) s:each ;
+
+
+"The solution to Project Euler problem 22 is " . 
+  0 "p022_names.txt" load 
+  ( sum-text swap 1+ * + ) a:each drop 
+  . cr
+
+;with
+bye

@@ -1,0 +1,35 @@
+needs utils/pdf
+
+with: pdf
+
+: app:main
+\ page set
+  "a4" setpagesize
+  "in" setunit
+  1 setmargin
+  "flate" +encoder
+\ title
+  "center" setalign
+  "Courier 16, bold" font:new setfont
+  "Before BreakFast" output
+  paragraphbreak
+\ contents
+  "times 12" font:new setfont
+  "left" setalign
+  "charlotte web.txt" app:asset
+  b:>base64 s:base64>
+  output
+\ a picture
+  "test.png" app:asset img:new
+  300 300 img:scale
+  "center" setalign
+  output
+\ end
+  paragraphbreak
+  "---- end ----" output
+\ save it
+  "out.pdf" dup >file 
+
+\ launch the created PDF in a viewer:
+  null f:launch
+  bye ;

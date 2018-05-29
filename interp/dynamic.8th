@@ -1,0 +1,16 @@
+\ Use "dynamic loading" to load code on-demand rather than at main run-time:
+
+\ This deferred word is
+defer: try-me
+
+: initial-try-me
+  "Not loaded yet" . cr
+  "dynamic-load.8th" app:asset eval 
+  "Should be loaded!" . cr ;
+
+' initial-try-me w:is try-me
+
+: app:main
+  try-me
+  try-me
+  bye ;

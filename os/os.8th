@@ -1,0 +1,19 @@
+\ How do you run os-specific code?  Easily!
+
+: linux-specific "hi, from linux\n" . ;
+: windows-specific "hi, from windows\n" . ;
+: osx-specific "hi, from osx\n" . ;
+: android-specific "hi, from android\n" . ;
+: ios-specific "hi, from ios\n" . ;
+: rpi-specific "hi, from raspberry pi\n" . ;
+
+[
+	' linux-specific ,
+	' windows-specific ,
+	' osx-specific ,
+	' android-specific ,
+	' ios-specific ,
+	' rpi-specific
+] os  caseof
+
+"Bye!\n" . bye

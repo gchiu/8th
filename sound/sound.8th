@@ -1,0 +1,28 @@
+\ how to play a sound...
+"ns:sio" w:find "The Free version does not have sound support" thrownull 
+
+\ get current sound level:
+snd:volume? var, vol
+
+\ load the sound as an 'asset'
+"shutter.ogg" app:asset snd:new 
+var, sound
+
+.5 var, newvol
+
+\ This is invoked when the sound stops playing.  This code unlocks the 'sound'
+\ variable so that the main loop can resume:
+( null? if t:main t:notify drop ;then drop newvol @ 0.80 n:* dup newvol ! snd:volume  ) w:is snd:played
+
+\ let it play five times, then quit
+newvol @ snd:volume
+( sound @ snd:play ) 5 times
+
+\ wait until everyone is done
+-1 sleep
+
+snd:stop
+
+\ restore the sound volume:
+vol @ snd:volume
+bye

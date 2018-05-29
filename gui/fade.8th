@@ -1,0 +1,56 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Fade Button Demo",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "red",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+      "min-wide" : 150,
+      "min-high" : 150,
+      "max-high" : 450,
+			"bg"   : "red",
+			"fg"   : "green",
+			"font" : "40",
+			"click" : "fademe",
+			"label" : "Green",
+      "target" : "green"
+		},
+		{
+			"kind" : "btn",
+			"name" : "green",
+			"bounds" : "10, 10, parent.width-10, parent.height-10",
+      "min-wide" : 150,
+      "min-high" : 150,
+      "max-high" : 450,
+			"fg"   : "red",
+			"bg"   : "green",
+			"font" : "40",
+			"click" : "fademe",
+			"label" : "Red",
+      \ Needs to be invisible, otherwise it gets the clicks...
+      "visible" : false,
+      "target" : "red"
+		}
+	]
+} var, guiobj
+
+: dofade \ gui2 gui1 --
+  1000 false g:fade g:hide drop
+  1000 true g:fade drop ;
+
+\ This fades to whatever control is named by "target":
+: fademe \ gui -- 
+  dup "target" g:m@ >r
+  g:parent r> g:child
+  swap dofade ;
+
+: app:main
+	guiobj @ g:new 
+	g:show ;

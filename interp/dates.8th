@@ -1,0 +1,22 @@
+\ Sample of allowing dates to be entered in the interpreter, using the ??? word:
+
+: check-date \ ofs s -- d true | ofs s false
+  dup d:parse         \ see if we can parse a date
+  null? if
+    \ not a date, we don't know what to do with it:
+    drop "Unknown date: " swap s:+ throw
+  else
+    \ it's a date, so get rid of the other stuff and return success:
+    -rot 2drop true
+  then ;
+     
+
+' check-date w:is ???
+
+
+"Let's see what happens with 2001-10-28:" . cr
+2001-10-28  . cr cr
+
+"What about an invalid date? 2001-1028:" . cr
+2001-1028 . cr
+bye

@@ -1,0 +1,20 @@
+\ Detect palindrome:
+
+\ This word takes a string and returns "true" if it's a palindrome, or "false" otherwise
+: pal? \ s -- flag
+  s:len 2 n:/mod                  \ Divide the str length in half, with even-odd flag
+  swap >r s:/                     \ Save the flag and split the string in 'half'
+  a:open s:rev                    \ Open the result array, reverse the tail
+  r> if -1 s:/ a:open drop then   \ Slice the end off the string if orig was odd length
+  s:= ;                           \ compare the head and tail
+
+\ Just a utility to take a string and test and print results:
+: test \ s --
+  dup . space
+  pal? . cr ;
+
+"abba" test
+"abab" test
+"abdba" test
+"abdab" test
+bye

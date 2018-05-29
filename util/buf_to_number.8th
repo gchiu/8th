@@ -1,0 +1,21 @@
+\ Convert a randomly large buffer of bytes to the equivalent number
+
+: b:>n \ b -- n
+  0  swap
+  (
+    nip
+    swap 256 n:* n:+
+  ) b:each ;
+
+\ Test it by creating a large buffer:
+80 randbuf var, testbuf
+
+\ and dumping it so we see what's inside:
+
+testbuf @ dump cr
+
+\ then converting to a number and printing as hex:
+
+testbuf @ b:>n hex . cr 
+
+bye

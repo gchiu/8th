@@ -1,0 +1,18 @@
+\ simple factorial, not smart at all:
+
+\ use thousands separators:
+', ,#
+
+needs math/factorial
+
+\ figure out the maximum width we'll need:
+var mx 30 mx !
+var w
+mx @ n:! >s len 1+ w ! 
+
+\ print the table:
+"Factorials 1.." .  mx @ . ': putc cr
+
+	( dup >r n:! w  @ #> . space r> . cr )
+	 1 mx @ loop
+ cr bye

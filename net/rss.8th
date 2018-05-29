@@ -1,0 +1,93 @@
+\ Super-simple RSS feed reader:
+needs net/http
+needs xml/parse
+
+\ An array of feeds to check:
+[
+ "http://the8thevangelist.blogspot.com/feeds/posts/default"
+] var, feeds
+
+\ An array of results from the feeds:
+[] var, items
+
+\ convert the URL string into an map with parameters:
+: >obj \ url -- obj
+  m:new over "url" swap m:!
+  nip
+  ;
+
+\ Attempt to read the feed given by the string 'url'.  Returns true if
+\ successful, or false otherwise:
+: get-feed \ url -- f
+  >obj
+  net:get if true else "Could not get feed" . cr false then ;
+
+\ Get the informational portion of the feed and save to the 'items' array:
+: parse-feed
+  xml:parse
+  dup . cr bye
+  (
+    xml:tag@ dup "item" s:= swap "entry" s:= or if
+		items @ swap 
+		a:push drop
+	else
+		drop
+	then
+  ) xml:each drop ;
+
+\ List the retrieved items:
+: list-feed
+  items @ 
+  (
+	swap n:1+ swap
+    "title" xml:@ 
+	nip xml:text@ nip swap
+	"%>3d %s\n" s:strfmt .
+  ) a:each drop ;
+
+\ Wait for input, convert to a number, and select that feed:
+: choose-feed
+  3 null con:accept >n n:1-
+  "A number was required" thrownull
+  \ bounds check the entered number:
+  0 items @ a:len nip n:1- n:clamp
+  items @ swap a:@ nip
+  "link" xml:@ 
+  null? if 
+	\ no link item
+	"No link" . cr
+  else
+    xml:text@ null? if
+		\ Atom feed; parse the result
+		2drop 
+		"" >r
+		(
+			xml:tag@ null? if drop 
+			else
+				"link" s:= if
+				"rel" xml:attr@ "alternate" s:= if
+					"href" xml:attr@ r! break
+					then
+				then 
+			then
+			drop
+		) xml:each drop
+		r>
+	then
+	"\nLaunching " . dup . cr
+	net:browse
+  then
+  ;
+
+: app:main
+  "Reading feeds...\n" .
+  feeds @ 
+  (
+	nip
+	get-feed 
+  if parse-feed then
+  ) a:each
+  list-feed 
+  "\nChoose the feed to view in your browser:\n" .
+  choose-feed
+  bye ;

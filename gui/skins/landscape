@@ -1,0 +1,14 @@
+\ vim: ft=8th :
+\ landscape orientation
+{
+  "g2" : { "bounds" : "0,0,parent.width/2,parent.height*.9"},
+  "g3" : { "bounds" : "g2.right,0,parent.width,parent.height*.9"}
+}
+\ Change the edit's orientation:
+"edit"
+{
+  "bg" : "yellow"  ,
+  "fg" : "red",
+  "bounds" : "0, parent.height-30, parent.width*.9, parent.height"
+} g:skin-class
+

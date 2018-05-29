@@ -1,0 +1,93 @@
+\ Given a range of integers, we define a list of forbidden integers within that
+\ range. The forbidden integers are given as a list of inclusive ranges in a
+\ file, such that each range is in a new line.
+\ For example, given a range of 0-9 and a forbidden integers list of [5-8, 0-2, 4-7], 
+\ the only integers allowed are 3 and 9.
+\ Assuming a range of 0-4294967295 (all 32-bit unsigned integers) and using the
+\ forbidden numbers list attached, write a program that outputs the smallest
+\ allowed integer and the total number of allowed integers (add your result to
+\ the code as a comment).
+\ Notes:
+\   ● If  n  is the number of forbidden ranges and  u  is the length of the
+\   total range, your solution should not be a function of  u .
+\   ● Bonus points if your solution is more efficient than O(n2)
+
+\ Ron's answer:
+\ Total allowed is 117
+\ Minimum allowed value is 31053880
+
+\ read the list of forbidden numbers and parse into an array of arrays:
+: read-list \ filename -- array
+  app:asset >s [] swap
+  (
+    \ array line
+    \ split on the - character
+    "-" s:/ 
+    \ convert to an array of numbers
+    ( >n ) a:map
+    \ and save it
+    a:push 
+  ) s:eachline ;
+
+: find-total-allowed \ array -- array total
+  dup
+  \ iterate the array and find the total number of forbidden numbers:
+  ( 
+    \ array[ix]
+    swap a:open
+    n:1+ swap n:- n:+
+  ) 0 a:reduce 
+  \ Convert that to the number of permitted ones:
+  0x100000000 swap n:- ;
+
+\ Determine if a2 overlaps a1
+: a:within \ a1 a2 -- a1 a2 flag
+  2dup a:open drop              \ a1 a2 a1 a2[0]
+  swap a:open 
+  n:1+ n:between ;
+
+\ Ranges in a1 might overlap.  Let's coalesce them and create a new array with
+\ ranges coalesced:
+: coalesce-overlapping \ a1 -- a2
+  \ Create the new array and get the first element of a1 
+  a:new swap a:shift swap
+
+  \ repeatedly shift off elements from a1, and compare with the current element.
+  \ If the new element overlaps, coalesce the two. Otherwise, push the current
+  \ element onto the result and let the new element become the current one:
+  repeat \ a2 curelem a1
+    a:shift swap >r
+    \ a2 curelem nextelem
+    a:within if
+      \ within, so take the max from curleem,nextelem and make it the top of curelem
+      >r 1 a:@ r>
+      a:open nip n:max 
+      1 swap a:!
+    else
+      \ not within; so push the curelem into a2, and make nextelem curelem
+      >r a:push r>
+    then
+    r> a:len
+  while! drop 
+  \ The last element should be pushed into a2:
+  a:push ;
+
+: app:main
+  \ get the list of numbers into an array:
+  "forbidden_integers.txt" read-list
+
+  \ Sort the list by starting element:
+  ( a:open drop swap a:open drop swap n:cmp ) a:sort 
+
+  \ coalesce overlapping ranges:
+  coalesce-overlapping
+  \ print the coalesced data:
+  \ ( . cr drop ) a:each
+
+  \ how many allowed values?
+  find-total-allowed "Total allowed is " . . cr
+
+  \ The minimum allowed value will be one greater than the top of the first
+  \ element:
+  a:shift a:pop n:1+ "Minimum allowed value is " . . cr
+  bye ;

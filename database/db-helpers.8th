@@ -1,0 +1,28 @@
+\ Get a set of SELECT responses as an array or as an map
+
+: select>array \ db sql a -- db a
+  >r
+  ( 0 db:col r@ swap a:push drop )
+  swap
+  db:exec-cb r> ;
+
+: select>map \ db sql o -- db o
+  >r
+  ( 1 db:col >r 0 db:col r> r@ -rot m:! drop )
+  swap
+  db:exec-cb r> ;
+
+\ get the help database
+app:8thdir "docs/help.db" s:+ db:open
+
+"Getting the list of tables in the help database as an array:" . cr
+
+"select name from sqlite_master where type='table' order by name" [] select>array
+. cr
+
+"Now getting some of the words as an map" . cr
+
+"select nm,desc from words limit 10" {} select>map
+. cr
+bye
+

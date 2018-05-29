@@ -1,0 +1,54 @@
+\ shows how to do a simple reverse geocode using the Google APIs
+
+needs net/http
+
+var lat
+var long
+var result-obj
+"false" var, result
+
+\ This should be Jerusalem, Israel:
+"31.779020" lat !
+"35.225300" long !
+
+\ make a nice function to produce a properly formatted request:
+: request 
+	"https://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng="
+	lat @ s:+
+	"," s:+
+	long @ s:+ ;
+
+: makerequest
+	request dup . cr cr 
+	net:get if result ! then drop ;
+
+\ now ask for it:
+: ask-google 
+  "Going to ask Google:" . cr 
+  makerequest ;
+
+: save-results
+  "Saving results to a local file \"google.json\"" . cr 
+  "google.json" f:create
+  result @ f:write
+  drop f:close ;
+
+: parse-results
+  "Parsing Google's answer:" . cr
+  result @ json> result-obj ! ;
+
+: say-answer
+  "This is what they said:" . cr
+  result-obj @ . cr ;
+
+: app:main
+  ask-google
+  save-results
+  parse-results
+  say-answer
+  bye ;
+
+
+
+
+

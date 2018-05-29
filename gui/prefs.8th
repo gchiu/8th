@@ -1,0 +1,44 @@
+true app:isgui !
+\ a "color" lets you select from a palette of colors
+{
+	"kind" : "win",
+	"wide" : 400,
+	"high" : 200,
+	"center" : true,
+	"bg" : "white",
+	"resize-corner" : 20,
+	"children" :
+	[
+		{
+			"kind" : "preferences",
+			"name" : "prefs",
+			"bg" : "blue",
+			"buttonsize" : 64,
+			"pages" : 
+			[
+				{
+					"kind" : "btn",
+          "name": "n1",
+					"label" : "first",
+					"title" : "Our first",
+					"bg" : "yellow",
+					"bounds" : "0,64,parent.width, parent.height",
+					"preficon" : "hi.png"
+				},
+				{
+					"kind" : "btn",
+          "name": "n2",
+					"label" : "second",
+					"title" : "The second",
+					"bg" : "pink",
+					"bounds" : "0,64,parent.width, parent.height",
+					"preficon" : "bye.png"
+				}
+			],
+			"bounds" : "0,0,parent.width, parent.height"
+		}
+	]
+} var, guiobj
+
+: app:main
+	guiobj @ g:new ;

@@ -1,0 +1,35 @@
+true app:isgui !
+\ a viewport lets you view a portion of a larger component, and scroll around it
+{
+	"kind" : "win",
+	"wide" : 800,
+	"high" : 600,
+	"center" : true,
+	"bg" : "white",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"wide" : 1200,
+			"high" : 800,
+			"name" : "btn",
+			"label" : "Really big button",
+			"bg" : "green"
+		},
+		{
+			"kind" : "view",
+			"name" : "view",
+			"bounds" : "0,0,parent.width, parent.height",
+			"bg" : "pink"
+		}
+	]
+} var, guiobj
+
+var gui
+
+: app:main
+	guiobj @ g:new 
+	g:show
+	dup gui !
+	"view" g:child "btn" g:view
+	;

@@ -1,0 +1,74 @@
+\ Using tasks, do parallel processing
+\ We'll create a large numeric array and sum it serially and then by splitting
+\ it into #tasks pieces and using a separate task to sum each array
+
+var arr
+var total
+
+\ Set the task queue size to equal the number of tasks we'll have:
+8 dup var, #tasks
+  t:def-queue
+
+\ How many numbers in the array, and how many items in a 'slice' (note that the
+\ arrsize should be a multiple of #tasks!)
+20000 dup var, arrsize
+#tasks @  n:/ var,  slicesize
+
+\ Just create an array of 'arrsize' random numbers from 0 to 100000:
+: randarray \ n -- a
+  [] const
+  (
+    rand-pcg  n:abs
+    100000 n:mod
+    a:push
+  )
+  rot times ;
+
+\ Utility word to sum an array:
+: dosum \ arr -- arr sum
+  dup ' n:+ 0 a:reduce ;
+
+\ This is the word which actually does the summing for the slice:
+: sum \ arr -- 
+  dosum nip
+  t:main swap t:push ;
+
+\ Utility word to split an array into two pieces:
+: a:/ \ a n -- a[n..a:len] a[0..n-1] 
+  over over 0 swap a:slice \ a n a[0..n-1]
+  -rot >r a:len r>         \ a1 a len n
+  tuck n:- a:slice 
+  swap ;
+
+[] var, tasks
+: app:main
+  arrsize @ dup "Creating array with %d random numbers\n" s:strfmt .
+  randarray arr !
+
+  "\nSum of array using linear approach:\n" .
+  arr @ dosum
+  dup total ! . cr
+
+  #tasks @ "\nSum of array using %d tasks:\n" s:strfmt .
+
+  \ Note: you must be careful when you use tasks!  Why?  Because the array etc
+  \ are not task-safe, meaning two tasks accessing the same array can get into a
+  \ bad state.
+  \
+  \ Therefore: we slice the array first, and pass the slices to the tasks:
+  \ We drop after task-n since we don't require the task item (it will
+  \ automatically decref when finished:
+  ( slicesize @ a:/ 1 ' sum t:task-n tasks @ swap a:push tasks ! ) #tasks @ times drop
+
+  \ The tasks push their results into the main task's queue.  Let's wait until
+  \ there are #tasks items in it:
+  "Waiting for results...\n" .
+  tasks @ t:wait
+  "Done with wait" . cr 
+
+  "Get the values calculated: " . cr
+  0 ( t:pop dup . space n:+ ) #tasks @ times cr
+  "Total: " . dup . cr
+
+  total @ over n:= if "PASS" else r@ "FAIL %d %d" s:strfmt throw then . cr
+  bye ;

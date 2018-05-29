@@ -1,0 +1,79 @@
+\ Let's send a tweet!
+needs net/http
+needs net/oauth
+
+"8thTweeter" appname !
+
+\ Pass these values on the command-line so that we don't publish them!
+0 args var, consumer-key
+1 args var, consumer-secret
+2 args var, token
+3 args var, token-secret
+
+token-secret @ "Syntax: 8th twitter.8th consumer-key consumer-secret token token-secret" thrownull
+
+\ The api entry point on Twitter:
+"https://api.twitter.com/1.1/statuses/update.json" var, url
+
+\ This is the net:post map which we fill in:
+{
+ "url" : ` url @ `,
+} var, post-req
+
+\ These are the headers we send out (in the post-req map under "headers")
+\ We fill in the Authorization key after the OAuth code creates a suitable one:
+{ 
+  "Content-Type" : "application/x-www-form-urlencoded",
+  "Connection" : "close",
+  "Accept" : "*/*",
+}  var, headers
+
+\ Holds the text of our intended Tweet
+var tweet
+
+: send-tweet
+  \ take our params and make a header:
+  consumer-key @ token @ OAuth:gen-nonce "HMAC-SHA1" OAuth:params 
+
+  \ add our parameters to the map
+  "status" tweet @ m:!
+
+  \ the url, POST:
+  url @ true 
+  \ the keys to use:
+  consumer-secret @ token-secret @ 
+  \ And actually generate an OAuth auth string
+  OAuth:auth-string
+  headers @ "Authorization" rot m:!
+  post-req @ "headers" rot m:! 
+  "data" "status=" tweet @ net:>url s:+ m:!
+  \ Send the packet out
+  net:post ;
+
+: byebye
+  cr "OK, maybe next time!" . cr bye ;
+
+: get-tweet
+  "Enter your tweet (up to 140 chars):" . cr
+  140 null con:accept
+  null? if byebye then
+  tweet !  ;
+
+: yes?
+  "Is this correct? (Y/N) " . cr
+  con:key 
+  32 n:bor 'y n:= ;
+  
+: confirm-tweet
+  "\nYour tweet will be:\n" . tweet @ . cr
+  yes? not if byebye then ;
+
+: initialize
+  rand rand rand-pcg-seed \ initialize the pcg
+  \ we'll be using SHA1
+  "sha1" cr:hash! ;
+
+: app:main 
+  initialize get-tweet confirm-tweet send-tweet 
+  if "Success" else "Could not send, sorry" then
+  cr . cr bye ;

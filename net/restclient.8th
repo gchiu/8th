@@ -1,0 +1,18 @@
+\ Client for the 'rest.8th' sample:
+
+needs net/http
+
+{
+  "url": "https://127.0.0.1:8081/api/v1/info",
+  "data" : {
+    "a" : "xxxx"
+  }
+} var, postdata
+
+: app:main
+  postdata @ net:post if
+    json> .
+  else
+    "Failed API call"
+  then
+  bye ;

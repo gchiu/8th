@@ -1,0 +1,25 @@
+\ How to redirect 8th's console output
+
+\ we'll save the output into a string:
+var output
+
+: my_puts \ s --
+	output @ 
+	swap s:+ 
+	output !  ;
+
+\ use these words to start and stop redirection:
+: redir \ --
+	"" output !
+	' my_puts w:is puts
+	' my_puts w:is putc ;
+
+: noredir \ -- s
+	' (puts) w:is puts
+	' (putc) w:is putc
+	output @ ;
+
+: app:main
+  "Enter 'redir' to redirect output to a string, and 'noredir' to stop the
+  redirection and put the collected output on TOS:\n" . 
+  (interp) ;

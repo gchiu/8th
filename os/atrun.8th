@@ -1,0 +1,31 @@
+\ A sample of how to use the 'app:atrun' word:
+
+\ This takes a time and adds the number of minutes to it:
+: d:+min \ d n -- d2
+  60000 n:* d:+msec ;
+
+\ Not every one of the keys is required on all OSes, but it is recommended to
+\ have them in any case:
+{
+  "name" : "atrun.test.8th",
+  "exe" : ` app:exename ` ,
+  "dir" : ` getcwd ` ,
+  "args" : [ ` scriptfile -1 a:@ nip `, "testing"],
+  "when" : ` d:new 1 d:+min ` 
+} var, opts
+
+: app:main
+  0 args null? nip if
+    opts @ app:atrun 
+    "Will start in a minute" . cr bye
+  else
+    ' bye w:is (say)
+    "Hi there" g:say
+  then ;
+
+
+
+  
+
+
+

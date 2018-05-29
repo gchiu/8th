@@ -1,0 +1,44 @@
+\ demo of i8n in 8th
+
+\ the strings to be localized are in 'assets' in 'lang/xx' where 'xx' is the
+\ language code: 'de' for German, 'es' for Spanish, etc
+
+"Before loading language:\n" .
+"hi" s:intl . cr
+"bye" s:intl . cr
+cr
+
+"After loading English\n" .
+"en" s:lang
+"hi" s:intl . cr
+"bye" s:intl . cr
+"today" s:intl d:new d:format . cr
+cr
+
+"After loading Spanish\n" .
+"es" s:lang
+"hi" s:intl . cr
+"bye" s:intl . cr
+"today" s:intl d:new d:format . cr
+cr
+
+"After loading Hebrew\n" .
+"he" s:lang
+"hi" s:intl . cr
+"bye" s:intl . cr
+"today" s:intl d:new d:format . cr
+cr
+
+"Back to English\n" .
+"en" s:lang
+"hi" s:intl . cr
+"bye" s:intl . cr
+"today" s:intl d:new d:format . cr
+cr
+
+"Try French:\n" .
+"fr" s:lang
+"hi" s:intl . cr
+"bye" s:intl . cr
+
+bye

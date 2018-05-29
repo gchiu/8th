@@ -1,0 +1,31 @@
+\ generate dh keys
+"Demonstration of Diffie-Hellman words\n" .
+
+64 cr:dh-genkey var, pub1  var, priv1
+64 cr:dh-genkey var, pub2  var, priv2
+
+"Generated two public ed25519 keys\n" .
+
+"Generating a shared secret:\n" .
+priv2 @ pub1 @ cr:dh-secret var, key
+key @ dump
+
+"Hashing that secret:\n" . 
+key @ cr:hash cr:hash>b var, keyhash
+keyhash @ dump
+
+"Signing the hash:\n" .
+priv2 @ keyhash @ cr:dh-sign var, sig
+sig @ dump
+
+"Verifying the signature against the hash:\n" .
+pub2 @ keyhash @ sig @ cr:dh-verify . cr
+
+"Verify signature against the hash after modifying it:\n" .
+pub2 @ keyhash @ sig @ 
+  b:len 2 n:/ tuck 
+  b:@ 1 bxor
+  rot swap b:!
+  cr:dh-verify . cr
+
+bye

@@ -1,0 +1,2 @@
+\ let's be even more complicated:
+( "hello, world!\n" . ) exec bye

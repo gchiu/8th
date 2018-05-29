@@ -1,0 +1,42 @@
+\ Produce an array containing a range of numbers:
+: range \ low high -- a
+  [] const ' a:push
+  2swap loop ;
+
+\ Do a sum of the numbers from 3 to 8 using a range:
+"The range from 3 to 8 is:" . cr
+3 8 range dup . cr cr
+
+"Its sum is:" . cr
+' n:+ 0 a:reduce . cr
+
+cr "Now we'll use 'curry' to make a range" .  cr
+
+\ This checks if the value is 'null', and returns the value before the first first:
+: fixnull \ a x -- a init
+  null? if
+    drop 2 a:@ >r 0 a:@ r> n:- 
+  then ;
+
+: (range) \ a -- n
+  \ 0 = low, 1 = high, 2 = skip, 3 = current
+  3 a:@ fixnull swap 2 a:@ rot n:+ swap
+  \ new a
+  1 a:@ 2 pick 
+  \ new a high new
+  n:< if
+    \ the high value has been exceeded, reset to the low value and return null
+    \ new a
+    nip 3 null a:!
+    drop null
+  else
+    \ new a
+    3 2 pick a:!  drop
+  then ;
+
+\ low, high, skip (, initial)
+[1, 10, 1] ' (range) curry: range1
+
+( range1 . space ) 15 times
+cr bye
+

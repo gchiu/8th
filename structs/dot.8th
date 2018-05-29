@@ -1,0 +1,10 @@
+\ How the generalized array dot product works:
+
+: dodot
+  dup . cr
+  eval a:dot . cr ;
+
+"[1,2] [3,4] ' n:* ' n:+" dodot
+"[\"hi\",\"there\"] [\"3\",\"4\"] ( swap s:uc swap s:+ \" \" swap s:+ ) ' s:+" dodot
+
+bye

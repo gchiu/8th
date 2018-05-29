@@ -1,0 +1,37 @@
+\ simple example of the 'when' word
+null var, val
+
+: q1
+	val @ null? nip ;
+
+: q2 
+	val @ 123 n:= ;
+
+: a1 
+	"val was null" . ;
+
+: a2
+	"val was 123" . ;
+
+: default
+	"val was something else" . ;
+
+[
+	' q1 , ' a1 ,
+	' q2 , ' a2 ,
+	' default
+] var, x
+
+"Decisions using 'when': First, should print null:\n" .
+x @ a:when cr
+
+123 val !
+"Decisions using 'when': Next, should print 123:\n" .
+x @ a:when cr
+
+1233 val !
+"Decisions using 'when': Finally, should print something else:\n" .
+x @ a:when cr
+
+cr cr
+bye 

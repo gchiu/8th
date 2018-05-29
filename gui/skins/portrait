@@ -1,0 +1,12 @@
+\ vim: ft=8th :
+\ portrait orientation
+{
+  "g2" : { "bounds" : "0,0,parent.width*.9,parent.height/2"},
+  "g3" : { "bounds" : "0,g2.bottom,parent.width*.9,parent.height"}
+}
+"edit"
+{
+  "bg" : "brown"  ,
+  "fg" : "white",
+  "bounds" : "parent.width/2, parent.height-30, parent.width, parent.height"
+} g:skin-class

@@ -1,0 +1,33 @@
+\ There are two random number generators in 8th:  
+\
+\   a cryptographically secure one, using 'Fortuna', and
+\   a fast bug good one using a 'PCG' generator.
+\
+
+: timeit \ w s --
+	. space
+	d:msec >r
+	w:exec
+	d:msec r> n:- . " msec" . cr ;
+[
+	10000000  ,
+	10000000  ,
+	10000000  ,
+	100000  ,
+	100000  ,
+	100000  
+] os caseof var, reps
+
+: crypt-rand ( rand drop ) reps @ times ;
+: crypt-pcg ( rand-pcg drop ) reps @ times ;
+
+cr
+"This sample compares the runtime of the two random-number generators in 8th\n"
+.
+"It runs each " . reps @ . " times:\n" 
+.
+cr
+' crypt-rand "rand" timeit
+' crypt-pcg "rand-pcg" timeit
+cr bye
+	

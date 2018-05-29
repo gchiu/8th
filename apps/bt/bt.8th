@@ -1,0 +1,220 @@
+\ GUI-based BT sample
+true app:isgui !
+
+\ The sample requires BT:
+"ns:bt" w:find "This sample requires the Professional or Enterprise versions to run" thrownull
+
+\ Whether to use BLE or standard BT:
+false var, ble
+
+\ get the screen size...
+0 hw:displaysize? var, scr-hi  var, scr-wide
+
+\ ...and set size of a 'line' to some fraction of screen height...
+scr-hi @ 12 n:/ n:int
+dup var, rowhi
+
+\ ...and set the default font size to fit nicely in the row-height
+.7 n:* n:int >s g:default-font
+
+\ The devices we found:
+[] var, devices
+
+\ Define a very simple GUI:
+{
+  "kind" : "win",
+  "bg" : "lightyellow1",
+  "center" : ` mobile? not `,
+  "children"  :
+  [
+    \ Top row: scan button:
+    {
+      "kind" : "btn",
+      "label" : "Scan…",
+      "bounds" : `rowhi @ "0,0,parent.width,%d" s:strfmt ` ,
+      "click" : "scan-click",
+      "name" : "btn"
+    },
+    \ next: select BLE or not:
+    {
+      "kind" : "toggle",
+      "label": "BLE",
+      "bounds" : `rowhi @ "0,btn.bottom,parent.width,top+%d" s:strfmt` ,
+      "square" : true,
+      "fg":"blue",
+      "click" : "onclick", 
+      "name" : "ble"
+    },
+    \ then a list of devices:
+    {
+      "kind" : "list",
+      "name" : "list",
+      "bounds": "0, ble.bottom, parent.width, parent.bottom",
+      "row-height" : ` rowhi @ ` ,
+      "bg" : "lightyellow2",
+      "fg" : "black",
+      "list-dblclicked" : "l2click"
+    }
+  ]
+} var, guidef
+var gui
+var list
+{} var, uniques
+
+\ Current choice of peripheral:
+null var, peripheral
+
+\ The connection we've got:
+null var, connection
+
+\ services found:
+null var, services
+
+\ service with characteristics:
+null var, cservice
+
+: task-msg \ msg --
+  m:new "msg" rot m:!
+  "xt"
+  ( "msg" g:say ) 
+  m:! g:do ;
+  
+
+\ This word is run in a progress-task thread, not on the main GUI thread:
+: do-connect \ gui --
+  >r
+
+  \ message that we are connecting:
+  peripheral @ "name" m:@ nip task-msg
+
+  \ try to do the connect:
+  peripheral @ 
+  "ble" m:@ if bt:leconnect else bt:connect  then
+  dup connection ! 
+
+  \ notify the result
+  null? if 
+    "Failed" "BT error " bt:err? >s s:+ log 
+  else 
+    "Connected" task-msg
+    0.5 sleep
+    "Services..." task-msg
+    connection  @ ( services ! ) 15 bt:services?
+    services @ >s dup log 
+    0.5 sleep
+
+    \ see if there is a service with characteristics:
+    "Looking for svc w/ characteristics" log
+    null cservice !
+    services @ ( "characteristics" m:exists? if cservice ! break then ) a:each drop
+
+    "Did we find one?" log
+
+    \ read the value if there is such a service:
+    cservice @ null? if 
+      drop "Nope" log
+    else
+      \ Print the value of the characteristic etc:
+      "Characteristic..." task-msg
+      "uuid" m:@ >r
+      "Service: " r@ s:+ log
+      "characteristics" m:@ 0 a:@ nip nip
+      "Characteristic: " over s:+ log
+      r> swap connection @ -rot bt:ch@ 
+      
+      null? if drop "Failed" else b:hex> then
+      dup log
+    then
+
+  then 
+    swap task-msg
+
+  \ let the notification remain a second:
+  1 sleep
+
+  rdrop ;
+
+\ User double-clicked the list time, so try to connect:
+: l2click \ list ix -- list
+  devices @ swap a:@ nip peripheral !
+
+  1 ' do-connect t:task-n ;
+
+: device-exists? \ obj -- obj false | true
+  \ if there is no 'addr' key, say the device doesn't exist:
+  "addr" m:@ null? if drop false ;then
+  \ obj addr
+  uniques @ over m:exists? if
+    \ exists: \ obj addr uniques 
+    2drop drop true
+  else
+    \ doesn't exist, so insert it
+    swap true m:! drop false
+  then ;
+
+: enable-scan \ --
+  gui @ "btn" g:child true g:enable drop ;
+
+: scanner \ obj -- f
+  \ debug log output:  particularly useful on mobile!
+  "scanner: " over >s s:+ log
+
+  \ null means end of scan:
+  null? if enable-scan false ;then
+
+  \ duplicate detection:
+  device-exists? if true ;then
+
+  \ save ble connection info:
+  "ble" ble @ m:!
+
+  \ save the device in the devices array:
+  devices @ over a:push drop
+
+  \ now make sure it's in the list:
+  "addr" "UNK" m:@? >r
+  "name" "UNK" m:@? clone nip " at " s:+ r> s:+
+  list @ swap g:list+ drop
+  true ;
+
+\ user clicked BLE:
+: onclick g:on? ble ! ;
+
+\ user clicked 'Scan'
+: scan-click
+  \ don't do anything if bt is not on:
+  bt:on? not if ( {"msg":"BT not enabled"} "parent" gui @ m:! g:say ) g:do ;then
+
+  \ disable presses while we are scanning:
+  false g:enable
+
+  \ clear the devices array
+  devices @ a:clear drop
+
+  \ clear the uniques map
+  uniques @ m:clear drop
+
+  \ and the list:
+  list @ -1 g:list- drop
+
+  \ initiate the scan:
+  ' scanner 15
+  ble @ if bt:lescan else bt:scan then ;
+
+\ It all begins here; but all this does is create the GUI and wait around.
+: app:main 
+  ( connection @ null? not if bt:disconnect then ) onexit
+
+  guidef @ 
+  \ We are modifying the GUI definition at runtime based on whether or not we
+  \ are running on a mobile device:
+  mobile? if
+    \ On mobile systems, make the window full-screen:
+    "fullscreen" true m:!
+  else
+    \ On desktop systems make the window centered and half the screen size:
+    "wide" scr-wide @ 2 n:/ m:!
+    "high" scr-hi @ 2 n:/ m:!
+  then
+  g:new dup gui ! 
+  "list" g:child list ! ;

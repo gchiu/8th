@@ -1,0 +1,252 @@
+true app:isgui !
+\ simple app to show some sensor information
+
+0 hw:displaysize?
+var, high
+var, wide
+[
+	"Liberation Sans ",
+	"Tahoma ",
+	"Arial ",
+	"Console ",
+	"ArialMT ",
+	"Liberation Sans "
+] var, fonts
+: fontname fonts @ os a:@ nip clone nip ;
+\ Dynamically figure out a good font size for the address edit:
+: calc-font  \ n -- s
+	high @ swap n:/ 
+	os 3 n:= if 2 n:* then
+	>s
+	fontname swap s:+ 
+	 ;
+
+\ this map has the sensor types we want to poll, and the items it contains
+\ are the 'hw' items or 'null' if no hw is available:
+{
+	"gps" : null,
+	"compass" : null,
+	"gyro" : null,
+	"accel" : null
+} var, hw
+
+\ this map has a convenient look-up table, mapping sensor names to the gui to
+\ update for each type:
+{
+	"gps" : null,
+	"compass" : null,
+	"gyro" : null,
+	"accel" : null
+} var, hwlabel
+
+\ and *this* map is the main gui, which presents the data from the sensors as
+\ well as having a way to start and stop sensors.
+{
+	"kind" : "win",
+	"wide" : 800,
+	"high" : 600,
+	"center" : true,
+	"fullscreen" : `mobile? `,
+	"bg" : "lightblue",
+	"children" :
+	[
+		\ GPS  ------------------
+		{
+			"kind" : "label",
+			"label" : "GPS:",
+			"name" : "gps",
+			"bounds" : "4,4,100,top+parent.height/10",
+			"font": `40 calc-font `
+		},
+		{
+			"kind" : "label",
+			"label" : "none",
+			"name" : "gps_l",
+			"bounds" : "gps.right + 4,gps.top,parent.width-4, top+1.2*gps.height",
+			"font": `40 calc-font `
+		},
+
+		\ Gyro  ------------------
+		{
+			"kind" : "label",
+			"label" : "Gyro:",
+			"name" : "gyro",
+			"bounds" : "gps.left,gps_l.bottom+4,gps.right,top+2*gps.height",
+			"font": `40 calc-font `
+		},
+		{
+			"kind" : "label",
+			"label" : "none",
+			"name" : "gyro_l",
+			"bounds" : "gyro.right + 4,gyro.top,parent.width-4, gyro.bottom",
+			"font": `40 calc-font `
+		},
+
+		\ Accel  ------------------
+		{
+			"kind" : "label",
+			"label" : "Accel:",
+			"name" : "accel",
+			"bounds" : "gyro.left,gyro.bottom+4,gyro.right,top+2*gps.height",
+			"font": `40 calc-font `
+		},
+		{
+			"kind" : "label",
+			"label" : "none",
+			"name" : "accel_l",
+			"bounds" : "accel.right + 4,accel.top,parent.width-4, accel.bottom",
+			"font": `40 calc-font `
+		},
+
+		\ Compass  ------------------
+		{
+			"kind" : "label",
+			"label" : "Compass:",
+			"name" : "compass",
+			"bounds" : "accel.left,accel.bottom+4,accel.right,top+2*gps.height",
+			"font": `40 calc-font `
+		},
+		{
+			"kind" : "label",
+			"label" : "none",
+			"name" : "compass_l",
+			"bounds" : "compass.right + 4,compass.top,parent.width-4, compass.bottom",
+			"font": `40 calc-font `
+		},
+		
+		\ start and stop:
+		{
+			"kind" : "btn",
+			"label" : "Start",
+			"name" : "start",
+			"bg" : "palegreen",
+			"bounds" : "gps.left, parent.height-gps.height-4, left+parent.width/4, top+gps.height",
+			"click" : "start-sensors",
+			"font": `40 calc-font `
+		},
+		
+		{
+			"kind" : "btn",
+			"label" : "Stop",
+			"name" : "stop",
+			"bg" : "palered",
+			"click" : "stop-sensors",
+			"bounds" : "start.right+8, start.top, left+start.width, start.bottom",
+			"font": `40 calc-font `
+		},
+		
+		{
+			"kind" : "btn",
+			"label" : "Quit",
+			"name" : "quit",
+			"bg" : "red",
+			"click" : ( g:quit ) ,
+			"bounds" : "stop.right+8, start.top, left+start.width, start.bottom",
+			"font": `40 calc-font `
+		}
+	]
+} var, guiobj
+
+var gui
+
+: o>s \ o -- s
+	"x" m:@ null? nip if 
+		"lat" m:@ "lat: " swap >s s:+ >r
+		"lon" m:@ "\nlon: " swap >s s:+ 
+			r> swap s:+ >r
+		"alt" m:@ "\nalt: " swap >s s:+
+		r> swap s:+
+	else
+		"x" m:@ "x: " swap >s s:+ >r
+		"y" m:@ "\ny: " swap >s s:+ 
+		r> swap s:+ >r
+		"z" m:@ "\nz: " swap >s s:+
+		r> swap s:+
+	then
+	nip
+	;
+\ generic word which takes a string, the name of the sensor, and polls it for
+\ data and updates the gui:
+: upd-sensor \ s --
+	>r
+	\ get the sensor
+	hw @ r@ m:@ nip
+
+	\ is the sensor available?
+	null? if
+		\ sorry, it is not available
+		drop 
+	else
+		\ yes it is.  So read it:
+		hw:poll
+		\ was there data?
+		null? if
+			\ no data
+			drop
+		else
+			\ yes data, convert to a string for display
+			o>s 
+			\ get the gui to be updated:
+			hwlabel @ r@ m:@ nip
+			\ and update it
+			swap g:text drop
+		then
+	then
+
+	rdrop \ clean up r:
+	;
+
+: poll-sensors
+	repeat
+		\ iterate all sensors and update the gui
+		hw @ m:keys nip
+		(
+			nip upd-sensor
+		) a:each drop
+		\ sleep a second
+		1.0 sleep
+	again ;
+
+: start-sensors
+	{"msg":"Starting sensors"}
+  "parent" rot g:parent m:!  g:say
+	hw @ 
+	(
+		nip
+		null? if drop else hw:start then
+	) m:each ;
+
+: stop-sensors
+	{"msg":"Stopping sensors"}
+  "parent" rot g:parent m:!  g:say
+	hw @ 
+	(
+		nip
+		null? if drop else hw:stop then
+	) m:each ;
+
+: init-sensors
+	\ set up the sensors:
+	hw @
+	"gps" dup hw:sensor m:!
+	"gyro" dup hw:sensor m:!
+	"compass" dup hw:sensor m:!
+	"accel" dup hw:sensor m:!
+	drop
+
+	\ for convenience, make a lookup for the children to update for each sensor:
+	hwlabel @ 
+	"gps" gui @ "gps_l" g:child m:!
+	"gyro" gui @ "gyro_l" g:child m:!
+	"accel" gui @ "accel_l" g:child m:!
+	"compass" gui @ "compass_l" g:child m:!
+	drop
+
+	\ turn on the hw poll loop:
+	' poll-sensors t:task ;
+
+: app:main
+	guiobj @ 
+	g:new g:show gui ! 
+	init-sensors ;
+

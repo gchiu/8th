@@ -1,0 +1,57 @@
+true app:isgui !
+{
+	"kind" : "win",
+	"wide" : 200,
+	"high" : 200,
+	"title" : "Big Button Demo",
+	"bg" : "grey",
+	"font" : "20",
+	"children" :
+	[
+		{
+			"kind" : "btn",
+			"name" : "btn1",
+			"bounds" : "10, 10, parent.width-10, parent.height/2-10",
+			"bg"   : "red",
+			"bg0"   : "yellow",
+      "fg"   : "white",
+      "fg0"   : "grey",
+			"font" : "20",
+			"click" : "clicked",
+      "ix": 1,
+      "on" : 1,
+      "autotoggle" : true,
+			"label" : "ON"
+		},
+		{
+			"kind" : "btn",
+			"name" : "btn2",
+			"bounds" : "10, btn1.bottom+10, parent.width-10, parent.height-10",
+      "fg"   : "black",
+      "fg0"   : "grey",
+			"bg"   : "green",
+			"bg0"   : "lightblue",
+			"font" : "20",
+			"click" : "clicked",
+\      "enabled" : false,
+      "autotoggle" : true,
+      "ix": 0,
+      "on" : 0,
+			"label" : "OFF"
+		}
+	]
+} var, guiobj
+
+var buttons
+
+: clicked 
+  g:on? if "ON" else "OFF" then
+  g:text ;
+
+: app:main
+	guiobj @ g:new 
+  dup
+  "btn1" g:child
+  swap "btn2" g:child
+  2 a:close buttons ! 
+  buttons @ . cr ;

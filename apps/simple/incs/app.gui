@@ -1,0 +1,76 @@
+{
+	\ the outermost container is a 'window'
+	"kind" : "win",
+	"title" : "Simple GUI Application",
+	"bg" : "beige",
+	"init" : ( null g:center ) ,
+
+	\ create some controls, children of this window:
+	"children" :
+	[
+		\ first, a label so we know what we're looking at:
+		\ note that the position is fixed:
+		{
+			"kind" : "label",
+			"label" : "Location:",
+			"bounds" : "10,10,80,parent.height/12",
+			"font": `50 calc-font `,
+			"justify":["right"],
+			"name" : "anchor"
+		},
+		\ then an edit field for the user to put information:
+		{
+			"kind" : "edit",
+			"bounds" : "anchor.right + 10, anchor.top, parent.width-10, anchor.bottom",
+			"font" :  `40 calc-font `,
+			"name" : "addr",
+			"kbd" : "text",
+			"focus-gained" : "focusgained",
+			"empty-text": "Type in an address to look up here…",
+			"return-pressed" : "get-data"
+		},
+
+		\ ok, so now you want to show the result of the query:
+		{
+			"kind" : "label",
+			"label" : "Results:",
+			"font":`50 calc-font `,
+			"justify":["right"],
+			"bounds" : "anchor.left, anchor.bottom+10, anchor.right, top+30",
+			"name" : "rlabel"
+		},
+		\ here is a read-only editor which will contain the results:
+		{
+			"kind" : "edit",
+			"ro" : true,
+			"multi" : true,
+			"wordwrap" : true,
+			"name" : "results",
+			"empty-text": "Results will be shown here…",
+			"bounds" : "rlabel.right + 10, rlabel.top, parent.width-10, parent.height - parent.height/12 - 8",
+			"font" :  `30 calc-font `
+		},
+
+		\ and finally, some buttons at the bottom:
+		{
+			"kind" : "btn",
+			"bounds" : "rlabel.left, results.bottom+8, left+parent.width/4, top-4+parent.height/12",
+			"label" : "Look up",
+			"bg" : "green",
+			"name" : "btn1",
+			"click" : "get-data",
+			"font":`50 calc-font `
+		},
+		{
+			"kind" : "btn",
+			"bounds" : "parent.width-btn1.width-10, results.bottom+8, left+parent.width/4, btn1.bottom",
+			"label" : "Quit",
+			"bg" : "red",
+			"click" : "quit" ,
+			"font":`50 calc-font `
+		}
+	]
+} var, gui-json
+
+\ This variable is just to hold the instantiated GUI:
+var gui

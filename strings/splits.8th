@@ -1,0 +1,16 @@
+"one,two,three,four" var, str
+
+"Original string: " .  str @ . cr
+
+"Split on commas: " . str @ "," s:/ . cr
+
+"Split on first comma (note the comma remains) :" .
+str @ "," s:search s:/ . cr
+
+"Split on first comma using regex :" .
+str @ /,/ s:search s:/ . cr
+
+"Split on last comma :" .
+str @ "," s:rsearch s:/ . cr
+
+bye

@@ -1,0 +1,28 @@
+
+: goto \ x y --
+  swap con:gotoxy ;
+
+var savex
+var savey
+
+: save con:getxy savey ! savex ! ;
+: restore savex @ savey @ con:gotoxy ;
+
+: vline \ high --
+  ( "X" con:print con:left con:down ) 
+  swap times ;
+
+: hline \ wide --
+  ( "X" con:print ) 
+  swap times ;
+
+: rect \ wide high x y --
+  goto save 2dup
+  vline hline restore
+  swap hline vline ;
+
+con:cls 
+30 10 15 5 rect 
+"\nDone\n" con:print
+
+bye

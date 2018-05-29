@@ -1,0 +1,89 @@
+\ calculate the average and std-dev of an array of numbers
+\ vim: ts=4 sw=4 et :
+
+: XX log .s cr ;
+var a1
+var sum
+var variance
+var a2
+var dev1
+var dev2
+var m
+var s
+var arr
+
+: same? \ x y -- 
+    n:- n:abs
+    0.000001 n:<
+    if "Yes" else "No" then
+    . cr ;
+
+\ First the data:
+\ We'll store an array of a few numbers, in a 'var' named 'arr':
+
+\ fill the array with ten numbers:
+: generate \ -- 
+    []
+    ( 
+        rand-pcg
+        n:abs 100 n:mod
+        a:push
+    ) 10 times arr !  ;
+
+\ print it:
+: show-original \ --
+    "Original data: " .  
+    arr @ . cr cr ;
+
+
+\ We'll get the sum of the numbers using the handy a:reduce word, which takes
+\ an array, a word to call for each element and a starting value.  Since we're
+\ interested in the total, we'll start with '0':
+: 2pass
+    cr "Traditional two-pass method:" . cr cr
+    arr @ ' n:+ 0  a:reduce
+    \ Tell us the value
+    "Sum is: " .  dup . cr
+    \ divide by the number of items:
+    arr @ a:len nip n:/
+    \ Store the result in a new var named 'avg'
+    dup a1 !
+    "Mean: " . . cr ;
+
+\ get the sum of squares:
+: sum-squares \ --
+    \ Iterate the array using a:each, which passes the index and item to the
+    \ callback word.  In this case, we accumulate the sum into the var 'sum':
+    arr @ ( nip a1 @ n:- n:sqr sum n:+! ) a:each  \ leaves the array on TOS
+    "Sum of diffs squared : " .  sum @ . cr ;
+
+: calc-variance \ --
+    a:len nip sum @ swap n:/ dup variance !
+    "Variance: " . variance @ . cr
+    "Std dev: " . variance @ n:sqrt dup dev1 ! . cr ;
+
+: kv
+	tuck m @ dup >r tuck 
+	n:- rot n:1+ n:/ n:+ dup m !
+	over r> n:- >r n:- r> n:*
+	s n:+! ;
+
+
+: knuth-variance
+    cr "Redo the calculations using Knuth's one-pass method:" . cr cr
+    arr @ ' kv a:each 
+    "Mean: " . m @ dup a2 ! . cr
+    "Variance: "  . s @ arr @ a:len nip n:/ dup . cr
+    "Std dev: " . n:sqrt dup dev2 ! . cr ;
+
+: check
+    cr "Are the results the same?" . cr cr
+    "Mean : " . a1 @ a2 @ same?
+    "StdDev: " . dev1 @ dev2 @ same?  ;
+
+: app:main 
+  generate
+  show-original
+  2pass sum-squares calc-variance
+  knuth-variance
+  check bye ;

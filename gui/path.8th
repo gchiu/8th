@@ -1,0 +1,64 @@
+\ draw a path on an image
+
+\ Create a base font to use:
+"Arial 40" font:new var, font
+
+\ create an image:
+800 600 img:new 
+"pink" g:fillall
+\ set its font to the one we just made:
+font @ g:setfont
+4 g:line-width
+"red" g:fcolor
+"black" g:scolor
+
+\ draw a hollow rectangle
+g:path
+10 10 20 20 g:rect 
+g:/path g:stroke 
+
+\ draw another hollow rectangle
+"red" g:scolor
+g:path
+15 15 30 30 g:rect 
+g:/path g:stroke 
+
+\ use regular text output to draw 'X'
+100 20 "X" g:draw-text-at
+
+"green" g:scolor
+"white" g:fcolor
+
+\ draw a bezier
+g:path
+50 50 g:moveto
+100 100 200 200 250 100 g:bezier
+50 50 g:lineto
+\ save the path to reuse:
+g:getpath >r
+g:stroke-fill
+
+\ scale that path by 2 and draw it rotated 30 degrees anti-clockwise :
+r>
+-30 2 200 200 g:+path g:stroke-fill
+
+\ draw a glyph from the font we created:
+"blue" g:fcolor
+\ get the glyph corresponding to the letter "R"
+font @ 60 font:pixels "R" font:glyph-pos 
+drop 0 a:@ nip
+    font:glyph-path nip
+\ draw the glyph rotated 45 degrees clockwise:
+\ note: font glyphs are normalized to '1' pixel:
+45 60 100 300 g:+path
+g:fill
+
+\ save to a file
+"path.png" var, file
+file @ f:rm drop 
+file @ img:>file
+
+\ launch a viewer
+file @ null f:launch
+
+bye

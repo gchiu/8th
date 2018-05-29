@@ -1,0 +1,8 @@
+\ How does 'indexof' work?
+
+[ "cat", "hat", "bat", "fat" ] var, items
+"hat" var, lookfor
+
+"Search the array " . items @ . " for " . lookfor @ .  cr
+items @ lookfor @ ' s:= a:indexof . cr
+bye

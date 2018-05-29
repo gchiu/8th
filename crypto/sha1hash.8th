@@ -1,0 +1,33 @@
+\ simple sample of how to generate an SHA1 hash of a file
+
+\ syntax: 8th samples/sha1hash.8th filetohash
+: XX log .s cr ;
+: open-file \ -- h|throw
+	0 args dup f:exists? not if 
+		"There is no file: " swap s:+ throw 
+	then
+	"SHA1 sum of " . dup . ": " .
+	f:open ;
+
+defer: process-file
+
+: process-next \ hash b -- hash
+	swap cr:hash+ ;
+
+: process-first \ b -- hash
+	cr:hash
+	' process-next w:is process-file ;
+
+' process-first w:is process-file
+
+: app:main
+	\ set the hash to SHA1:
+	"sha1" cr:hash!
+	\ get the file name and open it:
+	open-file
+	\ process file 4k at a time...
+	' process-file 4096 f:eachbuf 
+	\ stack has:  file hash
+	swap f:close
+	cr:hash>s . cr 
+	bye ;

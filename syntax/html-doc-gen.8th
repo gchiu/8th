@@ -1,0 +1,274 @@
+#! /usr/bin/env 8th
+
+\ 8th script to generate an HTML document format of the online help for 8th
+\
+\ Version: 1.2
+\ Updated: 2017/08/14
+\ Author: Richard A. Mead
+\ Contact: Richard {at} InfoMontage.com
+\ Copyright: (c) 2016 Information Montage
+\ Non-exclusive distribution rights are herein granted to Aaron High-Tech, Ltd.
+\
+\ Usage: 8th html-doc-gen.8th > 8th-docs.html
+\ Created using 8th version 17.06 (build ad91807f)
+
+needs stack/rstack
+
+\ Correction for bug in rroll:
+: rroll rstack swap st:roll drop ;
+
+: _add-to-map \ v k m[k->a] --
+	over m:exists? -- v k m f
+		if -- v k m
+			swap m:@ rot -- m oa v
+			a:push 2drop -- 
+		else -- v k m
+			swap rot -- m k v
+			[] clone nip swap a:push -- m k na
+			m:! drop -- 
+		then ;
+
+
+var HDB
+var CSQL
+var WSQL
+
+: init-helpdb-access \ --
+	app:8thdir "docs/help.db" s:+ db:open
+	"SELECT * FROM classes WHERE nm=?" db:prepare CSQL !
+	"SELECT * FROM words WHERE nm=? AND cls=?" db:prepare WSQL !
+	HDB ! ;
+
+
+: create-html-header-section \ --
+	quote %
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>8th %
+
+	G:8thver? " (build " s:+ G:buildver? s:+ ")" s:+
+
+	dup >r s:+
+
+	" word list</title>
+	</head>
+	<body>
+	<center><h1>8th " s:+ r> s:+
+
+	quote %
+</h1></center>
+<br/>
+<ul>
+<li><a href="#namespace-section">Namespaces</a></li>
+<li><a href="#words-section">Words</a></li>
+<li><a href="#detail-section">Detailed list</a></li>
+</ul><br>%
+	s:+ 
+	. ;
+	
+: create-html-ns-section \ m[ns>s->a[w>s]] -- m[ns>s->a[w>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[ns>s] (r: m[ns>s->a[w>s]])
+	quote %
+<div id="namespace-section">
+<center><h3>Namespaces</h3></center>
+<p>The following are the predefined namespaces in 8th,
+ and the words that are defines in each of them:</p>
+<table style="border-spacing:0"><thead>
+<tr style="text-align:left">
+<th style="border-bottom:1px solid black">Namespace</th>
+<th style="border-bottom:1px solid black">Description</th>
+<th style="border-bottom:1px solid black">Word(s)</th>
+</tr>
+</thead><tbody>%
+	>r -- a[ns>s] (r: m[ns>s->a[w>s]] html)
+	( nip
+		"<tr><td style=\"vertical-align:top;border-bottom: thin dashed black\">"
+		"<div id=\"namespace-" s:+ over s:+ "\">"
+		s:+ "<a href=\"#" s:+ over s:+ ":\">" s:+ over s:+ "</a>" s:+
+		"</td>\n<td style=\"vertical-align:top;border-bottom: thin dashed black\">" s:+
+		"ns:" 2 pick s:+ eval ns>ls s:+
+		"</td><td style=\"border-bottom: thin dashed black\">" s:+
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[w>s] (r: m[ns>s->a[w>s]] html ns>s phtml)
+		(
+			swap 0 n:> if ", "  else "" then
+			"<a href=\"#" s:+ 1 rpick s:+ ":" s:+ over s:+ "\">" s:+ swap s:+ "</a>" s:+
+			r> s:<+ >r -- (r: m[ns>s->a[w>s]] html ns>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ "</div></td><tr>\n" s:+ >r -- (r: m[ns>s->a[w>s]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+ . r> ;
+
+: create-html-words-section \ m[w>s->a[ns>s]] -- m[w>s->a[ns>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[w>s] (r: m[w>s->a[ns>s]])
+	quote %
+<div id="words-section">
+<center><h3>Words</h3></center>
+<p>The following are the predefined words in 8th,
+ and the namespaces that define each word:</p>
+<table style="border-spacing:0"><thead>
+<tr style="text-align:left">
+<th style="border-bottom:1px solid black">Word</th>
+<th style="border-bottom:1px solid black">Namespace(s)</th>
+</tr>
+</thead><tbody>%
+	>r -- a[w>s] (r: m[w>s->a[ns]] html)
+	( nip
+		"<tr><td style=\"vertical-align:top;border-bottom: thin dashed black\">"
+		"<div id=\"word-" s:+ over s:+ "\">" s:+ over s:+ "</td>\n" s:+
+		"<td style=\"vertical-align:top;border-bottom: thin dashed black\">" s:+
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[ns>s] (r: m[w>s->a[ns>s]] html w>s phtml)
+		(
+			swap 0 n:> if ", "  else "" then
+			"<a href=\"#" s:+ over s:+ ":" s:+ 1 rpick s:+ "\">" s:+ swap s:+ "</a>" s:+
+			r> s:<+ >r -- (r: m[w->a[ns]] html w>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ "</div></td><tr>\n" s:+ >r -- (r: m[w>s->a[ns]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+ . r> ;
+
+: apply-html-highlights \ text -- text+html
+	/__([^_]+)__/
+	"<span style=\"font-weight:bolder\">\\1</span>"
+	s:replace!
+	/@([^@]+)@/
+	"<span style=\"text-decoration:underline;font-style: italic\">\\1</span>"
+	s:replace! ;
+
+: get-ns-detail \ ns>s -- desc2>s
+	HDB @ CSQL @ rot 1 db:bind
+	{ "desc2" : "" } >r
+	( rdrop db:col{} >r ) swap db:exec-cb drop r>
+	"desc2" m:@ nip
+	apply-html-highlights "<br/><br/>" s:+ ;
+
+: get-word-detail \ w>s ns>s -- imm>s stk>s desc>s
+	HDB @ WSQL @ rot 2 db:bind rot 1 db:bind
+	{ "immed" : 0, "st" : "", "desc" : "" } >r
+	( rdrop db:col{} >r ) swap db:exec-cb drop r>
+	"st" m:@ swap "desc" m:@ swap "immed" m:@ nip
+	0 n:>
+	if
+		"Immed"
+	else
+		/^\s*__deferred__:?\s*/ >r
+		r@ s:search number?
+		if
+			0 n:=
+			if
+				r@ "" s:replace
+				"Defer"
+			else
+				""
+			then
+		else
+			drop ""
+		then
+		rdrop
+	then
+	swap apply-html-highlights -rot ;
+	
+: create-html-ns-words-detail-section -- m[ns>s->a[w>s]] -- m[ns>s->a[w>s]]
+	m:keys swap >r ' s:cmpi a:sort -- a[ns>s] (r: m[ns>s->a[w>s]])
+	quote %
+<div id="detail-section">
+<center><h3>Word descriptions</h3></center>
+<p>The following are the built-in descriptions of each predefined word in each of the
+ predefined namespaces in 8th:</p>
+
+<table>
+<thead>
+	<tr style="text-align:left">
+		<th style="border-bottom:1px solid black">Word</th>
+		<th style="border-bottom:1px solid black;padding-left:4pt">Immediate /Deferred</th>
+		<th style="border-bottom:1px solid black;padding-left:2pt;padding-right:6pt">Stack comment</th>
+		<th style="border-bottom:1px solid black">Description</th>
+	</tr>
+</thead>
+<tbody>
+%
+	>r -- a[ns>s] (r: m[ns>s->a[w>s]] html)
+	( nip
+		"<tr><td colspan=5>&nbsp</td></tr>\n"
+		"<tr style=\"text-align:center\">" s:+
+		"<td colspan=5 style=\"font-size:larger;font-weight:bolder\"><div id=\"" s:+
+		over s:+ ":\">" s:+ over s:+
+		" (" s:+ "ns:" 2 pick s:+ eval ns>ls s:+ ")" s:+
+		"</div></td></tr>" s:+
+		"<tr><td colspan=5 style=\"border-bottom:1px solid black\">" s:+
+		over get-ns-detail s:+
+		"</td></tr>" s:+
+		>r 2 rpick swap dup >r rswap m:@ nip
+		' s:cmpi a:sort -- a[w>s] (r: m[ns>s->a[w>s]] html ns>s phtml)
+		( nip
+			"<tr><td style=\"border-bottom: thin dashed black\"><div id=\""
+			1 rpick s:+ ":" s:+ over s:+ "\">"
+			s:+ over s:+ "</div></td>\n<td style=\"border-bottom: thin dashed black;"
+			"padding-left:2px\">" s:+ s:+
+			swap 1 rpick get-word-detail
+			"%s</td><td style=\"border-bottom: thin dashed black;"
+			"padding-left:2px;padding-right:2px;white-space: nowrap\">" s:+
+			"%s</td>\n<td style=\"border-bottom: thin dashed black\">%s</td>\n" s:+ s:strfmt s:+ "</tr>\n" s:+
+			r> s:<+ >r -- (r: m[ns>s->a[w>s]] html ns>s phtml)
+		) a:each drop
+		r> rdrop r> s:<+ >r -- (r: m[ns>s->a[w>s]] html)
+	) a:each drop
+	r> quote %
+</tbody></table></div><br/>
+%
+	s:+ . r> ;
+
+
+[]
+"ns:" words-like a:+
+"I:" words-like a:+
+"C:" words-like a:+
+"X:" words-like a:+
+"ctx:" words-like a:+
+"user:" words-like a:+
+
+null words-like
+(
+	true >r
+	swap
+	( nip over s:= if rdrop false >r break then ) a:each
+	nip r>
+) a:filter
+nip -- a["ns:w"]
+
+
+{} >r {} >r
+
+( nip -- nv
+	":" s:search s:/ a:open 0 1 s:- 2dup r@ -- ns>s w>s v k m
+	_add-to-map -- ns>s w>s = nsk nsv
+	swap 1 rpick -- v k m
+	_add-to-map -- 
+) a:each drop
+
+
+r>
+{ "#then":[], "#else":[] } m:+
+r>
+
+create-html-header-section
+create-html-ns-section
+swap
+create-html-words-section
+drop
+init-helpdb-access
+create-html-ns-words-detail-section
+drop
+
+cr
+
+bye

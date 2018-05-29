@@ -1,0 +1,87 @@
+\ A "responsive" GUI changes layout depending upon size and orientation
+true app:isgui !
+
+\ state variables
+false var, landscape
+var wide var high
+
+\ This is called when the main window resizes.  We calculate the orientation and
+\ save the max width and height:
+: winsize   \ gui wide high
+  2dup high ! wide !
+  n:> landscape !
+  landscape @ if "landscape" else "portrait" then high @ wide @ 
+  "Window is %d X %d, %s" s:strfmt . cr
+  \ tell everyone to resize appropriately
+  0 landscape @ if n:1+ then  g:user!  ;
+
+\ this is called for every other item when the main window resizes
+: onuser \ gui index --
+  >r "bnd" g:m@ 
+  r> a:@ nip g:bounds ;
+
+: btnsay \ msg --
+  >r g:parent 
+  m:new "parent" rot m:!
+  "msg" r> m:! g:say ;
+
+
+\ Define the gui
+{
+  "kind" : "win",
+  "size" : "winsize",
+  "wide" : 640,
+  "high" : 480,
+  "bg"   : "beige",
+  "children" :
+  [
+    {
+      "kind" : "btn",
+      "label" : "One",
+      "click" : ( "Number one!" btnsay ) ,
+      "bg" : "red:50",
+      "name" : "b1",
+      "bnd" :
+      [
+        \ portrait bounds:
+        "0,0,parent.width,30",
+        \ landscape bounds:
+        "0,0,parent.width/3,30"
+      ],
+      "user" : "onuser"
+    },
+    {
+      "kind" : "btn",
+      "label" : "Two",
+      "click" : ( "Too bad" btnsay ) ,
+      "bg" : "yellow:50",
+      "name" : "b2",
+      "bnd" :
+      [
+        \ portrait bounds:
+        "0,b1.bottom+10,parent.width,top+30",
+        \ landscape bounds:
+        "b1.right+10,0,left+parent.width/3,30"
+      ],
+      "user" : "onuser"
+    },
+    {
+      "kind" : "btn",
+      "label" : "Three",
+      "click" : ( "Three's a crowd" btnsay ) ,
+      "bg" : "green:50",
+      "name" : "b3",
+      "bnd" :
+      [
+        \ portrait bounds:
+        "0,b2.bottom+10,parent.width,top+30",
+        \ landscape bounds:
+        "b2.right+10,0,parent.width-10,30"
+      ],
+      "user" : "onuser"
+    }
+  ]
+} var, layout
+
+: app:main
+  layout @ g:new ;

@@ -1,0 +1,43 @@
+\ vim: ft=8th: 
+"en" curlang !
+
+\ no need to add date names for English!
+
+\ string to translate is the key, the value is the value to retrieve:
+{
+"name" : "The '24 Game'",
+"txt" : "Welcome to the '24 Game'!
+
+You will be shown four random digits from 1 to 9.  
+
+Using all four digits just once, and any combination of plus (+) minus (-)
+multiplication (*) and division (/), you must create an expression which
+evaluates to the number 24.
+
+The expression must use 'RPN' (Reverse Polish Notation), which means
+that instead of adding one and two like this: '1 + 2',  you do it like
+this: '1 2 +'.  For example, given the digits '1 1 3 6', the expression '6 3 1 + 1
+* *' will work. You may not combine digits.
+
+If the expression is correct, you gain two points; if it is incorrect, you lose
+one point.  If you press 'Skip' then you neither gain nor lose points. In any case,
+you will be given another set of digits to try.
+
+Your goal is to get 10 points in 5 minutes.
+
+Good luck!",
+"score" : "Score: ",
+"great" : "\"%0%\" worked!",
+"bad" : "Wrong digits, try again.",
+"del" : "Del",
+"eval" : "Try",
+"skip" : "Skip",
+"q1" : "Quit",
+"q2" : "Quit",
+"win" : "Yay!  You won!",
+"lose" : "Better luck next time!",
+"wrong" : "That expression is wrong.",
+"ok1" : "Continue…",
+"abt" : "About…"
+}
+s:intl! 

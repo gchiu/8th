@@ -1,0 +1,17 @@
+\ This wraps an existing 8th script so that it can be run as a Windows batch file:
+
+
+: app:main 
+  0 args            \ get the file-name from the command-line
+  "Need to give a file name!" thrownull
+  clone ".bat" s:+  \ create the output file-name
+  f:create			\ actually create that file
+  \ write out the prefatory stuff:
+  ": @echo '@ parse drop ;\r\n" f:write drop
+  "@echo off\r\n" f:write drop
+  app:exename f:write drop
+  "  \"%~f0\" %*\r\n goto :eof\r\n@\r\n" f:write drop
+  swap				\ outfile original
+  f:slurp f:write drop
+  \ we be done
+  f:close bye ;

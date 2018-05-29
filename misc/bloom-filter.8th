@@ -1,0 +1,23 @@
+\ Bloom filter sample
+
+needs utils/bloomfilter
+
+: check \ filter val -- filter
+  "Check: " . dup . space bloom:in? . cr ;
+
+: app:main
+  "Setting up a Bloom filter for 100 items with 2 hash functions:\n"  .
+  100 2 bloom:filter
+
+  "Adding 'cat' and 'dog':\n" .
+
+  "cat" bloom:add
+  "dog" bloom:add
+
+  "rat" check
+  "cat" check
+  "bog" check
+  "dog" check
+  
+  "Done\n" . bye ;
+

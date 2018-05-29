@@ -1,0 +1,1053 @@
+var combo
+
+true app:isgui !
+needs gui/filedlg
+{
+    "kind" : "win",
+    "wide" : 800,
+    "high" : 600,
+    "title" : "Window",
+    "bg" : "white",
+    "center" : true,
+	"resize-corner" : 16,
+    "children" :
+    [ 
+		{
+			"kind" : "tab",
+			"bounds" : "0, 0, max(400,parent.width), max(300,parent.height)",
+			"bg"   : "white",
+			"tab-depth": 26,
+			"name" : "tab",
+			"tabs" :
+			[
+			{ 
+				"kind" : "box",
+				"name" : "box1",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Look and Feel",
+				"colour" : "azure1",
+				"children" : 
+				[
+					{
+						"kind" : "label",
+						"label" : "\nSet the Look and Feel:",
+						"bounds": "100,10,parent.width-100, top+80 ",
+						"justify" : ["hcenter"],
+						"name" : "lbl"
+					},
+					{
+						"kind" : "combo",
+						"bounds" : "100, lbl.bottom+30, parent.width-100,top+80",
+						"bg"   : "palevioletred1",
+						"name" : "comboLaf",
+						"size" : ( 2drop combo ! ) ,
+						"changed" : "changelaf",
+						"setTextNewText" : "New",
+						"newMessage" : "Default message",
+						"tooltip" : "Combobox",
+						"items" :
+						[
+							"Look and Feel #1",
+							"Look and Feel #2",
+							"Look and Feel #3",
+							"Custom"
+						]
+					}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Edit text",
+				"colour" : "azure1",
+				"children" : 
+				[
+					{
+						"kind" : "label",
+						"label" : "Some edit fields:",
+						"bounds": "100,10,parent.width-100, top+40 ",
+						"justify" : ["hcenter"]
+					},
+					{
+						"kind" : "edit",
+						"empty-text" : "Enter your text",
+						"bounds" : "100 , 60 ,parent.width-100, top+40",
+						"name" : "lbl1",
+						"bg"   : "aquamarine1", 
+						"tooltip" : "A single line of text"
+					},
+					{
+						"kind" : "edit",
+						"bounds" : "lbl1.left , lbl1.bottom+16 , lbl1.right, parent.height-40",
+						"bg"   : "aquamarine2",
+						"focus-gained" : "onFocusGained",
+						"focus-lost" : "onFocusLost",
+						"multi"  : true,
+						"empty-text" : "Multiple...",
+						"border" : 2,
+						"auto-scroll": true,
+						"tooltip" : "Multi-line text editor"
+					}
+				]
+			},
+			{
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Color selector",
+				"name" : "clrselector",
+				"colour" : "cyan1",
+				"children":
+				[
+					{
+						"kind" : "label",
+						"label" : "Click the labels to set their colors",
+						"bounds": "100,10,parent.width-100, top+40 ",
+						"justify" : ["hcenter"]
+					},
+					{
+						"kind" : "label",
+						"bounds" : "100 , 60 ,parent.width-100, top+40",
+						"justify" : ["hcenter"],
+						"bg"   : "lavenderblush1",
+						"mouse-up" : "clrclicked",
+						"label" : "Try me",
+						"tooltip" : "Original lavenderblush1"
+					},
+					{
+						"kind" : "label",
+						"bounds" : "100 , 110 ,parent.width-100, top+40",
+						"justify" : ["hcenter"],
+						"bg"   : "lavenderblush2",
+						"mouse-up" : "clrclicked",
+						"label" : "or me!",
+						"tooltip" : "Original lavenderblush2"
+					},
+					{
+						"kind" : "label",
+						"bounds" : "100 , 160 ,parent.width-100, top+40",
+						"justify" : ["hcenter"],
+						"bg"   : "lavenderblush3",
+						"mouse-up" : "clrclicked",
+						"label" : "or even this one",
+						"tooltip" : "Original lavenderblush3"
+					}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Combo & List",
+				"colour" : "antiquewhite1",
+				"children":
+				[
+					{
+						"kind" : "label",
+						"label" : "Combo and list boxes:",
+						"bounds": "100,10,parent.width-100, top+40 ",
+						"justify" : ["hcenter"]
+					},
+					{
+						"kind" : "combo",
+						"bounds" : "100, 60, parent.width-100,top+40",
+						"bg"   : "palevioletred1",
+						"name" : "combo1",
+						"click" : "clicked",
+						"label" : "combo",
+						"changed" : "combo-changed",
+						"value-changed" : "onValueChanged",
+						"isEditable" : true,
+						"justification" : 1,
+						"newItemId" : 3,
+						"setSelectedIdNotification" : 2,
+						"newItemIndex" : 2,
+						"setTextNewText" : "New",
+						"setTextNotification" : 1,
+						"SelectedItemIndexNotification" : 1,
+						"newMessage" : "Default message",
+						"tooltip" : "Combobox",
+						"enabled" : true,
+						"items" :
+						[
+							"Item 1",
+							"Item 2",
+							"Item 3"
+						]
+					},
+					{
+						"kind" : "list",
+						"bounds" : "combo1.left, combo1.bottom+16, combo1.right, parent.bottom-40",
+						"bg"   : "hotpink2",
+						"hl"   : "hotpink3",
+						"name" : "list",
+						"fg" : "lightgoldenrodyellow",
+						"click" : "clicked",
+						"keyState-changed" : "onKeyStateChanged",
+						"visibility-changed" : "onVisibilityChanged",
+						"label" : "List Box",
+						"shouldBeEnabled" : true,
+						"shouldSelect" : true,
+						"rowNumber" : 1,
+						"dontScrollToShowThisRow" : false,
+						"deselectOthersFirst" : true,
+						"firstRow" : 0,
+						"lastRow" : 3,
+						"deselectRowNumber" : 1,
+						"flipRowSelectionNumber" : 1,
+						"rowThatWasClickedOn" : 1,
+						"modifiers" : 1, 
+						"isMouseUpEvent" : true,
+						"newProportion" : 0.5,
+						"row" : 4,
+						"newHeight" : 22,
+						"outlineThickness" : 5,
+						"newMinimumWidth" : 70,
+						"repaintRowNumber" : 1,
+						"list-clicked" : "onListBoxItemClicked",	
+						"list-dblclicked" : "onListBoxItemDoubleClicked",
+						"delete-pressed" : "onDeleteKeyPressed",
+						"return-pressed" : "onReturnKeyPressed",
+						"tooltip" : "System Tray Icon",
+						"items" :
+							[
+							"Item 1",
+						"Item 2",
+						"Item 3",
+						"Item 4"
+							]
+					}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Tree view & Group",
+				"colour" : "lightpink",
+				"children":
+				[
+					{
+						"kind" : "label",
+						"label" : "Tree and group:",
+						"bounds": "10,10,parent.width-40, top+40 ",
+						"name" : "toplbl",
+						"justify" : ["hcenter"]
+					},
+					{
+						"kind" : "group",
+						"bounds" : "10+(toplbl.left+toplbl.right)/2, toplbl.bottom+16, toplbl.right-10, parent.bottom-40",
+						"bg"   : "plum1",
+						"name" : "groupComponent",
+						"click" : "clicked",
+						"label" : "GroupComponent",
+						"justification" : 1,
+						"newText" : "Group Component",
+						"children" :
+						[
+						{
+							"kind" : "toggle",
+							"name" : "toggle1",
+							"group": 1,
+							"on" : true,
+							"bounds" : "30, 35 ,parent.width-10, top+35",
+							"bg"   : "plum4",
+							"label" : "Button 1",
+							"tooltip" : "Button"
+						},
+						{
+							"kind" : "toggle",
+							"group": 1,
+							"bounds" : "30, 75 ,parent.width-10, top+35",
+							"bg"   : "plum4",
+							"label" : "Button 2",
+							"tooltip" : "Button"
+						},
+						{
+							"kind" : "toggle",
+							"group": 2,
+							"bounds" : "30, 115 ,parent.width-10, top+35",
+							"bg"   : "plum4",
+							"label" : "Button 3",
+							"tooltip" : "Button"
+						},
+						{
+							"kind" : "toggle",
+							"group": 2,
+							"bounds" : "30, 155 ,parent.width-10, top+35",
+							"label" : "Button 4",
+							"on" : true,
+							"bg"   : "plum4",
+							"tooltip" : "Button"
+						}
+						]	 
+					},
+					{
+						"kind" : "tree",
+						"bounds" : "toplbl.left+10, toplbl.bottom+16, ((toplbl.right+toplbl.left)/2)-10, parent.bottom-40",
+						"bg"   : "deeppink",
+						"name" : "treeView",
+						"files-dropped" : "onFilesDropped",
+						"item-drag-enter" : "onItemDragEnter",
+						"item-drag-move" : "onItemDragMove",
+						"item-drag-exit" : "onItemDragExit",
+						"item-dropped" : "onItemDropped",
+						"label" : "Tree View",
+						"root-visible" : false,
+						"default-open" : true,
+						"multi-select" : false,
+						"open-close-visible" : true,
+						"items" : 
+						[
+						"item one",
+						"item two",
+						[
+						"sub two-1",
+						"sub two-2"
+						],
+						"item three",
+						"item four",
+						[
+						"sub one",
+						"sub two",
+						"sub three"
+						]
+						]
+					}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Sliders",
+				"colour" : "plum",
+				"children":
+				[
+					{
+						"kind" : "slider",
+						"style" : "LinearHorizontal",
+						"bounds" : "20, 20 ,parent.width-20, parent.bottom/2",
+						"bg"   : "thistle1",
+						"name" : "slider",
+						"text-pos" : 4,
+						"text-high": 40,
+						"text-wide" : 60,
+						"ro" : false,
+						"min" : 0,
+						"max" : 1,
+						"interval" : 0.1,
+						"stop-at-end" : false,
+						"click" : "clicked",
+						"label" : "Slider",
+						"tooltip" : "Slider",
+						"enabled" : true,
+						"name":"slide1",
+						"value-changed" : ( over g:root "progressbar" g:child over g:>progress ) 
+					} ,
+					{
+						"kind" : "progressbar",
+						"bounds" : "slide1.left, slide1.bottom+16, slide1.right, top + 60",
+						"bg"   : "red",
+						"name" : "progressbar",
+						"click" : "clicked",
+						"label" : "Progress Bar",
+						"shouldDisplayPercentage" : true,
+						"text" : "ProgressBar",
+						"tooltip" : "Progressbar"
+					},
+					{
+						"kind" : "scroll",
+						"bounds" : "progressbar.left, progressbar.bottom, progressbar.right, top+30",
+						"bg"   : "plum1",
+						"name" : "scroll",
+						"click" : "clicked",
+						"label" : "Scroll Bar",
+						"vertical":false,
+						"min" : 0,
+						"max" : 100,
+						"step" : 10,
+						"scrollbar-moved" : 
+						(
+							100 n:/ >r
+							g:parent "progressbar" g:child
+							r> g:>progress
+						)
+					}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"bounds" : "0, 26, parent.width, parent.height",
+				"label" : "Menus",
+				"colour" : "peachpuff",
+				"children":
+				[
+				{
+					"kind" : "menubar",
+					"bounds" : "20,20,parent.width-20, top+40",
+					"bg"   : "red",
+					"name" : "menubar",
+					"click" : "clicked",
+					"label" : "Menu Bar Component",
+					"menu-selected" : "onMenuSelected",
+					"menu" :
+					[
+					[
+					"One!", 1,
+					"First", 2,
+					null, 0,
+					"Primary", 3,
+					[
+					"Submenu 1a", 4,
+					"Submenu 1b", 5
+					], "Submenu 1" ,
+					"Quit at once", 6
+					],
+					[
+					"Two true", 7,
+					"Second", 8,
+					null, 0,
+					"Secondary", 9,
+					[
+					"Submenu 2a", 10,
+					"Submenu 2b", 11 
+					], "Submenu 2" ,
+					"Quit in a thrice", 6
+					]
+					]
+				},
+				{
+					"kind" : "toolbar",
+					"bounds" : "menubar.left, menubar.bottom+40 ,menubar.right, top+64",
+					"bg"   : "orchid1",
+					"name" : "toolbar",
+					"click" : "tb-clicked",
+					"item-drag-move" : "onItemDragMove",
+					"item-drag-exit" : "onItemDragExit",
+					"item-dropped" : "onItemDropped",
+					"label" : "Tool Bar",
+					"shouldBeVertical" : false,
+					"newStyle" : 1,
+					"editingEnabled" : false,
+					"items" : 
+					[
+					{ "img": "hi.png", "id": 1023, "label" : "hi", "extra" : "read all about it" },
+					{ "img": "bye.png", "id": 1020, "label" : "bye", "extra" : "parting is such sweet sorrow" },
+					{ "img": "ok.png", "id": 1021, "label" : "ok", "extra" : "i'm ok and you're ok" }
+					]
+				},
+				{
+					"kind" : "filename",
+          "native" : false,
+					"bounds" : "toolbar.left, toolbar.bottom+60, toolbar.right, top+40",
+					"bg"   : "magenta1",
+					"name" : "filename",
+					"click" : "clicked",
+					"files-dropped" : "onFilesDropped",
+					"item-drag-enter" : "onItemDragEnter",
+					"item-drag-exit" : "onItemDragExit",
+					"lookandfeel" : "onLookAndFeelChanged",
+					"label" : "File name Component",
+					"shouldBeEditable" : true, 
+					"newMaximum": 10,
+					"browseButtonText" : "Browse",
+					"tooltip" : "File name"
+				}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"wide" : 100,
+				"high" : 100,
+				"label" : "Images",
+				"colour" : "tan1",
+				"children":
+				[
+				{
+					"kind" : "label",
+					"label" : "Image and Systemtrayicon:",
+					"bounds": "10,10,parent.width-40, top+40 ",
+					"name" : "lbl2",
+					"justify" : ["hcenter"]
+				},
+				{
+					"kind" : "image",
+				        "bounds" : "lbl2.left+10, lbl2.bottom+16, ((lbl2.right+lbl2.left)/2)-10, parent.bottom-40",
+					"img"   : "8thlogo.png",
+					"name" : "imageComponent",
+                                        "bg" : "lightyellow",
+					"placement" : 64,
+					"label" : "Image Component",
+					"tooltip" : "Image"
+				},
+				{
+					"kind" : "systemtrayicon",
+					"name" : "systemtrayicon",
+				        "bounds" : "10+(lbl2.left+lbl2.right)/2, lbl2.bottom+16, lbl2.right-10, parent.bottom-40",
+					"bg"   : "olivedrab1",
+					"img" : "8thlogo.png",
+					"click" : "clicked",
+					"label" : "SystemTrayIconComponent",
+					"tooltip" : "Tooltip for a system tray icon",
+					"setHighlighted" : true,
+					"title" : "Title",
+					"content" : "Content",
+					"tooltip" : "System Tray Icon"
+				}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"wide" : 100,
+				"high" : 100,
+				"label" : "File Browser",
+				"colour" : "tan1",
+				"children":
+				[
+				{
+					"kind" : "label",
+					"label" : "File Browser:",
+					"bounds": "10,10,parent.width-40, top+40 ",
+					"name" : "lbl3",
+					"justify" : ["hcenter"]
+				},
+				{
+					"kind" : "filebrowser",
+					"header" : "File browser",
+					"name" : "browser",
+					"bounds" : "100,50,parent.width-100, top+200",
+					"bg" : "pink",
+					"label" : "file:",
+					"root" : `getcwd`,
+					"flags" : [ "open", "file", "tree", "multi"],
+					"filter" : "*.8th;*.cpp"
+				},
+				{
+					"kind" : "btn",
+					"label" : "Click to open File Chooser",
+					"bg" : "purple",
+					"bounds" : "100,260,parent.width-100, top+40",
+					"name" : "upb",
+					"click" : "openfc"
+				}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"wide" : 100,
+				"high" : 100,
+				"label" : "Table",
+				"colour" : "tan1",
+				"children":
+				[
+				{
+					"kind" : "label",
+					"label" : "Table:",
+					"bounds": "10,10,parent.width-40, top+40 ",
+					"name" : "lbl4",
+					"justify" : ["hcenter"]
+				},
+				{
+					"kind" : "table",
+					"name" : "table",
+					"bg" : "green",
+          "hl" : "lightgreen",
+          "hlc" : "lightyellow",
+					"resize-corner" : 10,
+					"resize-border" : 10,
+					"resize-edge" : ["bottom"],
+					"header" : 
+					[
+						{
+							"name" : "Column 1"
+						},
+						{
+							"name" : "Column 2"
+						}
+					],
+					"bounds" : "100,50,parent.width-100, top+200",
+					"items" : [
+						["Cell 1", "Cell 2"],
+						["Cell 3", "Cell 4"]
+					]
+				}
+				]
+			},
+			{ 
+				"kind" : "box",
+				"wide" : 100,
+				"high" : 100,
+				"label" : "Concertina",
+				"colour" : "tan1",
+				"children":
+				[
+				{
+					"kind" : "concertina",
+					"bounds" : "0,0,parent.width,parent.height",
+					"bg":"pink",
+					"panels" :
+					[
+						{
+							"kind" : "btn",
+							"name" : "btn",
+							"label" : "A Button",
+							"bounds" : "0,30,parent.width, parent.height",
+							"bg" : "green",
+							"header" : "Just a Button",
+							"headersize" : 30,
+							"headerclr" : "yellow"
+						},
+						{
+							"kind" : "color",
+							"name" : "color",
+							"bg" : "green",
+							"changed" : "color-change",
+							"header" : "Color chooser",
+							"bounds" : "0,30,parent.width, parent.height",
+							"headersize" : 30,
+							"headerclr" : "pink"
+						}
+					]
+				}
+				]
+			}
+			]
+		}
+    ]
+} var, guiobj
+var gui
+
+{
+	"kind" : "label",
+	"label" : "Combo Label",
+	"name" : "cmbLbl"
+} var, cmblabel
+
+{
+	"kind" : "btn",
+	"label" : "Up",
+	"bg" : "green",
+	"name" : "upb"
+} var, upBtn
+
+: menusay
+  >r drop
+  m:new "parent" 2 pick g:parent m:!
+  "msg" r> m:! 
+  g:say ;
+
+[
+	( "You are number one" menusay ) ,
+	( "First" menusay ) ,
+	( "primary" menusay ) ,
+	( "sub 1a" menusay ) ,
+	( "sub 1b" menusay ) ,
+	' g:quit ,
+	( "too much" menusay ) ,
+	( "Second" menusay ) ,
+	( "secondary" menusay ) ,
+	( "2a" menusay ) ,
+	( "2b" menusay ) 
+] var, actions
+
+{
+	"getLabelFont" : "getLabelFont",
+	"getTextButtonFont" : "getTextButtonFont",
+	"getComboBoxFont" : "getComboBoxFont",
+	"getPopupMenuFont" : "getPopupMenuFont",
+	"drawButtonText" : "drawButtonText",
+	"drawButtonBackground" : "drawButtonBackground",
+	"areLinesDrawnForTreeView" : "areLinesDrawnForTreeView",
+	"areScrollbarButtonsVisible" : "areScrollbarButtonsVisible",
+	"changeToggleButtonWidthToFitText" : "changeToggleButtonWidthToFitText",
+	"createComboBoxTextBox" : "createComboBoxTextBox",
+	"createDocumentWindowButton" : "createDocumentWindowButton",
+	"createFileBrowserGoUpButton" : "createFileBrowserGoUpButton",
+	"createFileChooserHeaderText" : "createFileChooserHeaderText",
+	"createFilenameComponentBrowseButton" : "createFilenameComponentBrowseButton",
+	"createSliderButton" : "createSliderButton",
+	"createSliderTextBox" : "createSliderTextBox",
+	"drawAlertBox" : "drawAlertBox",
+	"drawBubble" : "drawBubble",
+	"drawComboBox" : "drawComboBox",
+	"drawLabel" : "drawLabel",
+	"drawMenuBarBackground" : "drawMenuBarBackground",
+	"drawMenuBarItem" : "drawMenuBarItem",
+	"drawScrollbar" : "drawScrollbar",
+	"drawScrollbarButton" : "drawScrollbarButton",
+	"drawPopupMenuBackground" : "drawPopupMenuBackground",
+	"drawPopupMenuSectionHeader" : "drawPopupMenuSectionHeader",
+	"drawPopupMenuUpDownArrow" : "drawPopupMenuUpDownArrow",
+	"drawProgressBar" : "drawProgressBar",
+	"drawRotarySlider" : "drawRotarySlider",
+	"drawSpinningWaitAnimation" : "drawSpinningWaitAnimation",
+	"drawTabAreaBehindFrontButton" : "drawTabAreaBehindFrontButton",
+	"drawTabButton" : "drawTabButton",
+	"drawTableHeaderBackground" : "drawTableHeaderBackground",
+	"drawTableHeaderColumn" : "drawTableHeaderColumn",
+	"drawTextEditorOutline" : "drawTextEditorOutline",
+	"drawTickBox" : "drawTickBox",
+	"drawToggleButton" : "drawToggleButton",
+	"drawTooltip" : "drawTooltip",
+	"drawTreeviewPlusMinusBox" : "drawTreeviewPlusMinusBox",
+	"fillTextEditorBackground" : "fillTextEditorBackground",
+	"getAlertBoxWindowFlags" : "getAlertBoxWindowFlags",
+	"getAlertWindowButtonHeight" : "getAlertWindowButtonHeight",
+	"getAlertWindowFont" : "getAlertWindowFont",
+	"getAlertWindowMessageFont" : "getAlertWindowMessageFont",
+	"getAlertWindowTitleFont" : "getAlertWindowTitleFont",
+	"getDefaultMenuBarHeight" : "getDefaultMenuBarHeight",
+	"getDefaultScrollbarWidth" : "getDefaultScrollbarWidth",
+	"getIdealPopupMenuItemSize" : "getIdealPopupMenuItemSize",
+	"getMenuBarFont" : "getMenuBarFont",
+	"getMenuBarItemWidth" : "getMenuBarItemWidth",
+	"getMenuWindowFlags" : "getMenuWindowFlags",
+	"getMinimumScrollbarThumbSize" : "getMinimumScrollbarThumbSize",
+	"getScrollbarButtonSize" : "getScrollbarButtonSize",
+	"getSliderPopupFont" : "getSliderPopupFont",
+	"getSliderPopupPlacement" : "getSliderPopupPlacement",
+	"getSliderThumbRadius" : "getSliderThumbRadius",
+	"getTabButtonOverlap" : "getTabButtonOverlap",
+	"getTabButtonSpaceAroundImage" : "getTabButtonSpaceAroundImage",
+	"getTreeViewIndentSize" : "getTreeViewIndentSize",
+	"layoutFilenameComponent" : "layoutFilenameComponent",
+	"positionComboBoxText" : "positionComboBoxText",
+	"drawConcertinaPanelHeader" : "drawConcertinaPanelHeader",
+	"drawLinearSlider" : "drawLinearSlider",
+	"drawLinearSliderBackground" : "drawLinearSliderBackground",
+	"drawLinearSliderThumb" : "drawLinearSliderThumb",
+	"drawCornerResizer" : "drawCornerResizer",
+	"drawStretchableLayoutResizerBar" : "drawStretchableLayoutResizerBar",
+	"drawResizableFrame" : "drawResizableFrame"
+} var, lafObj1
+
+var glabel
+var upbtn
+
+: openfc
+    {
+     "title": "Select a file",
+     "flags": ["open", "tree", "file", "multi" ],
+     "filter": "*.*"
+    } g:filedlg ;
+
+: getLabelFont \ gui -- font
+  "Arial 30,bold" ;
+
+: getTextButtonFont \ gui height -- font
+  drop
+  "font" g:m@ null? if drop "20" then ;
+ 
+: getComboBoxFont \ gui -- font
+  "Arial 10,italic" ;
+
+: getPopupMenuFont \ -- font
+  "Arial 20,italic bold underlined" ;
+
+: drawButtonBackground \ gui bg mouseover buttondown --
+  >r 2drop 
+  \ create the gradient
+  dup >r
+  g:size? \ gui wide high
+  0 0 2swap  
+  r@ "bg" g:m@ swap "bg2" g:m@ nip
+  g:gradient
+  r> g:size? 
+	r@ if 2 2 else 0 0 then
+	2swap  20 g:rrect rdrop ;
+
+: areLinesDrawnForTreeView \ gui -- areLinesDrawnForTreeView
+  true ;
+
+: areScrollbarButtonsVisible \ -- areScrollbarButtonsVisible
+  true ;
+
+\ not being called for some reason
+: createDocumentWindowButton \ buttonType -- documentWindowButton
+  "createDocumentWindowButton" log ;
+
+: createFileBrowserGoUpButton \ -- fileBrowserGoUpButton
+  upbtn @ ;
+
+\ not being called for some reason
+: createFileChooserHeaderText \ title instructions -- string
+  "createFileChooserHeaderText" log ;
+
+\ crash
+\ : createFilenameComponentBrowseButton \ text -- filenameComponentBrowseButton
+\  upbtn @ "createFilenameComponentBrowseButton" log ;
+
+: createSliderButton \ gui isIncrement -- sliderButton 
+  upbtn @ ;
+
+\ crash
+\ : createSliderTextBox \ gui -- label
+\  glabel @ "createSliderTextBox" log ;
+
+\ : drawAlertBox \ gui arrayOfTextArea textLayout --
+\  "drawAlertBox" log ;
+
+\ : drawBubble \ gui arrayOfTip arrayOfBody
+\  "drawBubble" log ;
+
+: drawButtonText \ gui isMouseOverButton isButtonDown --
+  drop  if "red" else "black" then g:fcolor 
+  "Arial 20,bold" g:setfont 
+  g:text? dup >r g:textsize drop >r
+  g:size? 
+  2 n:/ swap r> n:- 2 n:/ swap
+  r> g:draw-text-at drop ;
+
+: drawComboBox \ gui width height isButtonDown buttonX buttonY buttonW buttonH --
+  2drop 2drop 2drop drop
+  "grey" g:fcolor
+  g:size? >r 50 n:- r> 20 n:- 2 n:/ 23 7 5 g:rrect 
+  g:size? >r 50 n:- r> 3 n:- 2 n:/ 23 7 5 g:rrect ;
+
+\ : drawLabel \ gui --
+\ "drawLabel" log ;
+
+: drawMenuBarBackground \ gui width height b --
+  >r 2drop r> 1 n:= if 
+  "lightskyblue" g:bg else 
+  "steelblue3" g:bg then ;
+
+: drawMenuBarItem \ gui width height itemIndex itemText isMouseOverItem	isMenuOpen isMouseOverBar --
+  2drop drop >r 2drop drop 
+  "Arial 25,bold italic" g:setfont 
+  "black" g:fcolor 20 20 r> g:draw-text-at ;
+
+: drawScrollbar \ gui x y width height isScrollbarVertical thumbStartPosition thumbSize isMouseOver isMouseDown --
+  cr 2drop rot 0 n:= if \ if its horizontal scrollbar
+  >r >r nip rot drop r> -rot 
+  r> -rot swap -rot 90 cr g:rrect else \ if its vertical scrollbar
+  >r >r nip nip r> swap r> swap 90 g:rrect \ doesn't work completely
+  then ;
+
+: drawScrollbarButton \ gui width height buttonDirection isScrollbarVertical isMouseOverButton isButtonDown --
+  2drop 2drop rot "grey" g:fcolor 
+  -rot 0 -rot 0 -rot g:rect ;
+
+\ crash - the second time that changing the combo selection its crashing
+\ : drawPopupMenuBackground \ gui width height --
+\  "drawPopupMenuBackground" log ;
+
+\ not being called for some reason (probably need to create PopupMenu with SectionHeader for it)
+: drawPopupMenuSectionHeader \ gui arrayArea sectionName --
+  "drawPopupMenuSectionHeader" log ;
+
+\ not being called for some reason
+: drawPopupMenuUpDownArrow \ gui width height isScrollUpArrow --
+  "drawPopupMenuUpDownArrow" log ;
+
+\ : drawProgressBar \ gui width height progress textToShow --
+\  "drawProgressBar" log ;
+
+\ : drawRotarySlider \ gui x y width height sliderPosProportional rotaryStartAngle rotaryEndAngle --
+\ "drawRotarySlider" log ;
+
+\ not being called for some reason
+: drawSpinningWaitAnimation \ gui colour x y w h --
+"drawSpinningWaitAnimation" log ;
+
+\ : drawTabAreaBehindFrontButton \ gui w h --
+\ "drawTabAreaBehindFrontButton" log ;
+
+\ : drawTabButton \ gui isMouseOver isMouseDown --
+\ "drawTabButton" log ;
+
+\ crash
+\ : drawTableHeaderBackground \ gui --
+\ "drawTableHeaderBackground" log ;
+
+\ crash
+\ : drawTableHeaderColumn \ gui columnName columnId width height isMouseOver isMouseDown columnFlags --
+\ "drawTableHeaderColumn" log ;
+
+\ : drawTextEditorOutline \ gui width height --
+\ "drawTextEditorOutline" log ;
+
+\ : drawTickBox \ gui x y w h ticked isEnabled isMouseOverButton isButtonDown --
+\  "drawTickBox" log ;
+
+\ : drawToggleButton \ gui isMouseOverButton isButtonDown --
+\  "drawToggleButton" log ;
+
+\ crash
+\ : drawTooltip \ gui text width height --
+\  "drawTooltip" log ;
+
+\ crash
+\ : drawTreeviewPlusMinusBox \ gui arrayArea backgroundColour isOpen isMouseOver --
+\  "drawTreeviewPlusMinusBox" log ;
+
+\ : fillTextEditorBackground \ gui width height --
+\  "fillTextEditorBackground" log ;
+
+: getAlertBoxWindowFlags \ -- alertBoxWindowFlags
+  2 ;
+
+: getAlertWindowButtonHeight \ -- alertWindowButtonHeight
+  50 ;
+
+\ not sure what it supposed to change
+: getAlertWindowFont \ -- font
+  "Arial 40,underlined" ; 
+
+: getAlertWindowMessageFont \ -- font
+  "Arial 30,italic" ;
+
+: getAlertWindowTitleFont \ -- font
+  "Arial 50,bold" ;
+
+\ not being called for some reason (probably need to add MenuBar to DocumentWindow)
+: getDefaultMenuBarHeight \ -- defaultMenuBarHeight
+  "getDefaultMenuBarHeight" log ;
+
+: getDefaultScrollbarWidth \ -- defaultScrollbarWidth
+  20 ;
+
+: getIdealPopupMenuItemSize \ text isSeparator standardMenuItemHeight idealWidth idealHeight --
+  "getIdealPopupMenuItemSize" log ;
+
+: getMenuBarFont \ gui itemIndex itemText -- font
+  "Arial 40,italic bold" ;
+
+: getMenuBarItemWidth \ gui itemIndex itemText -- menuBarItemWidth
+  150 ;
+
+\ not sure what it supposed to change
+: getMenuWindowFlags \ -- menuWindowFlags
+  1 ;
+
+: getMinimumScrollbarThumbSize \ gui -- minimumScrollbarThumbSize
+  50 ;
+
+\ not being called for some reason
+: getScrollbarButtonSize \ gui -- scrollbarButtonSize
+  100 "getScrollbarButtonSize" log ;
+
+: getSliderPopupFont \ gui -- font
+  "Arial 30,bold" ;
+
+: getSliderPopupPlacement \ gui -- sliderPopupPlacement
+  4 ;
+
+\ not sure what it supposed to change
+: getSliderThumbRadius \ gui -- sliderThumbRadius
+  100 ;
+
+: getTabButtonOverlap \ tabDepth -- tabButtonOverlap
+  5 ;
+
+: getTabButtonSpaceAroundImage \ -- tabButtonSpaceAroundImage
+  3 ;
+
+: getTreeViewIndentSize \ gui -- treeViewIndentSize
+  30 ;
+
+\ : layoutFilenameComponent \ gui gui gui --
+\  "layoutFilenameComponent" log ;
+
+\ : positionComboBoxText \ gui gui --
+\  "positionComboBoxText" log ;
+
+\ : drawConcertinaPanelHeader \ gui gui arrayArea isMouseOver isMouseDown --
+\ "drawConcertinaPanelHeader" log ;
+
+\ : drawLinearSlider \ gui x y width height sliderPos minSliderPos maxSliderPos sliderStyle --
+\ "drawLinearSlider" log ;
+
+\ : drawLinearSliderBackground \ gui x y width height sliderPos minSliderPos maxSliderPos sliderStyle --
+\  "drawLinearSliderBackground" log ;
+
+\ : drawLinearSliderThumb \ gui x y width height sliderPos minSliderPos maxSliderPos sliderStyle --
+\  "drawLinearSliderThumb" log ;
+
+\ crash
+\ : drawCornerResizer \ gui w h isMouseOver isMouseDragging --
+\   "drawCornerResizer" log ;
+
+\ crash
+\ : drawStretchableLayoutResizerBar \ gui w h isVerticalBar isMouseOver isMouseDragging --
+\   "drawStretchableLayoutResizerBar" log ; 
+
+\ crash
+\ : drawResizableFrame \ gui w h arrayOfBorderSize --
+\   "drawResizableFrame" log ;
+
+var index
+false var, ignore
+
+: recreateGui \ --
+	gui @ "tab" g:child g:obj clone >r
+	drop gui @ swap g:-child
+	r> g:new g:show
+    gui @ swap g:+child 
+	gui @ "tab" g:child 0 g:get-tab 
+	"comboLaf" g:child g:obj 
+    clone >r swap dup g:parent 
+	swap g:-child
+	r> g:new g:show 
+	true ignore !
+	index @ g:select!
+	g:+child 
+	2drop 2drop drop ;
+
+: createLafs
+  "g:new-laf" w:find null? nip 
+  not if "lafObj1 @ g:new-laf" eval then ;
+
+: changelaf
+	ignore @ not if 
+		true ignore !
+		drop swap dup combo ! swap index ! 
+		(	index @ n:1+ g:laf! recreateGui  ) g:do
+	then 
+	false ignore ! ;
+
+\ Event handlers. Normally you would do something interesting here rather than 
+\ just logging that the event happned.  For example the menu handler:
+: onMenuSelected n:1- actions @ case ;
+
+: onDeleteKeyPressed "Delete key pressed" log ;
+: onListBoxItemDoubleClicked "ListBox item double clicked" log ;
+: onListBoxItemClicked "ListBox item clicked" log ;
+: onValueChanged "value changed to " swap s:+ log ;
+: onTextEditorFocusLost "text editor focus lost" log ;
+: onTextEditorEscapeKeyPressed "text editor escape key pressed" log true ;
+: onTextEditorReturnKeyPressed "text editor return key pressed" log true ;
+: onFocusGained 
+	"got focus!" 1000 g:bubble ;
+: onFocusLost "focus lost" log ;
+: onTextWasEdited "text was edited" log ;
+: onTextEditorTextChanged "Text editor text changed" log ;
+: tb-clicked 
+  drop over g:parent >r 
+  g:obj "extra" m:@ nip 
+  m:new "msg" rot m:! "parent" r> m:! 
+  g:say ;
+
+var thelabel
+
+: selectedcolor
+	thelabel @
+	swap g:bg g:invalidate ;
+
+: clrclicked  
+	2drop
+	dup thelabel !
+	thelabel @ g:bg? 
+	' selectedcolor
+       g:colordlg ;
+
+: dosplash
+		{
+			"kind" : "splash",
+			"img"  : "8thheader.png",
+			"delay" : 1.0
+		} g:new g:show ;
+: app:main
+	dosplash
+	cmblabel @ g:new glabel !
+	upBtn @ g:new upbtn !
+	createLafs
+	guiobj @ g:new g:show  gui !
+	combo @ 2 g:select!  ;

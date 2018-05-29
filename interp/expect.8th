@@ -1,0 +1,20 @@
+\ How to easily handle checking for data types:
+needs utils/expect
+
+[ `ns:m`, `ns:a` ] var, m-a
+
+: yesno
+  if "Yes!" else "Sorry, no" then . cr ;
+
+: check1
+	"Checking if we are passing a map or array:" . cr
+	[123] m-a @ expect yesno ;
+
+: check2
+	"Checking again:" . cr
+	123 m-a @ expect yesno ;
+
+: app:main
+	check1 drop
+	check2 drop
+	bye ;

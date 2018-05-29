@@ -1,0 +1,86 @@
+\ This is a simple GUI-based application 
+needs net/http
+with: g
+0 hw:displaysize?
+var, high
+var, wide
+: fontname "*font/quicksand-regular.otf " ;
+\ Dynamically figure out a good font size for the address edit:
+
+: calc-font  \ n -- s
+	high @ swap n:/ >s
+	fontname swap s:+ ;
+
+\ Define the GUI.  8th uses JSON to describe the GUI layout.  After defining
+\ the JSON we'll store it in a variable to use later:
+\ We've split up the gui into a separate file.  Look in the 'incs' folder for
+\ it:
+
+"app.gui" f:include
+
+\ this makes the request from Google maps api:
+: do-request 
+	" " "+" s:replace!
+	"https://maps.googleapis.com/maps/api/geocode/json?sensor=false&address="
+	swap s:+ net:get if
+		>s
+	else 
+		\ result was a buffer, convert it to a string for display:
+		drop "Failed lookup" 
+	then ;
+
+\ This will update the UI
+: lookup-done \ map --
+  "text" m:@ >r drop
+
+	\ find the addr edit:
+	gui @ "addr" child
+	\ get its text and empty the addr edit
+	"" text drop
+
+	\ put results in the read-only results edit field:
+	gui @ "results" child r> g:text 
+
+	\ clean up...
+	drop
+	;
+
+\ This actually does the lookup, based on the text in the "addr" edit field
+: lookup-task \ what --
+  do-request
+  m:new
+  "text" rot m:!
+  "cb" ' lookup-done m:!
+  g:do ;
+  
+  
+  
+\ called when the user pressed ENTER inside the edit field, or clicked the 'Look
+\ up' button.  We don't care which, and we need to do the rest of our work in a
+\ safe manner.  So use "do" to run our lookup in the main context:
+: get-data 
+  g:text? >r
+  "Performing lookup..." g:text
+  r> 1 ' lookup-task t:task-n ;
+
+\ Instantiate and show the GUI:
+: show-gui
+	gui-json @				\ get the JSON representing the GUI
+	new dup gui !			\ create the GUI and save it in the 'gui' variable
+  \ make it 800x600 unless running on a mobile device:
+	mobile? if 
+    true g:fullscreen 
+  else
+    wide @ 2 n:/
+    high @ 2 n:/ 
+    g:size
+  then
+	show ;				\ and show the GUI
+
+\ This is where our application starts.  In a more complex application it would 
+\ probably do more than just start up the GUI:
+true app:isgui !
+: app:main
+  \ change Cut to Snip on the right-menu pop-up for the edit controls...
+	{ "Cut" : "Snip" } g:localize
+	show-gui ;

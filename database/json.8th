@@ -1,0 +1,34 @@
+\ SQLite has JSON aggregation functions, so it can return JSON which 8th can use
+\ directly.  This sample uses 8th's help file as 
+needs utils/help
+
+var db
+[] var, result
+
+: open-db 
+  I:help_file db:open 
+  dup db ! ;
+
+\ called on each row of the query:
+: db-row
+  0 db:col json> 
+  result @ swap a:push
+  result ! ;
+
+
+: app:main
+  "Some of the help file, as JSON:" . cr
+  \ get the help file:
+  open-db
+  \ make a query:
+  ' db-row
+  quote *
+     select json_object('nm',nm, 'desc',desc)
+     from words 
+          order by nm 
+          limit 10
+  *
+  db:exec-cb 
+  result @ . cr
+  bye ;
+
